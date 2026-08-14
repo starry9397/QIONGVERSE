@@ -4,6 +4,7 @@ import sourceDeskData from '../knowledge/source-desk.json'
 import sourceRegistryData from '../knowledge/source-registry.json'
 
 const LiMiaoImmersiveHall = lazy(() => import('./components/LiMiaoImmersiveHall'))
+const AerospaceImmersiveHall = lazy(() => import('./components/AerospaceImmersiveHall'))
 
 type SourceDeskEntry = {
   id: string
@@ -68,7 +69,7 @@ function App() {
   const [activeNav, setActiveNav] = useState(1)
   const [exhibitionMenuOpen, setExhibitionMenuOpen] = useState(false)
   const [hallNotice, setHallNotice] = useState('')
-  const [isLimiaoHall, setIsLimiaoHall] = useState(() => window.location.hash === '#limiao-hall')
+  const [activeHall, setActiveHall] = useState<'limiao' | 'aerospace' | null>(() => window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : null)
   const exhibitionRef = useRef<HTMLElement>(null)
   const guideTranscriptRef = useRef<HTMLDivElement>(null)
   const guideInputRef = useRef<HTMLInputElement>(null)
@@ -86,6 +87,7 @@ function App() {
   const sourceDeskTopics = [
     { id: 'all', en: 'All sources', zh: '全部来源' },
     { id: 'heritage', en: 'Heritage', zh: '文化与非遗' },
+    { id: 'aerospace', en: 'Aerospace', zh: '航天' },
     { id: 'free-trade-port', en: 'Free Trade Port', zh: '自贸港' },
   ]
   const visibleSourceDeskEntries = sourceDeskEntries.filter((entry) => entry.status === 'reviewed' && (sourceDeskTopic === 'all' || entry.topics.includes(sourceDeskTopic)))
@@ -115,7 +117,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const syncHallRoute = () => setIsLimiaoHall(window.location.hash === '#limiao-hall')
+    const syncHallRoute = () => setActiveHall(window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : null)
     window.addEventListener('hashchange', syncHallRoute)
     return () => window.removeEventListener('hashchange', syncHallRoute)
   }, [])
@@ -162,7 +164,14 @@ function App() {
     setActiveZone(1)
     setExhibitionMenuOpen(false)
     window.location.hash = 'limiao-hall'
-    setIsLimiaoHall(true)
+    setActiveHall('limiao')
+  }
+
+  const openAerospaceHall = () => {
+    setActiveZone(2)
+    setExhibitionMenuOpen(false)
+    window.location.hash = 'aerospace-hall'
+    setActiveHall('aerospace')
   }
 
   const openZoneHall = (index: number) => {
@@ -171,15 +180,19 @@ function App() {
       openLimiaoHall()
       return
     }
+    if (zones[index]?.id === 'aerospace') {
+      openAerospaceHall()
+      return
+    }
     const message = language === 'en' ? `${zones[index]?.title.en || 'This hall'} is in development.` : `${zones[index]?.title.zh || '该展厅'}正在开发中。`
     setHallNotice(message)
     window.setTimeout(() => setHallNotice(''), 3200)
   }
 
-  const exitLimiaoHall = () => {
+  const exitHall = (zoneIndex: number) => {
     window.location.hash = 'exhibition'
-    setIsLimiaoHall(false)
-    window.setTimeout(() => scrollToTarget('exhibition', 1, 1), 0)
+    setActiveHall(null)
+    window.setTimeout(() => scrollToTarget('exhibition', 1, zoneIndex), 0)
   }
 
   const submitQuestion = async () => {
@@ -265,7 +278,7 @@ function App() {
   const zoneMeta = useMemo(() => `${zone.index} / 05`, [zone.index])
 
   return <div className="site-shell">
-    {isLimiaoHall ? <Suspense fallback={<main className="limiao-loading">Opening the Li &amp; Miao Immersive Hall…</main>}><LiMiaoImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={exitLimiaoHall} onOpenGuide={(exhibit) => { setActiveZone(1); setQuestion(language === 'en' ? `Tell me about ${exhibit.title.en}.` : `请介绍${exhibit.title.zh}。`); setGuideOpen(true) }} /></Suspense> : <>
+    {activeHall === 'limiao' ? <Suspense fallback={<main className="limiao-loading">Opening the Li &amp; Miao Immersive Hall…</main>}><LiMiaoImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(1)} onOpenGuide={(exhibit) => { setActiveZone(1); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'aerospace' ? <Suspense fallback={<main className="aerospace-loading">Opening the Wenchang Aerospace Hall…</main>}><AerospaceImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(2)} onOpenGuide={(exhibit) => { setActiveZone(2); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : <>
     <header className="site-header">
       <a className="brand" href="#top" aria-label="HAINAN QIONGVERSE home">
         <img className="project-logo" src="/assets/logo.png" alt="QIONGVERSE project logo" />
@@ -278,7 +291,7 @@ function App() {
           {exhibitionMenuOpen && <>
             <button className="nav-menu-backdrop" aria-label={t.menuLabel} onClick={() => setExhibitionMenuOpen(false)} />
             <div id="exhibition-menu" className="nav-menu" role="menu" aria-label={t.nav[1]}>
-              {zones.map((item, index) => <a key={item.id} href={item.id === 'lijin' ? '#limiao-hall' : '#exhibition'} role="menuitem" onClick={(event) => { event.preventDefault(); openZoneHall(index) }}><span>{item.index}</span>{item.title[language]}</a>)}
+              {zones.map((item, index) => <a key={item.id} href={item.id === 'lijin' ? '#limiao-hall' : item.id === 'aerospace' ? '#aerospace-hall' : '#exhibition'} role="menuitem" onClick={(event) => { event.preventDefault(); openZoneHall(index) }}><span>{item.index}</span>{item.title[language]}</a>)}
             </div>
           </>}
         </div>
@@ -341,7 +354,7 @@ function App() {
           <div className="zone-image-wrap">
             <picture><source media="(max-width: 700px)" srcSet={zone.mobileImage} /><img src={zone.image} alt={zone.title[language]} onError={(event) => { event.currentTarget.src = zone.poster }} /></picture>
             <div className="image-caption"><span>{zoneMeta}</span><span>{t.source}</span></div>
-            <button className="media-play" aria-label={`Preview ${zone.title.en}`} onClick={() => { setMediaFailed(false); setMediaOpen(true) }}>▶</button>
+            <button className="media-play" aria-label={'Preview ' + zone.title.en} onClick={() => { setMediaFailed(false); setMediaOpen(true) }}>{zone.video ? '▶' : '◇'}</button>
           </div>
           <div className="zone-copy">
             <div className="zone-copy-top"><span className="zone-tag">{zone.tag[language]}</span><span className="zone-signal" aria-label="Zone signal">◌ {zone.id === 'huali' ? 'resonance' : 'listening'}</span></div>
@@ -351,6 +364,7 @@ function App() {
             <div className="zone-detail-image"><img src={zone.banner} alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></div>
             <div className="zone-footer"><span>{language === 'en' ? 'Read the room' : '阅读展室'}</span><span className="arrow">↗</span></div>
             {zone.id === 'lijin' && <button className="limiao-entry" type="button" onClick={openLimiaoHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
+            {zone.id === 'aerospace' && <button className="limiao-entry" type="button" onClick={openAerospaceHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
           </div>
         </div>
         <div className="tide-line" aria-hidden="true">{zones.map((item, index) => <span key={item.id} className={activeZone === index ? 'tide-dot active' : 'tide-dot'} />)}</div>
@@ -427,7 +441,7 @@ function App() {
     {mediaOpen && <div className="media-modal" role="dialog" aria-modal="true" aria-labelledby="media-title">
       <div className="media-modal-inner">
         <div className="media-modal-head"><div><span className="mono-label">{zoneMeta} / MEDIA PREVIEW</span><h2 id="media-title">{zone.title[language]}</h2></div><button className="close-button" onClick={() => setMediaOpen(false)} aria-label={t.close}>×</button></div>
-        {mediaFailed ? <div className="media-fallback"><p>{language === 'en' ? 'The motion file is unavailable. The still image remains available for reading.' : '动态媒体暂时不可用，静态图像仍可继续阅读。'}</p><img src={zone.poster} alt={zone.title[language]} /></div> : <video controls autoPlay playsInline preload="metadata" poster={zone.poster} onError={() => setMediaFailed(true)}><source src={zone.video} type="video/mp4" /><p>{language === 'en' ? 'Your browser does not support video.' : '你的浏览器不支持视频。'}</p></video>}
+        {!zone.video || mediaFailed ? <div className="media-fallback"><p>{zone.video ? (language === 'en' ? 'The motion file is unavailable. The still image remains available for reading.' : '动态媒体暂时不可用，静态图像仍可继续阅读。') : (language === 'en' ? 'This room uses a project-supplied still image for orientation. Open the immersive hall for the spatial experience.' : '本展厅使用项目提供的静态图像进行导览。请进入沉浸展厅获得空间体验。')}</p><img src={zone.poster} alt={zone.title[language]} /></div> : <video controls autoPlay playsInline preload="metadata" poster={zone.poster} onError={() => setMediaFailed(true)}><source src={zone.video} type="video/mp4" /><p>{language === 'en' ? 'Your browser does not support video.' : '你的浏览器不支持视频。'}</p></video>}
       </div>
     </div>}
   </div>

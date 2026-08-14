@@ -10,7 +10,7 @@ export type Zone = {
   mobileImage: string
   banner: string
   poster: string
-  video: string
+  video?: string
   tag: { en: string; zh: string }
   tone: 'tide' | 'woven' | 'amber' | 'village' | 'aerospace'
   guide: { en: string; zh: string }
@@ -37,8 +37,8 @@ export const zones: Zone[] = [
     id: 'aerospace', index: '03', title: { en: 'Wenchang Aerospace Hall', zh: '文昌航天厅' },
     kicker: { en: 'A project-curated launch horizon', zh: '项目策展的发射地平线' },
     description: { en: 'A visual orientation room for Wenchang aerospace stories, assembled from project-supplied media and open-ended questions.', zh: '一间关于文昌航天叙事的视觉导览厅，使用项目提供的媒体素材，保留继续探索与提问的空间。' },
-    image: '/assets/zones/tropical/zone-tropical-clean.webp', mobileImage: '/assets/zones/tropical/zone-tropical-portrait.webp',
-    banner: '/assets/user-media2/media2/图片素材新/wenchang-hall-banner-01.jpg', poster: '/assets/user-media2/media2/图片素材新/wenchang-hall-banner-01.jpg', video: '/assets/video/zones/zone-tropical-loop.mp4',
+    image: '/assets/user-media2/media2/图片素材新/wenchang-hall-banner-01.jpg', mobileImage: '/assets/3d/aerospace/文昌航天展厅参考图.png',
+    banner: '/assets/user-media2/space-console/发射体验控制台.png', poster: '/assets/3d/aerospace/文昌航天展厅参考图.png',
     tag: { en: 'PROJECT / AEROSPACE', zh: '项目 / 航天' }, tone: 'aerospace', guide: { en: 'This is a project-curated visual layer. Ask for sources before treating any aerospace detail as current fact.', zh: '这是项目策展的视觉层。涉及航天细节时，请先查看来源，再将其理解为当前事实。' },
   },
   {
