@@ -3,6 +3,7 @@ import type * as ThreeTypes from 'three'
 import type { Language } from '../data'
 import { aerospaceConsoleImage, aerospaceExhibits, aerospaceReferenceImage, cnsaUrl, type AerospaceExhibit } from '../aerospace-data'
 import { createImmersiveCameraGuard } from '../immersive-controls'
+import { avatarWorldConfigs, createLuoyinAvatarController, type LuoyinAvatarController } from '../luoyin-avatar'
 
 type Props = { language: Language; onToggleLanguage: () => void; onExit: () => void; onOpenGuide: (exhibit: AerospaceExhibit) => void }
 type SceneStatus = 'loading' | 'ready' | 'fallback'
@@ -57,6 +58,8 @@ export default function AerospaceImmersiveHall({ language, onToggleLanguage, onE
   const [active, setActive] = useState(aerospaceExhibits[0])
   const [detail, setDetail] = useState<AerospaceExhibit | null>(null)
   const [pulse, setPulse] = useState({ x: 0, y: 0, key: 0 })
+  const avatarRef = useRef<LuoyinAvatarController | null>(null)
+  const [avatarState, setAvatarState] = useState<'hidden' | 'loading' | 'ready' | 'failed'>('hidden')
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
   const select = (exhibit: AerospaceExhibit) => { setActive(exhibit); setDetail(exhibit) }
   const triggerPulse = (event?: Pick<MouseEvent<HTMLElement>, 'clientX' | 'clientY'>) => { const box = mount.current?.getBoundingClientRect(); if (box) setPulse({ x: event ? event.clientX - box.left : box.width / 2, y: event ? event.clientY - box.top : box.height / 2, key: Date.now() }) }
@@ -66,8 +69,8 @@ export default function AerospaceImmersiveHall({ language, onToggleLanguage, onE
     const element = mount.current
     if (!element) return
     setSceneStatus('loading')
-    let disposed = false; let timedOut = false; let frame = 0; let timeout = 0; let renderer: ThreeTypes.WebGLRenderer | null = null; let splat: { initialized: Promise<unknown>; dispose: () => void; getBoundingBox?: (centersOnly?: boolean) => ThreeTypes.Box3 } | null = null; let resize = () => {}
-    const cleanup = () => { cancelAnimationFrame(frame); clearTimeout(timeout); removeEventListener('resize', resize); splat?.dispose(); renderer?.dispose(); renderer?.domElement.remove() }
+    let disposed = false; let timedOut = false; let frame = 0; let timeout = 0; let renderer: ThreeTypes.WebGLRenderer | null = null; let splat: { initialized: Promise<unknown>; dispose: () => void; getBoundingBox?: (centersOnly?: boolean) => ThreeTypes.Box3 } | null = null; let resize = () => {}; let avatar: LuoyinAvatarController | null = null
+    const cleanup = () => { cancelAnimationFrame(frame); clearTimeout(timeout); removeEventListener('resize', resize); avatar?.dispose(); if (avatarRef.current === avatar) avatarRef.current = null; splat?.dispose(); renderer?.dispose(); renderer?.domElement.remove(); setAvatarState('hidden') }
     void (async () => {
       try {
         if (!window.WebGLRenderingContext || !document.createElement('canvas').getContext('webgl2')) throw new Error('WebGL 2 unavailable')
@@ -76,8 +79,11 @@ export default function AerospaceImmersiveHall({ language, onToggleLanguage, onE
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6)); element.appendChild(renderer.domElement)
         const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(62, 1, .01, 1000); scene.add(new SparkRenderer({ renderer }))
         splat = new SplatMesh({ url: '/assets/3d/aerospace/aerospace world.spz' }) as unknown as { initialized: Promise<unknown>; dispose: () => void }; scene.add(splat as unknown as ThreeTypes.Object3D)
-        const controls = new SparkControls({ canvas: renderer.domElement }); const cameraGuard = createImmersiveCameraGuard(controls, camera, splat); resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
-        const render = () => { if (!renderer || disposed || timedOut) return; controls.update(camera); cameraGuard.clamp(); renderer.render(scene, camera); frame = requestAnimationFrame(render) }; render()
+        const controls = new SparkControls({ canvas: renderer.domElement }); const cameraGuard = createImmersiveCameraGuard(controls, camera, splat)
+        avatar = createLuoyinAvatarController({ scene, camera, renderer, controls, splat, config: avatarWorldConfigs.aerospace, onState: setAvatarState }); avatarRef.current = avatar
+        resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
+        let lastFrame = performance.now()
+        const render = () => { if (!renderer || disposed || timedOut) return; const now = performance.now(); const delta = Math.min(.05, (now - lastFrame) / 1000); lastFrame = now; if (avatar?.getState() !== 'ready') controls.update(camera); avatar?.update(delta); cameraGuard.clamp(); renderer.render(scene, camera); frame = requestAnimationFrame(render) }; render()
         timeout = window.setTimeout(() => { if (!disposed) { timedOut = true; cleanup(); setSceneStatus('fallback') } }, 12000)
         await splat.initialized; clearTimeout(timeout)
         if (timedOut || disposed) return
@@ -87,7 +93,15 @@ export default function AerospaceImmersiveHall({ language, onToggleLanguage, onE
     return () => { disposed = true; cleanup() }
   }, [view])
 
+  const toggleAvatar = () => {
+    const avatar = avatarRef.current
+    if (!avatar) return
+    if (avatar.getState() === 'ready') avatar.disable()
+    else void avatar.enable()
+  }
+
   return <div className="aerospace-hall">
+    {view === 'world' && <div className="luoyin-avatar-floating"><button className="luoyin-avatar-button" type="button" disabled={sceneStatus !== 'ready' || avatarState === 'loading'} onClick={toggleAvatar}>{avatarState === 'ready' ? tx(language, 'Hide Luoyin', '隐藏螺音') : avatarState === 'loading' ? tx(language, 'Loading Luoyin', '正在加载螺音') : tx(language, 'Show Luoyin', '显示螺音')}</button><span className="luoyin-avatar-status" aria-live="polite">{avatarState === 'failed' ? tx(language, '3D character unavailable. Free camera remains available.', '3D 角色暂不可用，仍可使用自由相机浏览。') : avatarState === 'ready' ? tx(language, 'Luoyin ready · WASD / arrows to walk · drag to orbit · wheel to zoom', '螺音已准备 · WASD / 方向键行走 · 拖动环绕 · 滚轮缩放') : ''}</span></div>}
     <header className="aerospace-header"><a className="brand" href="#top" onClick={(event) => { event.preventDefault(); onExit() }}><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /></a><p>{view === 'world' ? 'WENCHANG / IMMERSIVE HALL' : 'WENCHANG / EXHIBIT INDEX'}</p><div><button type="button" onClick={onToggleLanguage}>EN / 中</button><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个展厅')}</button></div></header>
     {view === 'world' ? <main className="aerospace-stage"><div className="aerospace-scene" ref={mount} onClick={(event) => triggerPulse(event)} role="application" tabIndex={0} aria-label={tx(language, 'Interactive Wenchang aerospace visual world', '可交互的文昌航天视觉世界')} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); triggerPulse() } }}>
       {sceneStatus !== 'ready' && <div className={sceneStatus === 'fallback' ? 'aerospace-scene-fallback is-static' : 'aerospace-scene-fallback'}><img src={aerospaceReferenceImage} alt={tx(language, 'Wenchang aerospace hall reference view', '文昌航天展厅静态参考视图')} /><p>{sceneStatus === 'loading' ? tx(language, 'Opening the launch horizon…', '正在打开发射地平线…') : tx(language, 'This device is using the static hall view. The exhibit index and Luoyin remain available.', '当前设备正在使用静态展厅视图；展项索引与螺音仍可正常使用。')}</p></div>}

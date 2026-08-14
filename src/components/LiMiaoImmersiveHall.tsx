@@ -3,10 +3,10 @@ import type * as ThreeTypes from 'three'
 import type { Language } from '../data'
 import { limiaoExhibits, type LimiaoExhibit, sourceStatusLabel } from '../limiao-data'
 import { createImmersiveCameraGuard } from '../immersive-controls'
+import { avatarWorldConfigs, createLuoyinAvatarController, type LuoyinAvatarController } from '../luoyin-avatar'
 
 type Props = { language: Language; onToggleLanguage: () => void; onExit: () => void; onOpenGuide: (exhibit: LimiaoExhibit) => void }
 type SceneStatus = 'loading' | 'ready' | 'fallback'
-type GestureStatus = 'idle' | 'preparing' | 'ready' | 'denied' | 'unavailable' | 'paused'
 type ModelTransform = { scale: number; rotation: number }
 type HallView = 'world' | 'index'
 
@@ -80,7 +80,7 @@ function ModelPreview({ exhibit, language, transform, onTransform }: { exhibit: 
   return <div className="limiao-model-preview" ref={host} onWheel={(event) => { event.preventDefault(); onTransform({ ...transformRef.current, scale: Math.min(1.7, Math.max(.65, transformRef.current.scale - event.deltaY * .001)) }) }} onPointerDown={(event) => { dragRef.current = { x: event.clientX, rotation: transformRef.current.rotation }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={(event) => { if (!dragRef.current) return; onTransform({ ...transformRef.current, rotation: dragRef.current.rotation + (event.clientX - dragRef.current.x) * .012 }) }} onPointerUp={() => { dragRef.current = null }} onPointerCancel={() => { dragRef.current = null }}>{failed && <img src={exhibit.poster} alt={exhibit.title[language]} onError={(event) => { event.currentTarget.src = exhibit.fallback || '' }} />}<span className="limiao-model-hint">{language === 'en' ? 'Drag to rotate · wheel to zoom' : '拖拽旋转 · 滚轮缩放'}</span></div>
 }
 
-function DetailSheet({ exhibit, language, onClose, onAsk, transform, onTransform, gestureActive }: { exhibit: LimiaoExhibit; language: Language; onClose: () => void; onAsk: () => void; transform: ModelTransform; onTransform: (next: ModelTransform) => void; gestureActive: boolean }) {
+function DetailSheet({ exhibit, language, onClose, onAsk, transform, onTransform, gestureActive: _gestureActive }: { exhibit: LimiaoExhibit; language: Language; onClose: () => void; onAsk: () => void; transform: ModelTransform; onTransform: (next: ModelTransform) => void; gestureActive?: boolean }) {
   const [videoFailed, setVideoFailed] = useState(false)
   useEffect(() => { const listener = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }; addEventListener('keydown', listener); return () => removeEventListener('keydown', listener) }, [onClose])
   return <div className="limiao-sheet-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }} role="presentation"><section className="limiao-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="limiao-detail-title">
@@ -91,7 +91,6 @@ function DetailSheet({ exhibit, language, onClose, onAsk, transform, onTransform
       {exhibit.kind === 'model' && <div className="limiao-video-study">{videoFailed ? <img src={exhibit.fallback} alt={exhibit.title[language]} /> : <video controls playsInline preload="metadata" poster={exhibit.poster} onError={() => setVideoFailed(true)}><source src={exhibit.asset} type="video/mp4" /></video>}</div>}
     </div>
     <p className="limiao-detail-en">{exhibit.title.en}</p><p>{exhibit.introduction[language]}</p><p className="limiao-detail-note">{exhibit.note[language]}</p>
-    {exhibit.kind === 'model' && <p className="limiao-model-gesture-note">{gestureActive ? tx(language, 'Hand control is active: pinch to scale, move your hand left or right to rotate.', '手势已启用：捏合缩放，左右移动手掌旋转。') : tx(language, 'Optional hand control: enable gestures, then pinch to scale and move your hand left or right to rotate.', '可选手势：开启手势后，捏合缩放，左右移动手掌旋转。')}</p>}
     {exhibit.sourceUrl && <a className="limiao-source-link" href={exhibit.sourceUrl} target="_blank" rel="noreferrer">{tx(language, 'Open reviewed UNESCO source', '打开已核验 UNESCO 来源')} ↗</a>}
     <button className="limiao-ask-button" type="button" onClick={onAsk}>{tx(language, 'Ask Luoyin about this exhibit', '询问螺音关于此展项')}</button>
   </section></div>
@@ -99,7 +98,9 @@ function DetailSheet({ exhibit, language, onClose, onAsk, transform, onTransform
 
 export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit, onOpenGuide }: Props) {
   const mount = useRef<HTMLDivElement>(null); const [view, setView] = useState<HallView>('world'); const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading'); const [active, setActive] = useState(limiaoExhibits[0]); const [detail, setDetail] = useState<LimiaoExhibit | null>(null); const [pulse, setPulse] = useState({ x: 0, y: 0, key: 0 }); const [modelTransform, setModelTransform] = useState<ModelTransform>({ scale: 1, rotation: 0 })
-  const [gesture, setGesture] = useState<GestureStatus>('idle'); const streamRef = useRef<MediaStream | null>(null); const videoRef = useRef<HTMLVideoElement>(null); const landmarkerRef = useRef<{ close: () => void } | null>(null); const gestureFrameRef = useRef<number | null>(null); const gestureSessionRef = useRef(0); const activeRef = useRef(active); const detailRef = useRef(detail); const modelTransformRef = useRef(modelTransform); const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const activeRef = useRef(active); const detailRef = useRef(detail); const modelTransformRef = useRef(modelTransform); const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const avatarRef = useRef<LuoyinAvatarController | null>(null)
+  const [avatarState, setAvatarState] = useState<'hidden' | 'loading' | 'ready' | 'failed'>('hidden')
   useEffect(() => { activeRef.current = active }, [active])
   useEffect(() => { detailRef.current = detail }, [detail])
   useEffect(() => { modelTransformRef.current = modelTransform }, [modelTransform])
@@ -111,7 +112,7 @@ export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit
     if (view !== 'world') return
     const element = mount.current; if (!element) return
     setSceneStatus('loading')
-    let disposed = false; let timedOut = false; let frame = 0; let timeout = 0; let renderer: ThreeTypes.WebGLRenderer | null = null; let splat: { initialized: Promise<unknown>; dispose: () => void; getBoundingBox?: (centersOnly?: boolean) => ThreeTypes.Box3 } | null = null; let resize = () => {}
+    let disposed = false; let timedOut = false; let frame = 0; let timeout = 0; let renderer: ThreeTypes.WebGLRenderer | null = null; let splat: { initialized: Promise<unknown>; dispose: () => void; getBoundingBox?: (centersOnly?: boolean) => ThreeTypes.Box3 } | null = null; let resize = () => {}; let avatar: LuoyinAvatarController | null = null
     let cleanup = () => {
       cancelAnimationFrame(frame)
       clearTimeout(timeout)
@@ -119,6 +120,9 @@ export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit
       splat?.dispose()
       renderer?.dispose()
       renderer?.domElement.remove()
+      avatar?.dispose()
+      if (avatarRef.current === avatar) avatarRef.current = null
+      setAvatarState('hidden')
     }
     void (async () => {
       try {
@@ -128,8 +132,11 @@ export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6)); element.appendChild(renderer.domElement)
         const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(62, 1, .01, 1000); const spark = new SparkRenderer({ renderer }); scene.add(spark)
         splat = new SplatMesh({ url: '/assets/3d/limiao/limiao world.spz' }) as unknown as { initialized: Promise<unknown>; dispose: () => void; getBoundingBox: (centersOnly?: boolean) => ThreeTypes.Box3 }; const splatObject = splat as unknown as ThreeTypes.Object3D; scene.add(splatObject)
-        const controls = new SparkControls({ canvas: renderer.domElement }); const cameraGuard = createImmersiveCameraGuard(controls, camera, splat); resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
-        const render = () => { if (!renderer || disposed || timedOut) return; controls.update(camera); cameraGuard.clamp(); renderer.render(scene, camera); frame = requestAnimationFrame(render) }; render(); timeout = window.setTimeout(() => { if (!disposed) { timedOut = true; cleanup(); setSceneStatus('fallback') } }, 12000); await splat.initialized
+        const controls = new SparkControls({ canvas: renderer.domElement }); const cameraGuard = createImmersiveCameraGuard(controls, camera, splat)
+        avatar = createLuoyinAvatarController({ scene, camera, renderer, controls, splat, config: avatarWorldConfigs.limiao, onState: setAvatarState }); avatarRef.current = avatar
+        resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
+        let lastFrame = performance.now()
+        const render = () => { if (!renderer || disposed || timedOut) return; const now = performance.now(); const delta = Math.min(.05, (now - lastFrame) / 1000); lastFrame = now; if (avatar?.getState() !== 'ready') controls.update(camera); avatar?.update(delta); cameraGuard.clamp(); renderer.render(scene, camera); frame = requestAnimationFrame(render) }; render(); timeout = window.setTimeout(() => { if (!disposed) { timedOut = true; cleanup(); setSceneStatus('fallback') } }, 12000); await splat.initialized
         clearTimeout(timeout)
         if (timedOut || disposed) return
         camera.position.set(0, 0, 0); camera.up.set(0, 0, 1); camera.lookAt(1, 0, 0); camera.updateMatrixWorld(true)
@@ -139,42 +146,13 @@ export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit
     return () => { disposed = true; cleanup() }
   }, [view])
 
-  const stopGestures = () => { gestureSessionRef.current += 1; if (gestureFrameRef.current !== null) cancelAnimationFrame(gestureFrameRef.current); gestureFrameRef.current = null; landmarkerRef.current?.close(); landmarkerRef.current = null; streamRef.current?.getTracks().forEach((track) => track.stop()); streamRef.current = null; if (videoRef.current) videoRef.current.srcObject = null; setGesture('idle') }
-  useEffect(() => () => stopGestures(), [])
-  useEffect(() => { if (view === 'index') stopGestures() }, [view])
-  const enableGestures = async () => {
-    if (sceneStatus !== 'ready') return
-    if (!navigator.mediaDevices?.getUserMedia) { setGesture('unavailable'); return }
-    const session = gestureSessionRef.current + 1; gestureSessionRef.current = session; setGesture('preparing')
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false }); if (session !== gestureSessionRef.current || view !== 'world') { stream.getTracks().forEach((track) => track.stop()); return } streamRef.current = stream
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
-      const { FilesetResolver, HandLandmarker } = await import('@mediapipe/tasks-vision'); if (session !== gestureSessionRef.current || view !== 'world') { stream.getTracks().forEach((track) => track.stop()); return }
-      const files = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm')
-      const landmarker = await HandLandmarker.createFromOptions(files, { baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task' }, runningMode: 'VIDEO', numHands: 1 }); if (session !== gestureSessionRef.current || view !== 'world') { landmarker.close(); stream.getTracks().forEach((track) => track.stop()); return } landmarkerRef.current = landmarker
-      setGesture('ready'); let lastPinch = 0; let lastX = .5; let lastSwipe = 0; let stopped = false
-      const detect = () => {
-        if (stopped || !videoRef.current || !streamRef.current || !landmarkerRef.current) return
-        const result = landmarker.detectForVideo(videoRef.current, performance.now()); const hand = result.landmarks[0]
-        if (hand) { const thumb = hand[4]; const index = hand[8]; const distance = Math.hypot(thumb.x - index.x, thumb.y - index.y); const now = performance.now()
-          if (distance < .06 && now - lastPinch > 1100) { lastPinch = now; triggerPulse(); select(activeRef.current) }
-          if (detailRef.current?.kind === 'model') {
-            const pinchScale = Math.min(1.7, Math.max(.65, distance * 8.5 + .65))
-            const rotation = modelTransformRef.current.rotation + (hand[9].x - lastX) * 2.4
-            updateModelTransform({ scale: pinchScale, rotation })
-          }
-          if (now - lastSwipe > 900 && Math.abs(hand[9].x - lastX) > .14) { lastSwipe = now; const current = limiaoExhibits.findIndex((item) => item.id === activeRef.current.id); const next = (current + (hand[9].x < lastX ? 1 : -1) + limiaoExhibits.length) % limiaoExhibits.length; activeRef.current = limiaoExhibits[next]; setActive(limiaoExhibits[next]) } lastX = hand[9].x
-          const extended = [8, 12, 16, 20].filter((tip, offset) => hand[tip].y < hand[tip - 2].y).length
-          if (distance > .14 && extended >= 3) setGesture('ready')
-          if (distance > .1 && extended === 0) setGesture('paused')
-        } gestureFrameRef.current = requestAnimationFrame(detect)
-      }; detect()
-      stream.addEventListener('inactive', () => { stopped = true; stopGestures() }, { once: true })
-    } catch (error) { stopGestures(); setGesture(error instanceof DOMException && error.name === 'NotAllowedError' ? 'denied' : 'unavailable') }
-  }
+  const toggleAvatar = () => { const avatar = avatarRef.current; if (!avatar) return; if (avatar.getState() === 'ready') avatar.disable(); else void avatar.enable() }
 
-  const gestureText: Record<GestureStatus, string> = { idle: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用'), preparing: tx(language, 'Listening for hand', '正在识别手势'), ready: tx(language, 'Gesture ready', '手势已准备'), denied: tx(language, 'Camera permission denied. Mouse and touch controls remain available.', '摄像头权限未开启；鼠标与触控仍可使用。'), unavailable: tx(language, 'Gesture unavailable. Mouse and touch controls remain available.', '当前浏览器不支持手势；鼠标与触控仍可使用。'), paused: tx(language, 'Visual movement paused', '视觉运动已暂停') }
+  const gesture = 'idle' as 'idle' | 'ready' | 'paused'
+  const gestureText: Record<'idle' | 'ready' | 'paused', string> = { idle: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用'), ready: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用'), paused: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用') }
+  const videoRef = useRef<HTMLVideoElement>(null)
   return <div className="limiao-hall">
+    {view === 'world' && <div className="luoyin-avatar-floating"><button className="luoyin-avatar-button" type="button" disabled={sceneStatus !== 'ready' || avatarState === 'loading'} onClick={toggleAvatar}>{avatarState === 'ready' ? tx(language, 'Hide Luoyin', '隐藏螺音') : avatarState === 'loading' ? tx(language, 'Loading Luoyin', '正在加载螺音') : tx(language, 'Show Luoyin', '显示螺音')}</button><span className="luoyin-avatar-status" aria-live="polite">{avatarState === 'failed' ? tx(language, '3D character unavailable. Free camera remains available.', '3D 角色暂不可用，仍可使用自由相机浏览。') : avatarState === 'ready' ? tx(language, 'Luoyin ready · WASD / arrows to walk · drag to orbit · wheel to zoom', '螺音已准备 · WASD / 方向键行走 · 拖动环绕 · 滚轮缩放') : ''}</span></div>}
     <header className="limiao-header"><a className="brand" href="#top" onClick={(event) => { event.preventDefault(); onExit() }}><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /></a><p>{view === 'world' ? 'LI & MIAO / IMMERSIVE HALL' : 'LI & MIAO / EXHIBIT INDEX'}</p><div><button type="button" onClick={onToggleLanguage}>EN / 中</button><button type="button" onClick={onExit}>{tx(language, 'Back to four rooms', '返回四域展厅')}</button></div></header>
     {view === 'world' ? <main className="limiao-stage">
       <div className="limiao-scene" ref={mount} onClick={(event) => { triggerPulse(event) }} aria-label={tx(language, 'Interactive Li and Miao visual world', '可交互的黎苗视觉世界')} role="application" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); triggerPulse() } }}>
