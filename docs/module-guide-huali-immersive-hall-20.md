@@ -15,7 +15,7 @@
 
 | Material | Role | Fallback | Status |
 | --- | --- | --- | --- |
-| `assets/3d/huali/countryside world.spz` | Route-loaded immersive world | `东方花梨展厅参考图.png` | Project asset |
+| `assets/3d/huali/huali world.spz` | Route-loaded immersive world | `东方花梨展厅参考图.png` | Project asset |
 | `assets/3d/huali/东方花梨展厅参考图.png` | WebGL/load/timeout fallback | Exhibit index remains usable | Project asset |
 | Tree-slice, carving, furniture and incense images under `assets/user-media2/huali-*` | Visible image exhibits and reading sheets | Hall reference image | Project asset |
 | `assets/3d/products/huali/product-huali-00x-web.glb` | On-demand model preview | Matching poster image and reading text | AIGC concept, needs review |
