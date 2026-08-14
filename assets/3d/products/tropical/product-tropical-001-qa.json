@@ -1,0 +1,9 @@
+{
+  "input": "assets\\3d\\products\\tropical\\source\\extracted-sku-tropical-001-provider\\fbbe565f1ad0bc6a2e4c5537be6f129b.obj",
+  "webGlb": "assets\\3d\\products\\tropical\\product-tropical-001-web.glb",
+  "mobileGlb": "assets\\3d\\products\\tropical\\product-tropical-001-mobile.glb",
+  "collisionGlb": "assets\\3d\\products\\tropical\\product-tropical-001-collision.glb",
+  "reviewStatus": "needs-review",
+  "aigcStatus": "AIGC concept",
+  "rawSourcePreserved": true
+}

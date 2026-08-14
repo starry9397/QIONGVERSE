@@ -1,0 +1,9 @@
+{
+  "input": "assets\\3d\\products\\village\\source\\extracted-sku-village-002-provider\\62e82e4253bb503700a828309c1f38c9.obj",
+  "webGlb": "assets\\3d\\products\\village\\product-village-002-web.glb",
+  "mobileGlb": "assets\\3d\\products\\village\\product-village-002-mobile.glb",
+  "collisionGlb": "assets\\3d\\products\\village\\product-village-002-collision.glb",
+  "reviewStatus": "needs-review",
+  "aigcStatus": "AIGC concept",
+  "rawSourcePreserved": true
+}

@@ -1,0 +1,9 @@
+{
+  "input": "assets\\3d\\products\\lijin\\source\\extracted-product-lijin-001-provider\\1bdbb6fd97719f28e98129e8dc8f3010.obj",
+  "webGlb": "assets\\3d\\products\\lijin\\product-lijin-001-web.glb",
+  "mobileGlb": "assets\\3d\\products\\lijin\\product-lijin-001-mobile.glb",
+  "collisionGlb": "assets\\3d\\products\\lijin\\product-lijin-001-collision.glb",
+  "reviewStatus": "needs-review",
+  "aigcStatus": "AIGC concept",
+  "rawSourcePreserved": true
+}

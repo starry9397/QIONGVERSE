@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "unesco-li-textile-source-desk",
+      "sourceRecordId": "unesco-li-traditional-textile-techniques",
+      "displayKind": "verified_source",
+      "status": "reviewed",
+      "title": {
+        "en": "Li traditional textile techniques: UNESCO source page",
+        "zh": "黎族传统纺织技艺：UNESCO 来源页面"
+      },
+      "publisher": "UNESCO Intangible Cultural Heritage",
+      "canonicalUrl": "https://ich.unesco.org/en/RL/traditional-textile-techniques-of-the-li-ethnic-group-spinning-dyeing-weaving-and-embroidering-00202",
+      "topics": ["heritage", "li-textile", "culture"],
+      "scope": {
+        "en": "A direct starting point for the UNESCO-listed page on Li traditional textile techniques.",
+        "zh": "通往 UNESCO 列载黎族传统纺织技艺页面的一手入口。"
+      },
+      "limitation": {
+        "en": "It does not verify individual makers, product authenticity, pricing, ownership, or local availability.",
+        "zh": "不用于核验个体传承人、产品真伪、价格、权属或在地供给。"
+      },
+      "collaborationStatus": "no_partnership_claim"
+    },
+    {
+      "id": "hainan-free-trade-port-source-desk",
+      "sourceRecordId": "hainan-free-trade-port-english-portal",
+      "displayKind": "service_orientation",
+      "status": "reviewed",
+      "title": {
+        "en": "Hainan Free Trade Port: official English portal",
+        "zh": "海南自由贸易港：英文官方门户"
+      },
+      "publisher": "Hainan Free Trade Port official English portal",
+      "canonicalUrl": "https://en.hnftp.gov.cn/",
+      "topics": ["free-trade-port", "policy", "business"],
+      "scope": {
+        "en": "A starting point for checking current public Free Trade Port notices and policy materials.",
+        "zh": "用于核查海南自由贸易港公开通知与政策资料的一手入口。"
+      },
+      "limitation": {
+        "en": "It does not determine individual eligibility, tax treatment, customs clearance, visa outcome, investment approval, or commercial availability.",
+        "zh": "不用于确认个人资格、税务待遇、通关结果、签证结果、投资审批或商业供给。"
+      },
+      "collaborationStatus": "no_partnership_claim"
+    }
+  ]
+}

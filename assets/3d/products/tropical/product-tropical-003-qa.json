@@ -1,0 +1,9 @@
+{
+  "input": "assets\\3d\\products\\tropical\\source\\extracted-product-tropical-003-provider\\8e0cdf7414329694f145401d72f5703e.obj",
+  "webGlb": "assets\\3d\\products\\tropical\\product-tropical-003-web.glb",
+  "mobileGlb": "assets\\3d\\products\\tropical\\product-tropical-003-mobile.glb",
+  "collisionGlb": "assets\\3d\\products\\tropical\\product-tropical-003-collision.glb",
+  "reviewStatus": "needs-review",
+  "aigcStatus": "AIGC concept",
+  "rawSourcePreserved": true
+}

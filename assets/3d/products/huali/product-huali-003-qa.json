@@ -1,0 +1,9 @@
+{
+  "input": "assets\\3d\\products\\huali\\source\\extracted-sku-huali-003-provider\\ffb647b02bee18691f42e1450b978f5a.obj",
+  "webGlb": "assets\\3d\\products\\huali\\product-huali-003-web.glb",
+  "mobileGlb": "assets\\3d\\products\\huali\\product-huali-003-mobile.glb",
+  "collisionGlb": "assets\\3d\\products\\huali\\product-huali-003-collision.glb",
+  "reviewStatus": "needs-review",
+  "aigcStatus": "AIGC concept",
+  "rawSourcePreserved": true
+}

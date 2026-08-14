@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "id": "project-supplied-four-zone-archive",
+      "sourceClass": "supplied_project_media",
+      "status": "reviewed",
+      "publisher": "HAINAN QIONGVERSE project team",
+      "canonicalUrl": null,
+      "language": "en, zh",
+      "checkedAt": "2026-08-14",
+      "zoneIds": ["tropical", "lijin", "huali", "village"],
+      "topicTags": ["exhibition", "zone", "archive", "media", "\u5c55\u5385", "\u5c55\u533a", "\u6863\u6848", "\u7d20\u6750"],
+      "title": { "en": "Supplied project visual archive", "zh": "\u9879\u76ee\u63d0\u4f9b\u7684\u89c6\u89c9\u6863\u6848" },
+      "scope": { "en": "Project-provided visual context for the four exhibition zones. It does not verify external cultural, policy, travel, or commercial claims.", "zh": "\u56db\u4e2a\u5c55\u533a\u7684\u9879\u76ee\u89c6\u89c9\u8bed\u5883\uff0c\u4e0d\u7528\u4e8e\u6838\u9a8c\u5916\u90e8\u6587\u5316\u3001\u653f\u7b56\u3001\u65c5\u884c\u6216\u5546\u4e1a\u4e3b\u5f20\u3002" },
+      "permittedUse": "Internal exhibition context and source labeling only."
+    },
+    {
+      "id": "unesco-li-traditional-textile-techniques",
+      "sourceClass": "verified_primary_source",
+      "status": "reviewed",
+      "publisher": "UNESCO Intangible Cultural Heritage",
+      "canonicalUrl": "https://ich.unesco.org/en/RL/traditional-textile-techniques-of-the-li-ethnic-group-spinning-dyeing-weaving-and-embroidering-00202",
+      "language": "en",
+      "checkedAt": "2026-08-14",
+      "zoneIds": ["lijin"],
+      "topicTags": ["li", "miao", "brocade", "textile", "spinning", "dyeing", "weaving", "embroidering", "heritage", "\u9ece", "\u82d7", "\u9ece\u9526", "\u7eba\u7ec7", "\u7eba\u7eb1", "\u67d3\u8272", "\u7ec7\u9020", "\u523a\u7ee3", "\u975e\u9057"],
+      "title": { "en": "Traditional textile techniques of the Li ethnic group", "zh": "\u9ece\u65cf\u4f20\u7edf\u7eba\u7ec7\u6280\u827a" },
+      "scope": { "en": "General orientation to the UNESCO-listed page on Li traditional textile techniques only. It does not support claims about individual makers, product authenticity, prices, or local availability.", "zh": "\u4ec5\u7528\u4e8e\u8bf4\u660e UNESCO \u5217\u8f7d\u7684\u9ece\u65cf\u4f20\u7edf\u7eba\u7ec7\u6280\u827a\u9875\u9762\uff0c\u4e0d\u5ef6\u4f38\u4e3a\u4e2a\u4f53\u4f20\u627f\u4eba\u3001\u4ea7\u54c1\u771f\u4f2a\u3001\u4ef7\u683c\u6216\u5728\u5730\u4f9b\u7ed9\u7684\u4e3b\u5f20\u3002" },
+      "permittedUse": "Link and brief orientation with attribution; do not reproduce page content wholesale."
+    },
+    {
+      "id": "hainan-free-trade-port-english-portal",
+      "sourceClass": "verified_primary_source",
+      "status": "reviewed",
+      "publisher": "Hainan Free Trade Port official English portal",
+      "canonicalUrl": "https://en.hnftp.gov.cn/",
+      "language": "en",
+      "checkedAt": "2026-08-14",
+      "zoneIds": ["tropical", "lijin", "huali", "village"],
+      "topicTags": ["free trade port", "policy", "customs", "tax", "investment", "business", "trade", "visa", "travel rules", "\u81ea\u8d38\u6e2f", "\u653f\u7b56", "\u6d77\u5173", "\u7a0e", "\u6295\u8d44", "\u5546\u52a1", "\u8d38\u6613", "\u7b7e\u8bc1", "\u65c5\u884c\u89c4\u5b9a"],
+      "title": { "en": "Hainan Free Trade Port official English portal", "zh": "\u6d77\u5357\u81ea\u7531\u8d38\u6613\u6e2f\u82f1\u6587\u5b98\u65b9\u95e8\u6237" },
+      "scope": { "en": "A starting point for checking current public Free Trade Port notices and policy materials. It does not establish individual eligibility, tax treatment, customs clearance, visa outcomes, investment approval, or commercial availability.", "zh": "\u6838\u9a8c\u6d77\u5357\u81ea\u7531\u8d38\u6613\u6e2f\u516c\u5f00\u901a\u77e5\u4e0e\u653f\u7b56\u8d44\u6599\u7684\u4e00\u624b\u5165\u53e3\uff0c\u4e0d\u7528\u4e8e\u786e\u8ba4\u4e2a\u4f53\u8d44\u683c\u3001\u7a0e\u52a1\u5f85\u9047\u3001\u901a\u5173\u7ed3\u679c\u3001\u7b7e\u8bc1\u7ed3\u679c\u3001\u6295\u8d44\u5ba1\u6279\u6216\u5546\u4e1a\u4f9b\u7ed9\u3002" },
+      "permittedUse": "Link visitors to the official portal and state the scope limitation."
+    },
+    {
+      "id": "shellsong-fiction-layer",
+      "sourceClass": "shellsong_fiction",
+      "status": "reviewed",
+      "publisher": "HAINAN QIONGVERSE project team",
+      "canonicalUrl": null,
+      "language": "en, zh",
+      "checkedAt": "2026-08-14",
+      "zoneIds": ["tropical", "lijin", "huali", "village"],
+      "topicTags": ["shellsong", "luoyin", "fiction", "myth", "\u87ba\u97f3", "\u865a\u6784", "\u795e\u8bdd"],
+      "title": { "en": "ShellSong fictional guide layer", "zh": "\u87ba\u97f3\u865a\u6784\u5bfc\u89c8\u5c42" },
+      "scope": { "en": "An original fictional guide layer for HAINAN QIONGVERSE. It is not historical, ethnographic, official, or documentary material.", "zh": "HAINAN QIONGVERSE \u7684\u539f\u521b\u865a\u6784\u5bfc\u89c8\u5c42\uff0c\u4e0d\u6784\u6210\u5386\u53f2\u3001\u4eba\u7c7b\u5b66\u3001\u5b98\u65b9\u6216\u7eaa\u5b9e\u8d44\u6599\u3002" },
+      "permittedUse": "Use only when explicitly labeled as fiction."
+    }
+  ]
+}
