@@ -22,7 +22,7 @@ export const zones: Zone[] = [
     kicker: { en: 'A shoreline that keeps a record', zh: '一条保存记忆的海岸线' },
     description: { en: 'Enter the tide line: mangrove shadows, salt air, and the slow rhythm of an island edge.', zh: '进入潮汐线：红树林的影子、盐的气息，以及岛屿边缘缓慢的节奏。' },
     image: '/assets/zones/tropical/zone-tropical-clean.webp', mobileImage: '/assets/zones/tropical/zone-tropical-portrait.webp',
-    banner: '/assets/user-media2/tropical-hall-banner-01.jpg', poster: '/assets/zones/tropical/zone-tropical-loop-poster.webp', video: '/assets/video/zones/zone-tropical-loop.mp4',
+    banner: '/assets/user-media2/tropical-hall-banner-01.jpg', poster: '/assets/zones/tropical/zone-tropical-loop-poster.webp',
     tag: { en: 'REALITY / COAST', zh: '现实 / 海岸' }, tone: 'tide', guide: { en: 'I can hear the shoreline changing. Start with the coast, then follow the light.', zh: '我听见海岸正在变化。先从海边出发，再沿着光走。' },
   },
   {
@@ -30,7 +30,7 @@ export const zones: Zone[] = [
     kicker: { en: 'Patterns that remember', zh: '把记忆织进纹样' },
     description: { en: 'Slow down with the rhythm of Li brocade: color, geometry, touch, and the people who keep making.', zh: '跟随黎锦的节奏慢下来：颜色、几何、触感，以及持续创造的人们。' },
     image: '/assets/zones/lijin/zone-lijin-clean.webp', mobileImage: '/assets/zones/lijin/zone-lijin-portrait.webp',
-    banner: '/assets/user-media2/limiao-hall-banner-01.jpg', poster: '/assets/zones/lijin/zone-lijin-loop-poster.webp', video: '/assets/video/zones/zone-lijin-loop.mp4',
+    banner: '/assets/user-media2/limiao-hall-banner-01.jpg', poster: '/assets/zones/lijin/zone-lijin-loop-poster.webp',
     tag: { en: 'REALITY / HERITAGE', zh: '现实 / 文化' }, tone: 'woven', guide: { en: 'This pattern is not a decoration to rush past. Let us look at its structure first, then ask what has been carried through it.', zh: '这不是一眼掠过的装饰。让我们先看它的结构，再问它承载了什么。' },
   },
   {
@@ -46,7 +46,7 @@ export const zones: Zone[] = [
     kicker: { en: 'The memory inside wood', zh: '木头里的时间' },
     description: { en: 'A quiet room of grain, carving and material intelligence. Turn the object slowly; every surface changes the light.', zh: '一间关于木纹、雕刻与材料智慧的安静展室。慢慢转动作品，每一面都会改变光。' },
     image: '/assets/zones/huali/zone-huali-clean.webp', mobileImage: '/assets/zones/huali/zone-huali-portrait.webp',
-    banner: '/assets/user-media2/huali-hall-banner-01.jpg', poster: '/assets/zones/huali/zone-huali-loop-poster.webp', video: '/assets/video/zones/zone-huali-loop.mp4',
+    banner: '/assets/user-media2/huali-hall-banner-01.jpg', poster: '/assets/zones/huali/zone-huali-loop-poster.webp',
     tag: { en: 'REALITY / CRAFT', zh: '现实 / 工艺' }, tone: 'amber', guide: { en: 'Quiet here. The wood remembers through its grain. The ShellSong story around it is a fictional layer, not a historical claim.', zh: '这里需要安静。木头通过纹理记忆。围绕它的螺音故事是虚构叙事，不是历史断言。' },
   },
   {
@@ -54,7 +54,7 @@ export const zones: Zone[] = [
     kicker: { en: 'Where memory still lives', zh: '记忆仍在生活里' },
     description: { en: 'Look closer at volcanic stone, fields, pathways and everyday gestures that make a place more than a view.', zh: '看见火山石、田野、路径与日常动作，让地方不止是一幅风景。' },
     image: '/assets/zones/village/zone-village-clean.webp', mobileImage: '/assets/zones/village/zone-village-portrait.webp',
-    banner: '/assets/user-media2/village-hall-banner-01.jpg', poster: '/assets/zones/village/zone-village-loop-poster.webp', video: '/assets/video/zones/zone-village-loop.mp4',
+    banner: '/assets/user-media2/village-hall-banner-01.jpg', poster: '/assets/zones/village/zone-village-loop-poster.webp',
     tag: { en: 'REALITY / LIVING', zh: '现实 / 生活' }, tone: 'village', guide: { en: 'A village is not a backdrop. Listen for the small routines that make a place feel held.', zh: '乡村不是背景。听一听那些让地方被好好守护的日常。' },
   },
 ]
