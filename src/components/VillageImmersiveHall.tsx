@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import type * as ThreeTypes from 'three'
 import type { Language } from '../data'
 import { villageExhibits, villageReferenceImage, villageStatusLabel, type VillageExhibit } from '../village-data'
+import { createImmersiveCameraGuard } from '../immersive-controls'
 
 type Props = { language: Language; onToggleLanguage: () => void; onExit: () => void; onOpenGuide: (exhibit: VillageExhibit) => void }
 type SceneStatus = 'loading' | 'ready' | 'fallback'
@@ -93,7 +94,7 @@ export default function VillageImmersiveHall({ language, onToggleLanguage, onExi
   useEffect(() => {
     if (view !== 'world') return
     const element = mount.current; if (!element) return
-    setSceneStatus('loading'); let disposed = false; let timedOut = false; let frame = 0; let timeout = 0; let renderer: ThreeTypes.WebGLRenderer | null = null; let splat: { initialized: Promise<unknown>; dispose: () => void } | null = null; let resize = () => {}
+    setSceneStatus('loading'); let disposed = false; let timedOut = false; let frame = 0; let timeout = 0; let renderer: ThreeTypes.WebGLRenderer | null = null; let splat: { initialized: Promise<unknown>; dispose: () => void; getBoundingBox?: (centersOnly?: boolean) => ThreeTypes.Box3 } | null = null; let resize = () => {}
     const cleanup = () => { cancelAnimationFrame(frame); clearTimeout(timeout); removeEventListener('resize', resize); splat?.dispose(); renderer?.dispose(); renderer?.domElement.remove() }
     void (async () => {
       try {
@@ -103,8 +104,8 @@ export default function VillageImmersiveHall({ language, onToggleLanguage, onExi
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6)); element.appendChild(renderer.domElement)
         const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(62, 1, .01, 1000); scene.add(new SparkRenderer({ renderer }))
         splat = new SplatMesh({ url: '/assets/3d/countryside/countryside world.spz' }) as unknown as { initialized: Promise<unknown>; dispose: () => void }; scene.add(splat as unknown as ThreeTypes.Object3D)
-        const controls = new SparkControls({ canvas: renderer.domElement }); resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
-        const render = () => { if (!renderer || disposed || timedOut) return; controls.update(camera); renderer.render(scene, camera); frame = requestAnimationFrame(render) }; render()
+        const controls = new SparkControls({ canvas: renderer.domElement }); const cameraGuard = createImmersiveCameraGuard(controls, camera, splat); resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
+        const render = () => { if (!renderer || disposed || timedOut) return; controls.update(camera); cameraGuard.clamp(); renderer.render(scene, camera); frame = requestAnimationFrame(render) }; render()
         timeout = window.setTimeout(() => { if (!disposed) { timedOut = true; cleanup(); setSceneStatus('fallback') } }, 12000)
         await splat.initialized; clearTimeout(timeout); if (timedOut || disposed) return
         camera.position.set(0, 0, 0); camera.up.set(0, 0, 1); camera.lookAt(1, 0, 0); camera.updateMatrixWorld(true); setSceneStatus('ready')
