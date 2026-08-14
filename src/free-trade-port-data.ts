@@ -10,7 +10,11 @@ export type FreeTradePortExhibit = {
 }
 
 export const freeTradePortSourceUrl = 'https://en.hnftp.gov.cn/'
-export const freeTradePortReferenceImage = '/assets/3d/zimaogang/zimaogang.jpg'
+// Bump this version whenever the authored SPZ/JPG pair is replaced so an
+// updated same-name asset is requested instead of a previously cached file.
+export const freeTradePortSceneVersion = '20260814-v3'
+export const freeTradePortWorldUrl = `/assets/3d/zimaogang/zimaogang.spz?v=${freeTradePortSceneVersion}`
+export const freeTradePortReferenceImage = `/assets/3d/zimaogang/zimaogang.jpg?v=${freeTradePortSceneVersion}`
 
 export const freeTradePortExhibits: FreeTradePortExhibit[] = [
   {
