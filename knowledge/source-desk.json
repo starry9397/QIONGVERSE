@@ -44,6 +44,28 @@
         "zh": "不用于确认个人资格、税务待遇、通关结果、签证结果、投资审批或商业供给。"
       },
       "collaborationStatus": "no_partnership_claim"
+    },
+    {
+      "id": "cnsa-aerospace-source-desk",
+      "sourceRecordId": "cnsa-english-portal",
+      "displayKind": "verified_source",
+      "status": "reviewed",
+      "title": {
+        "en": "China National Space Administration: official English portal",
+        "zh": "中国国家航天局：英文官方门户"
+      },
+      "publisher": "China National Space Administration",
+      "canonicalUrl": "https://www.cnsa.gov.cn/english/",
+      "topics": ["aerospace", "space", "wenchang"],
+      "scope": {
+        "en": "A general background entry point for public aerospace information published by the China National Space Administration.",
+        "zh": "用于查阅中国国家航天局公开航天信息的一般背景入口。"
+      },
+      "limitation": {
+        "en": "It does not verify this project's visual assets, mission schedules, technical specifications, tickets, commercial arrangements or individual eligibility.",
+        "zh": "不用于核验本项目视觉素材、任务时间表、技术参数、票务、商业安排或个人资格。"
+      },
+      "collaborationStatus": "no_partnership_claim"
     }
   ]
 }

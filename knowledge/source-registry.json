@@ -44,6 +44,20 @@
       "permittedUse": "Link visitors to the official portal and state the scope limitation."
     },
     {
+      "id": "cnsa-english-portal",
+      "sourceClass": "verified_primary_source",
+      "status": "reviewed",
+      "publisher": "China National Space Administration",
+      "canonicalUrl": "https://www.cnsa.gov.cn/english/",
+      "language": "en",
+      "checkedAt": "2026-08-14",
+      "zoneIds": ["aerospace"],
+      "topicTags": ["aerospace", "spaceflight", "space", "wenchang", "航天", "太空", "文昌"],
+      "title": { "en": "China National Space Administration English portal", "zh": "中国国家航天局英文门户" },
+      "scope": { "en": "A general public entry point for checking aerospace information published by the China National Space Administration. It does not verify project-supplied exhibition images or make current operational claims for this project.", "zh": "用于查阅中国国家航天局公开航天信息的一般入口，不用于核验本项目提供的展厅图像，也不对本项目作出当前运行事实主张。" },
+      "permittedUse": "Link to the official portal for general background orientation with attribution and scope limitation."
+    },
+    {
       "id": "shellsong-fiction-layer",
       "sourceClass": "shellsong_fiction",
       "status": "reviewed",
