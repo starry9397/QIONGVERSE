@@ -3,7 +3,7 @@ import type * as ThreeTypes from 'three'
 import type { Language } from '../data'
 import { createImmersiveCameraGuard } from '../immersive-controls'
 import { avatarWorldConfigs, createLuoyinAvatarController, type LuoyinAvatarController } from '../luoyin-avatar'
-import { freeTradePortExhibits, freeTradePortReferenceImage, freeTradePortSourceUrl, type FreeTradePortExhibit } from '../free-trade-port-data'
+import { freeTradePortExhibits, freeTradePortReferenceImage, freeTradePortSourceUrl, freeTradePortWorldUrl, type FreeTradePortExhibit } from '../free-trade-port-data'
 
 type Props = { language: Language; onToggleLanguage: () => void; onExit: () => void; onOpenReadingRoom: () => void; onOpenGuide: (exhibit: FreeTradePortExhibit) => void }
 type SceneStatus = 'loading' | 'ready' | 'fallback'
@@ -51,7 +51,7 @@ export default function FreeTradePortImmersiveHall({ language, onToggleLanguage,
       const THREE = await import('three'); const { SparkRenderer, SplatMesh, SparkControls } = await import('@sparkjsdev/spark'); if (disposed) return
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6)); element.appendChild(renderer.domElement)
       const scene = new THREE.Scene(); const contactScene = new THREE.Scene(); const avatarScene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(62, 1, .01, 1000); scene.add(new SparkRenderer({ renderer }))
-      splat = new SplatMesh({ url: '/assets/3d/zimaogang/zimaogang.spz' }) as unknown as { initialized: Promise<unknown>; dispose: () => void; getBoundingBox: (centersOnly?: boolean) => ThreeTypes.Box3 }; scene.add(splat as unknown as ThreeTypes.Object3D)
+      splat = new SplatMesh({ url: freeTradePortWorldUrl }) as unknown as { initialized: Promise<unknown>; dispose: () => void; getBoundingBox: (centersOnly?: boolean) => ThreeTypes.Box3 }; scene.add(splat as unknown as ThreeTypes.Object3D)
       const controls = new SparkControls({ canvas: renderer.domElement }); const cameraGuard = createImmersiveCameraGuard(controls, camera, splat); disposeCameraGuard = cameraGuard.dispose
       avatar = createLuoyinAvatarController({ scene, avatarScene, contactScene, camera, renderer, controls, splat, config: avatarWorldConfigs.freeTradePort, onState: setAvatarState }); avatarRef.current = avatar
       resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
