@@ -6,7 +6,7 @@ This module adds an optional third-person Luoyin guide character to the four exi
 
 ## Asset boundary
 
-`luoyin_body.glb` is preserved as the source asset. Blender 5.2 prepares two web exports with a lightweight armature, skinning, and the `Luoyin_Idle`, `Luoyin_Walk`, `Luoyin_TurnLeft`, and `Luoyin_TurnRight` clips. The exported GLB files are project-supplied AIGC/curatorial assets. Their presence does not establish a partnership, endorsement, product, historical identity, or commercial availability.
+`luoyin_body.glb` is preserved as the source asset. The original armature experiment is superseded by Module Guide 22: Blender 5.2 now prepares two clean static web exports with one mesh and no skinning or animation clips. The exported GLB files are project-supplied AIGC/curatorial assets. Their presence does not establish a partnership, endorsement, product, historical identity, or commercial availability.
 
 The desktop and mobile files are loaded from `/assets/3d/luoyin/` only after the user activates the character. Draco decoder files are served locally from `/draco/`; no third-party runtime request is needed for model decoding.
 
@@ -18,7 +18,7 @@ The desktop and mobile files are loaded from `/assets/3d/luoyin/` only after the
 - `WASD` and arrow keys move relative to the horizontal camera heading. Hold `Shift` while moving to sprint; press `Space` for a short hop that can be combined with horizontal movement.
 - Pointer drag or one-finger touch orbits horizontally and allows only a small, bounded pitch. Wheel and two-finger pinch adjust distance within fixed limits.
 - Each hall supplies its own spawn, floor, radius, and rectangular safety bounds. SPZ scenes do not provide a navigation mesh, so the controller does not claim object-level collision detection or permit travel outside the configured safe region.
-- The render loop pauses when the component is unmounted or the page switches to the exhibit index. Controller disposal removes listeners, animation mixers, cloned objects, and renderer resources.
+- The render loop pauses when the component is unmounted or the page switches to the exhibit index. Controller disposal removes listeners, cloned objects, local guide lights, and renderer resources.
 
 ## Failure and accessibility states
 
@@ -36,7 +36,7 @@ This module does not request camera access, use MediaPipe, call a new API, expos
 
 - [ ] Four halls start with the character hidden and without a character network request.
 - [ ] Activating the button loads the matching GLB and shows `Luoyin ready`.
-- [ ] Idle/walk animation, movement, bounded orbit, zoom, and pitch limits work with mouse, touch, and keyboard.
+- [ ] Static character movement, sprint, hop, bounded orbit, zoom, and pitch limits work with mouse, touch, and keyboard.
 - [ ] Hiding the character restores free Spark camera control.
 - [ ] Character load failure leaves the hall usable and reports the fallback message.
 - [ ] SPZ failure leaves static media, exhibit index, guide entry, and return controls usable.

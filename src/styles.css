@@ -566,6 +566,10 @@ a { color: inherit; text-decoration: none; }
 .luoyin-avatar-button:disabled { cursor: wait; opacity: .58; }
 .luoyin-avatar-status { max-width: 320px; color: rgba(255,244,222,.78); font: 10px/1.45 var(--mono); text-align: right; }
 .luoyin-avatar-status::after { content: 'Shift sprint · Space hop / Shift 冲刺 · 空格跳跃'; display: block; margin-top: 3px; color: rgba(255,244,222,.58); }
+.limiao-hall[data-avatar-state="ready"] .limiao-exhibit-strip,
+.aerospace-hall[data-avatar-state="ready"] .aerospace-exhibit-strip,
+.huali-hall[data-avatar-state="ready"] .huali-exhibit-strip,
+.village-hall[data-avatar-state="ready"] .village-exhibit-strip { display: none; }
 .aerospace-hall .luoyin-avatar-button { border-color: rgba(110,200,255,.72); background: rgba(7,24,43,.88); }
 .aerospace-hall .luoyin-avatar-button:hover, .aerospace-hall .luoyin-avatar-button:focus-visible { color: #b8e4ff; border-color: #b8e4ff; }
 .village-hall .luoyin-avatar-button { border-color: rgba(188,218,132,.72); background: rgba(18,42,25,.88); }

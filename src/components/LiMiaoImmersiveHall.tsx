@@ -27,7 +27,7 @@ function TidePulse({ reduced, paused, pulse }: { reduced: boolean; paused: boole
       context.clearRect(0, 0, canvas.width, canvas.height)
       pulses.current = pulses.current.filter((pulse) => now - pulse.born < 900)
       for (const pulse of pulses.current) {
-        const progress = Math.min(1, (now - pulse.born) / 900)
+        const progress = Math.max(0, Math.min(1, (now - pulse.born) / 900))
         const radius = (reduced ? 42 : 120) * progress * devicePixelRatio
         context.beginPath(); context.arc(pulse.x * devicePixelRatio, pulse.y * devicePixelRatio, radius, 0, Math.PI * 2)
         context.strokeStyle = `rgba(232, 201, 135, ${0.85 * (1 - progress)})`; context.lineWidth = Math.max(1, 2.2 * devicePixelRatio); context.stroke()
@@ -112,11 +112,12 @@ export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit
     if (view !== 'world') return
     const element = mount.current; if (!element) return
     setSceneStatus('loading')
-    let disposed = false; let timedOut = false; let frame = 0; let timeout = 0; let renderer: ThreeTypes.WebGLRenderer | null = null; let splat: { initialized: Promise<unknown>; dispose: () => void; getBoundingBox?: (centersOnly?: boolean) => ThreeTypes.Box3 } | null = null; let resize = () => {}; let avatar: LuoyinAvatarController | null = null
+    let disposed = false; let timedOut = false; let frame = 0; let timeout = 0; let renderer: ThreeTypes.WebGLRenderer | null = null; let splat: { initialized: Promise<unknown>; dispose: () => void; getBoundingBox?: (centersOnly?: boolean) => ThreeTypes.Box3 } | null = null; let resize = () => {}; let avatar: LuoyinAvatarController | null = null; let disposeCameraGuard = () => {}
     let cleanup = () => {
       cancelAnimationFrame(frame)
       clearTimeout(timeout)
       removeEventListener('resize', resize)
+      disposeCameraGuard()
       splat?.dispose()
       renderer?.dispose()
       renderer?.domElement.remove()
@@ -130,13 +131,13 @@ export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit
         const THREE = await import('three'); const { SparkRenderer, SplatMesh, SparkControls } = await import('@sparkjsdev/spark')
         if (disposed) return
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6)); element.appendChild(renderer.domElement)
-        const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(62, 1, .01, 1000); const spark = new SparkRenderer({ renderer }); scene.add(spark)
+        const scene = new THREE.Scene(); const contactScene = new THREE.Scene(); const avatarScene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(62, 1, .01, 1000); const spark = new SparkRenderer({ renderer }); scene.add(spark)
         splat = new SplatMesh({ url: '/assets/3d/limiao/limiao world.spz' }) as unknown as { initialized: Promise<unknown>; dispose: () => void; getBoundingBox: (centersOnly?: boolean) => ThreeTypes.Box3 }; const splatObject = splat as unknown as ThreeTypes.Object3D; scene.add(splatObject)
-        const controls = new SparkControls({ canvas: renderer.domElement }); const cameraGuard = createImmersiveCameraGuard(controls, camera, splat)
-        avatar = createLuoyinAvatarController({ scene, camera, renderer, controls, splat, config: avatarWorldConfigs.limiao, onState: setAvatarState }); avatarRef.current = avatar
+        const controls = new SparkControls({ canvas: renderer.domElement }); const cameraGuard = createImmersiveCameraGuard(controls, camera, splat); disposeCameraGuard = cameraGuard.dispose
+        avatar = createLuoyinAvatarController({ scene, avatarScene, contactScene, camera, renderer, controls, splat, config: avatarWorldConfigs.limiao, onState: setAvatarState }); avatarRef.current = avatar
         resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
         let lastFrame = performance.now()
-        const render = () => { if (!renderer || disposed || timedOut) return; const now = performance.now(); const delta = Math.min(.05, (now - lastFrame) / 1000); lastFrame = now; if (avatar?.getState() !== 'ready') controls.update(camera); avatar?.update(delta); cameraGuard.clamp(); renderer.render(scene, camera); frame = requestAnimationFrame(render) }; render(); timeout = window.setTimeout(() => { if (!disposed) { timedOut = true; cleanup(); setSceneStatus('fallback') } }, 12000); await splat.initialized
+        const render = () => { if (!renderer || disposed || timedOut) return; const now = performance.now(); const delta = Math.min(.05, (now - lastFrame) / 1000); lastFrame = now; if (avatar?.getState() === 'ready') avatar.update(delta); else { controls.update(camera); cameraGuard.clamp() } renderer.render(scene, camera); if (avatar?.getState() === 'ready') { renderer.autoClear = false; renderer.clearDepth(); renderer.render(contactScene, camera); renderer.render(avatarScene, camera); renderer.autoClear = true } frame = requestAnimationFrame(render) }; render(); timeout = window.setTimeout(() => { if (!disposed) { timedOut = true; cleanup(); setSceneStatus('fallback') } }, 12000); await splat.initialized
         clearTimeout(timeout)
         if (timedOut || disposed) return
         camera.position.set(0, 0, 0); camera.up.set(0, 0, 1); camera.lookAt(1, 0, 0); camera.updateMatrixWorld(true)
@@ -151,7 +152,7 @@ export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit
   const gesture = 'idle' as 'idle' | 'ready' | 'paused'
   const gestureText: Record<'idle' | 'ready' | 'paused', string> = { idle: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用'), ready: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用'), paused: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用') }
   const videoRef = useRef<HTMLVideoElement>(null)
-  return <div className="limiao-hall">
+  return <div className="limiao-hall" data-avatar-state={avatarState}>
     {view === 'world' && <div className="luoyin-avatar-floating"><button className="luoyin-avatar-button" type="button" disabled={sceneStatus !== 'ready' || avatarState === 'loading'} onClick={toggleAvatar}>{avatarState === 'ready' ? tx(language, 'Hide Luoyin', '隐藏螺音') : avatarState === 'loading' ? tx(language, 'Loading Luoyin', '正在加载螺音') : tx(language, 'Show Luoyin', '显示螺音')}</button><span className="luoyin-avatar-status" aria-live="polite">{avatarState === 'failed' ? tx(language, '3D character unavailable. Free camera remains available.', '3D 角色暂不可用，仍可使用自由相机浏览。') : avatarState === 'ready' ? tx(language, 'Luoyin ready · WASD / arrows to walk · drag to orbit · wheel to zoom', '螺音已准备 · WASD / 方向键行走 · 拖动环绕 · 滚轮缩放') : ''}</span></div>}
     <header className="limiao-header"><a className="brand" href="#top" onClick={(event) => { event.preventDefault(); onExit() }}><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /></a><p>{view === 'world' ? 'LI & MIAO / IMMERSIVE HALL' : 'LI & MIAO / EXHIBIT INDEX'}</p><div><button type="button" onClick={onToggleLanguage}>EN / 中</button><button type="button" onClick={onExit}>{tx(language, 'Back to four rooms', '返回四域展厅')}</button></div></header>
     {view === 'world' ? <main className="limiao-stage">

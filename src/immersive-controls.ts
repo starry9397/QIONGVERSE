@@ -1,6 +1,9 @@
 import type { Box3, Camera } from 'three'
 
 type PointerControlsLike = {
+  enable?: boolean
+  canvas?: HTMLCanvasElement
+  update?: (...args: any[]) => boolean
   rotateSpeed?: number
   rotateInertia?: number
   moveInertia?: number
@@ -25,12 +28,17 @@ type SplatBoundsLike = {
 
 type CameraGuard = {
   clamp: () => void
+  dispose: () => void
 }
 
 const finiteBox = (box: Box3 | undefined) => Boolean(box && Number.isFinite(box.min.x) && Number.isFinite(box.min.y) && Number.isFinite(box.min.z) && Number.isFinite(box.max.x) && Number.isFinite(box.max.y) && Number.isFinite(box.max.z) && box.max.x > box.min.x && box.max.y > box.min.y && box.max.z > box.min.z)
 
 /** Keeps Spark's free camera usable inside a splat without allowing roll or inversion. */
-export function createImmersiveCameraGuard(controls: SparkControlsLike, camera: Camera, splat?: SplatBoundsLike): CameraGuard {
+export function createImmersiveCameraGuard(
+  controls: SparkControlsLike,
+  camera: Camera,
+  splat?: SplatBoundsLike,
+): CameraGuard {
   const pointer = controls.pointerControls
   if (pointer) {
     pointer.rotateSpeed = Math.min(pointer.rotateSpeed ?? .0025, .0025)
@@ -47,6 +55,61 @@ export function createImmersiveCameraGuard(controls: SparkControlsLike, camera: 
   }
 
   let bounds: Box3 | null = null
+  let orientationReady = false
+  let yaw = 0
+  let pitch = 0
+  let activePointer: number | null = null
+  let lastPointer = { x: 0, y: 0 }
+  const canvas = pointer?.canvas
+
+  const syncOrientation = () => {
+    const direction = camera.getWorldDirection(camera.position.clone())
+    const horizontal = Math.hypot(direction.x, direction.y) || 1
+    yaw = Math.atan2(direction.y, direction.x)
+    pitch = Math.atan2(direction.z, horizontal)
+    orientationReady = true
+  }
+  const applyOrientation = () => {
+    const direction = camera.position.clone().set(
+      Math.cos(yaw) * Math.cos(pitch),
+      Math.sin(yaw) * Math.cos(pitch),
+      Math.sin(pitch),
+    )
+    camera.up.set(0, 0, 1)
+    camera.lookAt(camera.position.clone().add(direction))
+    camera.updateMatrixWorld(true)
+  }
+
+  // Spark's built-in PointerControls uses Y-up Euler rotation. The splat halls
+  // are Z-up, which cross-wires horizontal drag into vertical motion. Retain
+  // its enable state for avatar mode, but replace only its pointer update with
+  // an explicit Z-up yaw/pitch controller.
+  if (pointer) pointer.update = () => false
+  const onPointerDown = (event: PointerEvent) => {
+    if (!pointer || pointer.enable === false || event.button !== 0) return
+    if (!orientationReady) syncOrientation()
+    activePointer = event.pointerId
+    lastPointer = { x: event.clientX, y: event.clientY }
+    canvas?.setPointerCapture(event.pointerId)
+  }
+  const onPointerMove = (event: PointerEvent) => {
+    if (!pointer || pointer.enable === false || activePointer !== event.pointerId) return
+    const dx = event.clientX - lastPointer.x
+    const dy = event.clientY - lastPointer.y
+    lastPointer = { x: event.clientX, y: event.clientY }
+    yaw -= dx * .006
+    pitch = Math.max(-.82, Math.min(.82, pitch - dy * .004))
+    applyOrientation()
+  }
+  const onPointerUp = (event: PointerEvent) => {
+    if (activePointer !== event.pointerId) return
+    try { canvas?.releasePointerCapture(event.pointerId) } catch { /* pointer was already released */ }
+    activePointer = null
+  }
+  canvas?.addEventListener('pointerdown', onPointerDown)
+  canvas?.addEventListener('pointermove', onPointerMove)
+  canvas?.addEventListener('pointerup', onPointerUp)
+  canvas?.addEventListener('pointercancel', onPointerUp)
   const fallbackMin = camera.position.clone().add({ x: -4, y: -4, z: -2 })
   const fallbackMax = camera.position.clone().add({ x: 4, y: 4, z: 2.5 })
   const getBounds = () => {
@@ -66,21 +129,22 @@ export function createImmersiveCameraGuard(controls: SparkControlsLike, camera: 
 
   const clamp = () => {
     camera.up.set(0, 0, 1)
+    if (pointer?.enable === false) {
+      orientationReady = false
+    } else if (!orientationReady) syncOrientation()
     const activeBounds = getBounds()
     if (activeBounds) camera.position.clamp(activeBounds.min, activeBounds.max)
     else camera.position.clamp(fallbackMin, fallbackMax)
 
-    const direction = camera.getWorldDirection(camera.position.clone())
-    const horizontal = Math.hypot(direction.x, direction.y) || 1
-    const pitch = Math.atan2(direction.z, horizontal)
-    const limitedPitch = Math.max(-.82, Math.min(.82, pitch))
-    if (Math.abs(pitch - limitedPitch) > .001) {
-      const limitedDirection = direction.clone()
-      const horizontalScale = Math.cos(limitedPitch)
-      limitedDirection.set((direction.x / horizontal) * horizontalScale, (direction.y / horizontal) * horizontalScale, Math.sin(limitedPitch))
-      camera.lookAt(camera.position.clone().add(limitedDirection))
-    }
   }
 
-  return { clamp }
+  const dispose = () => {
+    canvas?.removeEventListener('pointerdown', onPointerDown)
+    canvas?.removeEventListener('pointermove', onPointerMove)
+    canvas?.removeEventListener('pointerup', onPointerUp)
+    canvas?.removeEventListener('pointercancel', onPointerUp)
+    activePointer = null
+  }
+
+  return { clamp, dispose }
 }
