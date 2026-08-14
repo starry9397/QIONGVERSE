@@ -145,6 +145,12 @@ const zones = {
     context: 'A supplied visual archive about volcanic stone, fields, pathways, and everyday gestures. Do not invent a named village, visitor metric, or testimonial.',
     mock: { en: 'A village is not a backdrop. Listen for the small routines that make a place feel held.', zh: '乡村不是背景。听一听那些让地方被好好守护的日常。' },
   },
+  'free-trade-port': {
+    title: 'Free Trade Port',
+    sourceLabel: 'Supplied project asset / 项目提供素材',
+    context: 'A project-curated visual archive about port connection, logistics, public-information pathways, and outward-looking exchange. Do not invent policy outcomes, eligibility, prices, schedules, or commercial promises.',
+    mock: { en: 'The Free Trade Port hall is a project-curated visual orientation. For current public information, check the Hainan Free Trade Port official English portal.', zh: '自贸港展厅提供项目策展的视觉导览；当前公共信息请查阅海南自由贸易港英文官方门户。' },
+  },
 }
 
 function corsHeadersForOrigin(origin) {

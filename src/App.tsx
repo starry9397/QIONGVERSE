@@ -8,6 +8,7 @@ const AerospaceImmersiveHall = lazy(() => import('./components/AerospaceImmersiv
 const HualiImmersiveHall = lazy(() => import('./components/HualiImmersiveHall'))
 const VillageImmersiveHall = lazy(() => import('./components/VillageImmersiveHall'))
 const TropicalImmersiveHall = lazy(() => import('./components/TropicalImmersiveHall'))
+const FreeTradePortImmersiveHall = lazy(() => import('./components/FreeTradePortImmersiveHall'))
 
 type SourceDeskEntry = {
   id: string
@@ -72,7 +73,9 @@ function App() {
   const [activeNav, setActiveNav] = useState(1)
   const [exhibitionMenuOpen, setExhibitionMenuOpen] = useState(false)
   const [hallNotice, setHallNotice] = useState('')
-  const [activeHall, setActiveHall] = useState<'tropical' | 'limiao' | 'aerospace' | 'huali' | 'village' | null>(() => window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : null)
+  const [activeHall, setActiveHall] = useState<'tropical' | 'limiao' | 'aerospace' | 'huali' | 'village' | 'freeTradePort' | null>(() => window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : window.location.hash === '#free-trade-hall' ? 'freeTradePort' : null)
+  const [guideZoneId, setGuideZoneId] = useState('tropical')
+  const [guideZoneTitle, setGuideZoneTitle] = useState(zones[0].title)
   const exhibitionRef = useRef<HTMLElement>(null)
   const guideTranscriptRef = useRef<HTMLDivElement>(null)
   const guideInputRef = useRef<HTMLInputElement>(null)
@@ -102,6 +105,8 @@ function App() {
 
   const switchZone = (index: number) => {
     setActiveZone(index)
+    setGuideZoneId(zones[index]?.id || 'tropical')
+    setGuideZoneTitle(zones[index]?.title || zones[0].title)
     setMediaOpen(false)
     setMediaFailed(false)
   }
@@ -120,7 +125,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const syncHallRoute = () => setActiveHall(window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : null)
+    const syncHallRoute = () => setActiveHall(window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : window.location.hash === '#free-trade-hall' ? 'freeTradePort' : null)
     window.addEventListener('hashchange', syncHallRoute)
     return () => window.removeEventListener('hashchange', syncHallRoute)
   }, [])
@@ -198,6 +203,14 @@ function App() {
     setActiveHall('village')
   }
 
+  const openFreeTradePortHall = () => {
+    setExhibitionMenuOpen(false)
+    setGuideZoneId('free-trade-port')
+    setGuideZoneTitle({ en: 'Free Trade Port', zh: '自贸港' })
+    window.location.hash = 'free-trade-hall'
+    setActiveHall('freeTradePort')
+  }
+
   const openZoneHall = (index: number) => {
     setExhibitionMenuOpen(false)
     if (zones[index]?.id === 'tropical') {
@@ -239,14 +252,19 @@ function App() {
     setGuideMessages((messages) => [...messages, visitorMessage].slice(-24))
     let completed = false
     try {
-      const response = await fetch(apiPath('/api/luoyin'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ question: trimmed, language, zoneId: zone.id }) })
+      const response = await fetch(apiPath('/api/luoyin'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ question: trimmed, language, zoneId: guideZoneId }) })
       const payload = await response.json() as { answer?: string; layer?: string; sourceLabel?: string; sourceUrl?: string | null; sourceClass?: string; sourceStatus?: string; handoff?: boolean; mode?: 'local' | 'mock' | 'glm' | 'fallback' }
       if (!payload.answer) throw new Error('empty_response')
-      const guideMessage: GuideMessage = { id: `guide-${Date.now()}`, role: 'guide', text: payload.answer || '', zoneTitle: zone.title[language], layer: payload.layer || 'local_contextual_guide', sourceLabel: payload.sourceLabel || (language === 'en' ? 'Local contextual guide' : '本地语境导览'), sourceUrl: payload.sourceUrl || null, sourceClass: payload.sourceClass || '', sourceStatus: payload.sourceStatus || '', mode: payload.mode === 'glm' ? 'glm' : payload.mode === 'fallback' ? 'fallback' : payload.mode === 'local' ? 'local' : 'mock' }
+      const guideMessage: GuideMessage = { id: `guide-${Date.now()}`, role: 'guide', text: payload.answer || '', zoneTitle: guideZoneTitle[language], layer: payload.layer || 'local_contextual_guide', sourceLabel: payload.sourceLabel || (language === 'en' ? 'Local contextual guide' : '本地语境导览'), sourceUrl: payload.sourceUrl || null, sourceClass: payload.sourceClass || '', sourceStatus: payload.sourceStatus || '', mode: payload.mode === 'glm' ? 'glm' : payload.mode === 'fallback' ? 'fallback' : payload.mode === 'local' ? 'local' : 'mock' }
       setGuideMessages((messages) => [...messages, guideMessage].slice(-24))
       completed = true
     } catch {
-      const fallbackMessage: GuideMessage = { id: `fallback-${Date.now()}`, role: 'guide', text: zone.guide[language], zoneTitle: zone.title[language], layer: language === 'en' ? 'offline fallback' : '离线本地回退', sourceLabel: language === 'en' ? 'Offline local fallback' : '离线本地回退', sourceClass: 'ai_suggestion', sourceStatus: 'blocked', mode: 'error' }
+      const fallbackText = guideZoneId === 'free-trade-port'
+        ? language === 'en'
+          ? 'This Free Trade Port room is a project-curated visual orientation. Check the official Hainan Free Trade Port English portal for current public information.'
+          : '自贸港展厅提供项目策展的视觉导览。当前公共信息请查阅海南自由贸易港英文官方门户。'
+        : zone.guide[language]
+      const fallbackMessage: GuideMessage = { id: `fallback-${Date.now()}`, role: 'guide', text: fallbackText, zoneTitle: guideZoneTitle[language], layer: language === 'en' ? 'offline fallback' : '离线本地回退', sourceLabel: language === 'en' ? 'Offline local fallback' : '离线本地回退', sourceClass: 'ai_suggestion', sourceStatus: 'blocked', mode: 'error' }
       setGuideMessages((messages) => [...messages, fallbackMessage].slice(-24))
     } finally {
       setLoading(false)
@@ -314,7 +332,8 @@ function App() {
   const zoneMeta = useMemo(() => `${zone.index} / 05`, [zone.index])
 
   return <div className="site-shell">
-    {activeHall === 'tropical' ? <Suspense fallback={<main className="tropical-loading">Opening the Tropical Island Hall…</main>}><TropicalImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(0)} onOpenGuide={(exhibit) => { setActiveZone(0); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'limiao' ? <Suspense fallback={<main className="limiao-loading">Opening the Li &amp; Miao Immersive Hall…</main>}><LiMiaoImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(1)} onOpenGuide={(exhibit) => { setActiveZone(1); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'aerospace' ? <Suspense fallback={<main className="aerospace-loading">Opening the Wenchang Aerospace Hall…</main>}><AerospaceImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(2)} onOpenGuide={(exhibit) => { setActiveZone(2); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'huali' ? <Suspense fallback={<main className="huali-loading">Opening the Dongfang Rosewood Hall…</main>}><HualiImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(3)} onOpenGuide={(exhibit) => { setActiveZone(3); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'village' ? <Suspense fallback={<main className="village-loading">Opening the Beautiful Villages Hall…</main>}><VillageImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(4)} onOpenGuide={(exhibit) => { setActiveZone(4); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : <>
+    {activeHall === 'tropical' && <TropicalImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(0)} onOpenGuide={(exhibit) => { setActiveZone(0); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : exhibit.title.zh); setGuideOpen(true) }} />}
+    {activeHall === 'limiao' ? <Suspense fallback={<main className="limiao-loading">Opening the Li &amp; Miao Immersive Hall…</main>}><LiMiaoImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(1)} onOpenGuide={(exhibit) => { setActiveZone(1); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'aerospace' ? <Suspense fallback={<main className="aerospace-loading">Opening the Wenchang Aerospace Hall…</main>}><AerospaceImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(2)} onOpenGuide={(exhibit) => { setActiveZone(2); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'huali' ? <Suspense fallback={<main className="huali-loading">Opening the Dongfang Rosewood Hall…</main>}><HualiImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(3)} onOpenGuide={(exhibit) => { setActiveZone(3); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'village' ? <Suspense fallback={<main className="village-loading">Opening the Beautiful Villages Hall…</main>}><VillageImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(4)} onOpenGuide={(exhibit) => { setActiveZone(4); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'freeTradePort' ? <Suspense fallback={<main className="ftp-loading">Opening the Free Trade Port Immersive Hall…</main>}><FreeTradePortImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(0)} onOpenReadingRoom={() => { window.location.hash = 'free-trade-port-hall'; setActiveHall(null); window.setTimeout(() => scrollToTarget('free-trade-port-hall', 2), 0) }} onOpenGuide={(exhibit) => { setGuideZoneId('free-trade-port'); setGuideZoneTitle({ en: 'Free Trade Port', zh: '自贸港' }); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + ' in the Free Trade Port hall.' : '请介绍自贸港展厅中的' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : <>
     <header className="site-header">
       <a className="brand" href="#top" aria-label="HAINAN QIONGVERSE home">
         <img className="project-logo" src="/assets/logo.png" alt="QIONGVERSE project logo" />
@@ -331,7 +350,7 @@ function App() {
             </div>
           </>}
         </div>
-        <a className={activeNav === 2 ? 'nav-link active' : 'nav-link'} href="#free-trade-port-hall" onClick={(event) => { event.preventDefault(); setExhibitionMenuOpen(false); scrollToTarget('free-trade-port-hall', 2) }}>{t.nav[2]}</a>
+        <a className={activeNav === 2 ? 'nav-link active' : 'nav-link'} href="#free-trade-hall" onClick={(event) => { event.preventDefault(); openFreeTradePortHall() }}>{t.nav[2]}</a>
       </nav>
       <div className="header-actions">
         <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')} aria-label="Switch language">
@@ -373,7 +392,7 @@ function App() {
           <p className="eyebrow">{language === 'en' ? '05 / HAINAN PROVINCE' : '05 / 海南省'}</p>
           <h2 id="free-trade-portal-title">{language === 'en' ? 'Free Trade Port Main Hall' : '自贸港主展厅'}</h2>
           <p>{language === 'en' ? 'A public reading entrance for checking current Hainan Free Trade Port information through reviewed official sources.' : '面向公众的阅读入口，通过已核验的官方来源了解当前海南自由贸易港信息。'}</p>
-          <div className="free-trade-portal-actions"><a className="primary-button" href="#free-trade-port-hall" onClick={(event) => { event.preventDefault(); scrollToTarget('free-trade-port-hall', 2) }}>{language === 'en' ? 'Enter main hall' : '进入主展厅'} <span>↗</span></a><button className="outline-button" onClick={() => scrollToTarget('exhibition', 1)}>{language === 'en' ? 'Open virtual halls' : '打开虚拟展厅'} <span>↗</span></button><button className="archive-text-action" onClick={() => setGuideOpen(true)}>{language === 'en' ? 'Ask Luoyin for orientation' : '询问螺音导览'}</button></div>
+          <div className="free-trade-portal-actions"><a className="primary-button" href="#free-trade-hall" onClick={(event) => { event.preventDefault(); openFreeTradePortHall() }}>{language === 'en' ? 'Enter main hall' : '进入主展厅'} <span>↗</span></a><button className="outline-button" onClick={() => scrollToTarget('exhibition', 1)}>{language === 'en' ? 'Open virtual halls' : '打开虚拟展厅'} <span>↗</span></button><button className="archive-text-action" onClick={() => setGuideOpen(true)}>{language === 'en' ? 'Ask Luoyin for orientation' : '询问螺音导览'}</button></div>
           <small>{language === 'en' ? 'Public-information orientation only. Not a policy approval, eligibility check or commercial promise.' : '仅作公共信息导览，不构成政策审批、资格判断或商业承诺。'}</small>
         </div>
       </section>
@@ -443,7 +462,7 @@ function App() {
 
     <div className={guideOpen ? 'guide-drawer open' : 'guide-drawer'} role="dialog" aria-modal="true" aria-labelledby="guide-title">
       <div className="guide-top"><div className="guide-identity"><div className="guide-orb">◎</div><div><p className="mono-label">SHELLSONG / 螺音</p><h2 id="guide-title">{t.guideTitle}</h2></div></div><button className="close-button" onClick={() => setGuideOpen(false)} aria-label={t.close}>×</button></div>
-      <div className="guide-character"><img src="/luoyin/luoyin.png" alt="Luoyin, the ShellSong digital guide" onError={(event) => { event.currentTarget.src = '/assets/luoyin/luoyin-guide-focus.webp' }} /><div className="guide-state"><span className="state-dot" /> {guideState} / {zone.title[language]}</div></div>
+      <div className="guide-character"><img src="/luoyin/luoyin.png" alt="Luoyin, the ShellSong digital guide" onError={(event) => { event.currentTarget.src = '/assets/luoyin/luoyin-guide-focus.webp' }} /><div className="guide-state"><span className="state-dot" /> {guideState} / {guideZoneTitle[language]}</div></div>
       <p className="guide-body">{t.guideBody}</p>
       <button className="source-desk-trigger" type="button" onClick={openSourceDesk}>{language === 'en' ? 'Verified Source Desk' : '已核验来源服务台'} <span>↗</span></button>
       <button className="lead-trigger" type="button" onClick={() => { resetLead(); setLeadOpen(true) }}>{language === 'en' ? 'Request human follow-up' : '请求人工跟进'} <span>↗</span></button>
