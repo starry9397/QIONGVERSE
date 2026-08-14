@@ -2,6 +2,7 @@
 node_modules/
 dist/
 *.tsbuildinfo
+local-deliveries/
 
 # Local runtime configuration and secrets
 .env
@@ -18,4 +19,3 @@ dist/
 Thumbs.db
 .idea/
 .vscode/
-
