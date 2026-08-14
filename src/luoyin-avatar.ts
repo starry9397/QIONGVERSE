@@ -473,11 +473,12 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
   }
 }
 
-export const avatarWorldConfigs: Record<'limiao' | 'aerospace' | 'huali' | 'village', AvatarWorldConfig> = {
+export const avatarWorldConfigs: Record<'tropical' | 'limiao' | 'aerospace' | 'huali' | 'village', AvatarWorldConfig> = {
   // Spawn/bounds follow the measured SPZ centres rather than a shared origin.
   // These are calibrated visible floor planes, not splat bounding-box minima.
   // Camera and character share the same plane, so the cloud base, shadow and
   // third-person target remain physically coherent.
+  tropical: { spawn: { x: 2.45, y: 0, z: 0 }, bounds: { minX: -8.8, maxX: 12.5, minY: -5.2, maxY: 6.5, floorZ: -.78 }, radius: .16, modelHeight: .82, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.55, cameraHeight: 1.48, cameraTargetHeight: .46, contactShadowRadius: .31, platformLift: 0 },
   limiao: { spawn: { x: 2.55, y: 0, z: 0 }, bounds: { minX: -5.9, maxX: 21.9, minY: -4.6, maxY: 6.6, floorZ: -.84 }, radius: .16, modelHeight: .82, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.55, cameraHeight: 1.52, cameraTargetHeight: .46, contactShadowRadius: .31, platformLift: 0 },
   aerospace: { spawn: { x: 2.65, y: 0, z: 0 }, bounds: { minX: -3.5, maxX: 8.2, minY: -2.8, maxY: 4.2, floorZ: -.84 }, radius: .16, modelHeight: .8, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.65, cameraHeight: 1.54, cameraTargetHeight: .45, contactShadowRadius: .3, platformLift: 0 },
   huali: { spawn: { x: 2.55, y: 0, z: 0 }, bounds: { minX: -15.4, maxX: 23, minY: -2.7, maxY: 3.8, floorZ: -.64 }, radius: .16, modelHeight: .82, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.55, cameraHeight: 1.32, cameraTargetHeight: .46, contactShadowRadius: .32, platformLift: 0 },

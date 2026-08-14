@@ -7,6 +7,7 @@ const LiMiaoImmersiveHall = lazy(() => import('./components/LiMiaoImmersiveHall'
 const AerospaceImmersiveHall = lazy(() => import('./components/AerospaceImmersiveHall'))
 const HualiImmersiveHall = lazy(() => import('./components/HualiImmersiveHall'))
 const VillageImmersiveHall = lazy(() => import('./components/VillageImmersiveHall'))
+const TropicalImmersiveHall = lazy(() => import('./components/TropicalImmersiveHall'))
 
 type SourceDeskEntry = {
   id: string
@@ -71,7 +72,7 @@ function App() {
   const [activeNav, setActiveNav] = useState(1)
   const [exhibitionMenuOpen, setExhibitionMenuOpen] = useState(false)
   const [hallNotice, setHallNotice] = useState('')
-  const [activeHall, setActiveHall] = useState<'limiao' | 'aerospace' | 'huali' | 'village' | null>(() => window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : null)
+  const [activeHall, setActiveHall] = useState<'tropical' | 'limiao' | 'aerospace' | 'huali' | 'village' | null>(() => window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : null)
   const exhibitionRef = useRef<HTMLElement>(null)
   const guideTranscriptRef = useRef<HTMLDivElement>(null)
   const guideInputRef = useRef<HTMLInputElement>(null)
@@ -119,7 +120,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const syncHallRoute = () => setActiveHall(window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : null)
+    const syncHallRoute = () => setActiveHall(window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : null)
     window.addEventListener('hashchange', syncHallRoute)
     return () => window.removeEventListener('hashchange', syncHallRoute)
   }, [])
@@ -169,6 +170,13 @@ function App() {
     setActiveHall('limiao')
   }
 
+  const openTropicalHall = () => {
+    setActiveZone(0)
+    setExhibitionMenuOpen(false)
+    window.location.hash = 'tropical-hall'
+    setActiveHall('tropical')
+  }
+
   const openAerospaceHall = () => {
     setActiveZone(2)
     setExhibitionMenuOpen(false)
@@ -192,6 +200,10 @@ function App() {
 
   const openZoneHall = (index: number) => {
     setExhibitionMenuOpen(false)
+    if (zones[index]?.id === 'tropical') {
+      openTropicalHall()
+      return
+    }
     if (zones[index]?.id === 'lijin') {
       openLimiaoHall()
       return
@@ -302,7 +314,7 @@ function App() {
   const zoneMeta = useMemo(() => `${zone.index} / 05`, [zone.index])
 
   return <div className="site-shell">
-    {activeHall === 'limiao' ? <Suspense fallback={<main className="limiao-loading">Opening the Li &amp; Miao Immersive Hall…</main>}><LiMiaoImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(1)} onOpenGuide={(exhibit) => { setActiveZone(1); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'aerospace' ? <Suspense fallback={<main className="aerospace-loading">Opening the Wenchang Aerospace Hall…</main>}><AerospaceImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(2)} onOpenGuide={(exhibit) => { setActiveZone(2); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'huali' ? <Suspense fallback={<main className="huali-loading">Opening the Dongfang Rosewood Hall…</main>}><HualiImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(3)} onOpenGuide={(exhibit) => { setActiveZone(3); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'village' ? <Suspense fallback={<main className="village-loading">Opening the Beautiful Villages Hall…</main>}><VillageImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(4)} onOpenGuide={(exhibit) => { setActiveZone(4); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : <>
+    {activeHall === 'tropical' ? <Suspense fallback={<main className="tropical-loading">Opening the Tropical Island Hall…</main>}><TropicalImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(0)} onOpenGuide={(exhibit) => { setActiveZone(0); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'limiao' ? <Suspense fallback={<main className="limiao-loading">Opening the Li &amp; Miao Immersive Hall…</main>}><LiMiaoImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(1)} onOpenGuide={(exhibit) => { setActiveZone(1); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'aerospace' ? <Suspense fallback={<main className="aerospace-loading">Opening the Wenchang Aerospace Hall…</main>}><AerospaceImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(2)} onOpenGuide={(exhibit) => { setActiveZone(2); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'huali' ? <Suspense fallback={<main className="huali-loading">Opening the Dongfang Rosewood Hall…</main>}><HualiImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(3)} onOpenGuide={(exhibit) => { setActiveZone(3); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'village' ? <Suspense fallback={<main className="village-loading">Opening the Beautiful Villages Hall…</main>}><VillageImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(4)} onOpenGuide={(exhibit) => { setActiveZone(4); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : <>
     <header className="site-header">
       <a className="brand" href="#top" aria-label="HAINAN QIONGVERSE home">
         <img className="project-logo" src="/assets/logo.png" alt="QIONGVERSE project logo" />
@@ -315,7 +327,7 @@ function App() {
           {exhibitionMenuOpen && <>
             <button className="nav-menu-backdrop" aria-label={t.menuLabel} onClick={() => setExhibitionMenuOpen(false)} />
             <div id="exhibition-menu" className="nav-menu" role="menu" aria-label={t.nav[1]}>
-              {zones.map((item, index) => <a key={item.id} href={item.id === 'lijin' ? '#limiao-hall' : item.id === 'aerospace' ? '#aerospace-hall' : item.id === 'huali' ? '#huali-hall' : item.id === 'village' ? '#village-hall' : '#exhibition'} role="menuitem" onClick={(event) => { event.preventDefault(); openZoneHall(index) }}><span>{item.index}</span>{item.title[language]}</a>)}
+              {zones.map((item, index) => <a key={item.id} href={item.id === 'tropical' ? '#tropical-hall' : item.id === 'lijin' ? '#limiao-hall' : item.id === 'aerospace' ? '#aerospace-hall' : item.id === 'huali' ? '#huali-hall' : item.id === 'village' ? '#village-hall' : '#exhibition'} role="menuitem" onClick={(event) => { event.preventDefault(); openZoneHall(index) }}><span>{item.index}</span>{item.title[language]}</a>)}
             </div>
           </>}
         </div>
@@ -387,6 +399,7 @@ function App() {
             <p className="zone-description">{zone.description[language]}</p>
             <div className="zone-detail-image"><img src={zone.banner} alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></div>
             <div className="zone-footer"><span>{language === 'en' ? 'Read the room' : '阅读展室'}</span><span className="arrow">↗</span></div>
+            {zone.id === 'tropical' && <button className="limiao-entry" type="button" onClick={openTropicalHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
             {zone.id === 'lijin' && <button className="limiao-entry" type="button" onClick={openLimiaoHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
             {zone.id === 'aerospace' && <button className="limiao-entry" type="button" onClick={openAerospaceHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
             {zone.id === 'huali' && <button className="limiao-entry" type="button" onClick={openHualiHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
