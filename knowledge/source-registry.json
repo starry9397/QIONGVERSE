@@ -9,10 +9,10 @@
       "canonicalUrl": null,
       "language": "en, zh",
       "checkedAt": "2026-08-14",
-      "zoneIds": ["tropical", "lijin", "huali", "village"],
+      "zoneIds": ["tropical", "lijin", "huali", "village", "free-trade-port"],
       "topicTags": ["exhibition", "zone", "archive", "media", "\u5c55\u5385", "\u5c55\u533a", "\u6863\u6848", "\u7d20\u6750"],
       "title": { "en": "Supplied project visual archive", "zh": "\u9879\u76ee\u63d0\u4f9b\u7684\u89c6\u89c9\u6863\u6848" },
-      "scope": { "en": "Project-provided visual context for the four exhibition zones. It does not verify external cultural, policy, travel, or commercial claims.", "zh": "\u56db\u4e2a\u5c55\u533a\u7684\u9879\u76ee\u89c6\u89c9\u8bed\u5883\uff0c\u4e0d\u7528\u4e8e\u6838\u9a8c\u5916\u90e8\u6587\u5316\u3001\u653f\u7b56\u3001\u65c5\u884c\u6216\u5546\u4e1a\u4e3b\u5f20\u3002" },
+      "scope": { "en": "Project-provided visual context for the five exhibition zones. It does not verify external cultural, policy, travel, or commercial claims.", "zh": "\u4e94\u4e2a\u5c55\u533a\u7684\u9879\u76ee\u89c6\u89c9\u8bed\u5883\uff0c\u4e0d\u7528\u4e8e\u6838\u9a8c\u5916\u90e8\u6587\u5316\u3001\u653f\u7b56\u3001\u65c5\u884c\u6216\u5546\u4e1a\u4e3b\u5f20\u3002" },
       "permittedUse": "Internal exhibition context and source labeling only."
     },
     {
@@ -37,7 +37,7 @@
       "canonicalUrl": "https://en.hnftp.gov.cn/",
       "language": "en",
       "checkedAt": "2026-08-14",
-      "zoneIds": ["tropical", "lijin", "huali", "village"],
+      "zoneIds": ["tropical", "lijin", "huali", "village", "free-trade-port"],
       "topicTags": ["free trade port", "policy", "customs", "tax", "investment", "business", "trade", "visa", "travel rules", "\u81ea\u8d38\u6e2f", "\u653f\u7b56", "\u6d77\u5173", "\u7a0e", "\u6295\u8d44", "\u5546\u52a1", "\u8d38\u6613", "\u7b7e\u8bc1", "\u65c5\u884c\u89c4\u5b9a"],
       "title": { "en": "Hainan Free Trade Port official English portal", "zh": "\u6d77\u5357\u81ea\u7531\u8d38\u6613\u6e2f\u82f1\u6587\u5b98\u65b9\u95e8\u6237" },
       "scope": { "en": "A starting point for checking current public Free Trade Port notices and policy materials. It does not establish individual eligibility, tax treatment, customs clearance, visa outcomes, investment approval, or commercial availability.", "zh": "\u6838\u9a8c\u6d77\u5357\u81ea\u7531\u8d38\u6613\u6e2f\u516c\u5f00\u901a\u77e5\u4e0e\u653f\u7b56\u8d44\u6599\u7684\u4e00\u624b\u5165\u53e3\uff0c\u4e0d\u7528\u4e8e\u786e\u8ba4\u4e2a\u4f53\u8d44\u683c\u3001\u7a0e\u52a1\u5f85\u9047\u3001\u901a\u5173\u7ed3\u679c\u3001\u7b7e\u8bc1\u7ed3\u679c\u3001\u6295\u8d44\u5ba1\u6279\u6216\u5546\u4e1a\u4f9b\u7ed9\u3002" },
