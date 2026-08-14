@@ -106,7 +106,7 @@ export default function HualiImmersiveHall({ language, onToggleLanguage, onExit,
         if (disposed) return
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6)); element.appendChild(renderer.domElement)
         const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(62, 1, .01, 1000); scene.add(new SparkRenderer({ renderer }))
-        splat = new SplatMesh({ url: '/assets/3d/countryside/countryside world.spz' }) as unknown as { initialized: Promise<unknown>; dispose: () => void }; scene.add(splat as unknown as ThreeTypes.Object3D)
+        splat = new SplatMesh({ url: '/assets/3d/huali/countryside world.spz' }) as unknown as { initialized: Promise<unknown>; dispose: () => void }; scene.add(splat as unknown as ThreeTypes.Object3D)
         const controls = new SparkControls({ canvas: renderer.domElement }); resize = () => { const width = element.clientWidth; const height = element.clientHeight; if (!renderer) return; renderer.setSize(width, height, false); camera.aspect = width / height; camera.updateProjectionMatrix() }; resize(); addEventListener('resize', resize)
         const render = () => { if (!renderer || disposed || timedOut) return; controls.update(camera); renderer.render(scene, camera); frame = requestAnimationFrame(render) }; render()
         timeout = window.setTimeout(() => { if (!disposed) { timedOut = true; cleanup(); setSceneStatus('fallback') } }, 12000)

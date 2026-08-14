@@ -14,7 +14,7 @@ export type HualiExhibit = {
   modelPoster?: string
 }
 
-export const hualiReferenceImage = '/assets/3d/countryside/东方花梨展厅参考图.png'
+export const hualiReferenceImage = '/assets/3d/huali/东方花梨展厅参考图.png'
 
 const supplied = (id: string, en: string, zh: string, asset: string, introduction: Record<Language, string>, note: Record<Language, string>): HualiExhibit => ({
   id, kind: 'image', title: { en, zh }, asset, fallback: hualiReferenceImage, introduction, note,
