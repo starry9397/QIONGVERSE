@@ -1,13 +1,14 @@
 import type { Language } from './data'
+import { inline, type Localized } from './i18n'
 
 export type VillageExhibitKind = 'image' | 'model'
 
 export type VillageExhibit = {
   id: string
   kind: VillageExhibitKind
-  title: Record<Language, string>
-  introduction: Record<Language, string>
-  note: Record<Language, string>
+  title: Localized
+  introduction: Localized
+  note: Localized
   asset: string
   fallback: string
   modelAsset?: string
@@ -16,7 +17,7 @@ export type VillageExhibit = {
 
 export const villageReferenceImage = '/assets/3d/countryside/美丽乡村参考图.png'
 
-const supplied = (id: string, title: Record<Language, string>, asset: string, introduction: Record<Language, string>, note: Record<Language, string>): VillageExhibit => ({
+const supplied = (id: string, title: Localized, asset: string, introduction: Localized, note: Localized): VillageExhibit => ({
   id, kind: 'image', title, asset, fallback: villageReferenceImage, introduction, note,
 })
 
@@ -47,5 +48,5 @@ export const villageExhibits: VillageExhibit[] = [
 ]
 
 export const villageStatusLabel = (exhibit: VillageExhibit, language: Language) => exhibit.kind === 'model'
-  ? language === 'en' ? 'AIGC concept exhibit - needs review' : 'AIGC 策展概念展品 - 待审核'
-  : language === 'en' ? 'Project-supplied curatorial asset' : '项目提供的策展素材'
+  ? inline(language, 'AIGC concept exhibit - needs review', 'AIGC 策展概念展品 - 待审核')
+  : inline(language, 'Project-supplied curatorial asset', '项目提供的策展素材')

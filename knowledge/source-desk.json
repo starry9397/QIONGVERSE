@@ -8,18 +8,37 @@
       "status": "reviewed",
       "title": {
         "en": "Li traditional textile techniques: UNESCO source page",
-        "zh": "黎族传统纺织技艺：UNESCO 来源页面"
+        "zh": "黎族传统纺织技艺：UNESCO 来源页面",
+        "id": "Teknik tekstil tradisional Li: halaman sumber UNESCO",
+        "ja": "Li伝統的なテキスタイル技術：ユネスコのソースページ",
+        "ko": "Li 전통 섬유 기술: 유네스코 소스 페이지",
+        "ru": "Традиционные текстильные технологии Li: страница ЮНЕСКО",
+        "ar": "تقنيات المنسوجات التقليدية: صفحة مصدر اليونسكو"
       },
       "publisher": "UNESCO Intangible Cultural Heritage",
-      "canonicalUrl": "https://ich.unesco.org/en/RL/traditional-textile-techniques-of-the-li-ethnic-group-spinning-dyeing-weaving-and-embroidering-00202",
-      "topics": ["heritage", "li-textile", "culture"],
+      "canonicalUrl": "https://ich.unesco.org/en/RL/traditional-textile-techniques-of-the-li-ethnic-group-spinning-dyeing-weaving-and-embroidering-00238",
+      "topics": [
+        "heritage",
+        "li-textile",
+        "culture"
+      ],
       "scope": {
         "en": "A direct starting point for the UNESCO-listed page on Li traditional textile techniques.",
-        "zh": "通往 UNESCO 列载黎族传统纺织技艺页面的一手入口。"
+        "zh": "通往 UNESCO 列载黎族传统纺织技艺页面的一手入口。",
+        "id": "Titik awal langsung untuk halaman yang terdaftar di UNESCO tentang teknik tekstil tradisional Li.",
+        "ja": "ユネスコに登録されているリーの伝統的なテキスタイル技術に関するページの直接的な出発点。",
+        "ko": "Li 전통 섬유 기술에 대한 유네스코 등재 페이지의 직접적인 출발점.",
+        "ru": "Прямая отправная точка для страницы, включенной в список ЮНЕСКО, посвященной традиционным текстильным технологиям Ли.",
+        "ar": "نقطة انطلاق مباشرة لصفحة اليونسكو المدرجة حول تقنيات المنسوجات التقليدية."
       },
       "limitation": {
         "en": "It does not verify individual makers, product authenticity, pricing, ownership, or local availability.",
-        "zh": "不用于核验个体传承人、产品真伪、价格、权属或在地供给。"
+        "zh": "不用于核验个体传承人、产品真伪、价格、权属或在地供给。",
+        "id": "Ini tidak memverifikasi pembuat individual, keaslian produk, harga, kepemilikan, atau ketersediaan lokal.",
+        "ja": "個々のメーカー、製品の真正性、価格、所有権、または地域の可用性を確認するものではありません。",
+        "ko": "개별 제조업체, 제품 진위성, 가격, 소유권 또는 현지 가용성을 확인하지 않습니다.",
+        "ru": "Он не проверяет отдельных производителей, подлинность продукта, цены, право собственности или местную доступность.",
+        "ar": "لا يتحقق من صانعي المنتجات الفرديين أو صحة المنتج أو التسعير أو الملكية أو التوافر المحلي."
       },
       "collaborationStatus": "no_partnership_claim"
     },
@@ -30,18 +49,37 @@
       "status": "reviewed",
       "title": {
         "en": "Hainan Free Trade Port: official English portal",
-        "zh": "海南自由贸易港：英文官方门户"
+        "zh": "海南自由贸易港：英文官方门户",
+        "id": "Pelabuhan Perdagangan Bebas Hainan: portal resmi bahasa Inggris",
+        "ja": "海南自由貿易港：公式英語ポータル",
+        "ko": "하이난 자유무역항: 공식 영어 포털",
+        "ru": "Порт свободной торговли Хайнань: официальный портал на английском языке",
+        "ar": "ميناء هاينان للتجارة الحرة: البوابة الإنجليزية الرسمية"
       },
       "publisher": "Hainan Free Trade Port official English portal",
       "canonicalUrl": "https://en.hnftp.gov.cn/",
-      "topics": ["free-trade-port", "policy", "business"],
+      "topics": [
+        "free-trade-port",
+        "policy",
+        "business"
+      ],
       "scope": {
         "en": "A starting point for checking current public Free Trade Port notices and policy materials.",
-        "zh": "用于核查海南自由贸易港公开通知与政策资料的一手入口。"
+        "zh": "用于核查海南自由贸易港公开通知与政策资料的一手入口。",
+        "id": "Titik awal untuk memeriksa pemberitahuan dan materi kebijakan Pelabuhan Perdagangan Bebas publik saat ini.",
+        "ja": "現在の公的な自由貿易港の通知と政策資料を確認するための出発点。",
+        "ko": "현재 공개된 자유무역항 고지 및 정책 자료를 확인하기 위한 출발점.",
+        "ru": "Отправная точка для проверки текущих публичных уведомлений порта свободной торговли и политических материалов.",
+        "ar": "نقطة انطلاق للتحقق من إشعارات ميناء التجارة الحرة العامة الحالية ومواد السياسة."
       },
       "limitation": {
         "en": "It does not determine individual eligibility, tax treatment, customs clearance, visa outcome, investment approval, or commercial availability.",
-        "zh": "不用于确认个人资格、税务待遇、通关结果、签证结果、投资审批或商业供给。"
+        "zh": "不用于确认个人资格、税务待遇、通关结果、签证结果、投资审批或商业供给。",
+        "id": "Kebijakan ini tidak menentukan kelayakan individu, perlakuan pajak, bea cukai, hasil visa, persetujuan investasi, atau ketersediaan komersial.",
+        "ja": "これは、個人の適格性、税務処理、通関手続き、ビザの結果、投資承認、または商業利用可能性を決定するものではありません。",
+        "ko": "개인 자격, 세금 처리, 통관, 비자 결과, 투자 승인 또는 상업적 이용 가능 여부는 결정하지 않습니다.",
+        "ru": "Он не определяет индивидуальное право, налоговый режим, таможенное оформление, результат визы, одобрение инвестиций или коммерческую доступность.",
+        "ar": "وهو لا يحدد الأهلية الفردية أو المعاملة الضريبية أو التخليص الجمركي أو نتيجة التأشيرة أو الموافقة على الاستثمار أو التوافر التجاري."
       },
       "collaborationStatus": "no_partnership_claim"
     },
@@ -52,18 +90,201 @@
       "status": "reviewed",
       "title": {
         "en": "China National Space Administration: official English portal",
-        "zh": "中国国家航天局：英文官方门户"
+        "zh": "中国国家航天局：英文官方门户",
+        "id": "China National Space Administration: portal resmi bahasa Inggris",
+        "ja": "中国国家宇宙局：公式英語ポータル",
+        "ko": "중국 우주국: 공식 영어 포털",
+        "ru": "Китайское национальное космическое управление: официальный англоязычный портал",
+        "ar": "إدارة الفضاء الوطنية الصينية: البوابة الإنجليزية الرسمية"
       },
       "publisher": "China National Space Administration",
       "canonicalUrl": "https://www.cnsa.gov.cn/english/",
-      "topics": ["aerospace", "space", "wenchang"],
+      "topics": [
+        "aerospace",
+        "space",
+        "wenchang"
+      ],
       "scope": {
         "en": "A general background entry point for public aerospace information published by the China National Space Administration.",
-        "zh": "用于查阅中国国家航天局公开航天信息的一般背景入口。"
+        "zh": "用于查阅中国国家航天局公开航天信息的一般背景入口。",
+        "id": "Titik masuk latar belakang umum untuk informasi kedirgantaraan publik yang diterbitkan oleh Administrasi Antariksa Nasional Tiongkok.",
+        "ja": "中国国家宇宙局が公表した航空宇宙情報の一般的な背景エントリーポイント。",
+        "ko": "중국 우주국 (China National Space Administration) 이 발표한 공공 항공우주 정보의 일반적인 배경 진입 지점.",
+        "ru": "Общая фоновая точка входа для общедоступной аэрокосмической информации, публикуемой Китайским национальным космическим управлением.",
+        "ar": "نقطة دخول خلفية عامة للمعلومات الفضائية الجوية العامة التي نشرتها إدارة الفضاء الوطنية الصينية."
       },
       "limitation": {
         "en": "It does not verify this project's visual assets, mission schedules, technical specifications, tickets, commercial arrangements or individual eligibility.",
-        "zh": "不用于核验本项目视觉素材、任务时间表、技术参数、票务、商业安排或个人资格。"
+        "zh": "不用于核验本项目视觉素材、任务时间表、技术参数、票务、商业安排或个人资格。",
+        "id": "Ini tidak memverifikasi aset visual proyek ini, jadwal misi, spesifikasi teknis, tiket, pengaturan komersial atau kelayakan individu.",
+        "ja": "このプロジェクトのビジュアルアセット、ミッションスケジュール、技術仕様、チケット、商業的取り決め、または個人の資格を検証するものではありません。",
+        "ko": "이 프로젝트의 시각적 자산, 임무 일정, 기술 사양, 티켓, 상업적 준비 또는 개별 자격을 확인하지 않습니다.",
+        "ru": "Он не проверяет визуальные активы этого проекта, графики миссий, технические характеристики, билеты, коммерческие договоренности или индивидуальное право на участие.",
+        "ar": "لا يتحقق من الأصول المرئية لهذا المشروع أو جداول المهام أو المواصفات الفنية أو التذاكر أو الترتيبات التجارية أو الأهلية الفردية."
+      },
+      "collaborationStatus": "no_partnership_claim"
+    },
+    {
+      "id": "project-six-hall-visual-archive-desk",
+      "sourceRecordId": "project-supplied-six-hall-archive",
+      "displayKind": "project_context",
+      "status": "reviewed",
+      "title": {
+        "en": "Supplied six-hall visual archive",
+        "zh": "项目提供的六厅视觉档案",
+        "id": "Disediakan arsip visual enam ruang",
+        "ja": "付属の6ホールビジュアルアーカイブ",
+        "ko": "6홀 시각적 아카이브 제공",
+        "ru": "Поставляемый шестизальный визуальный архив",
+        "ar": "توفير أرشيف مرئي من ست قاعات"
+      },
+      "publisher": "HAINAN QIONGVERSE project team",
+      "canonicalUrl": null,
+      "topics": [
+        "heritage",
+        "aerospace",
+        "free-trade-port"
+      ],
+      "scope": {
+        "en": "Project-provided visual context used across the cultural halls, Free Trade Port orientation hall, and Hainan Unfolded atlas.",
+        "zh": "用于文化展厅、自贸港导览厅与海南图鉴的项目提供视觉语境。",
+        "id": "Konteks visual yang disediakan proyek digunakan di aula budaya, aula orientasi Pelabuhan Perdagangan Bebas, dan atlas Hainan Unfolded.",
+        "ja": "文化ホール、自由貿易港オリエンテーションホール、Hainan Unfoldedアトラスで使用されるプロジェクト提供のビジュアルコンテキスト。",
+        "ko": "문화 홀, 자유 무역항 오리엔테이션 홀, 하이난 언폴디드 아틀라스에서 사용되는 프로젝트 제공 시각적 맥락.",
+        "ru": "Предоставленный проектом визуальный контекст используется в залах культуры, зале ориентации порта свободной торговли и атласе Hainan Unfolded.",
+        "ar": "السياق المرئي المقدم من المشروع المستخدم عبر القاعات الثقافية وقاعة توجيه ميناء التجارة الحرة وأطلس هاينان المكشوف."
+      },
+      "limitation": {
+        "en": "It does not verify a named destination, route, service, current condition, policy, technical claim, or commercial availability.",
+        "zh": "不核验具体目的地、路线、服务、当前状况、政策、技术主张或商业可得性。",
+        "id": "Ini tidak memverifikasi tujuan, rute, layanan, kondisi saat ini, kebijakan, klaim teknis, atau ketersediaan komersial yang disebutkan.",
+        "ja": "これは、指定された目的地、ルート、サービス、現在の状態、ポリシー、技術的な主張、または商業的な可用性を検証するものではありません。",
+        "ko": "지정된 목적지, 경로, 서비스, 현재 상태, 정책, 기술 청구 또는 상업적 이용 가능 여부를 확인하지 않습니다.",
+        "ru": "Он не проверяет указанный пункт назначения, маршрут, услугу, текущее состояние, политику, техническую претензию или коммерческую доступность.",
+        "ar": "لا يتحقق من الوجهة أو الطريق أو الخدمة أو الحالة الحالية أو السياسة أو المطالبة الفنية أو التوافر التجاري."
+      },
+      "collaborationStatus": "no_partnership_claim"
+    },
+    {
+      "id": "hainan-provincial-international-portal-source-desk",
+      "sourceRecordId": "hainan-government-international-portal",
+      "displayKind": "service_orientation",
+      "status": "reviewed",
+      "title": {
+        "en": "Hainan Provincial People's Government: international portal",
+        "zh": "海南省人民政府：国际门户",
+        "id": "Pemprov Hainan: portal internasional",
+        "ja": "海南省人民政府：国際ポータル",
+        "ko": "하이난성 인민 정부: 국제 포털",
+        "ru": "Народное правительство провинции Хайнань: международный портал",
+        "ar": "الحكومة الشعبية لمقاطعة هاينان: البوابة الدولية"
+      },
+      "publisher": "Hainan Provincial People's Government international portal",
+      "canonicalUrl": "https://en.hainan.gov.cn/",
+      "topics": [
+        "heritage",
+        "free-trade-port"
+      ],
+      "scope": {
+        "en": "A public English-language entry point for current Hainan Province materials.",
+        "zh": "查阅海南省当前公开资料的英文入口。",
+        "id": "Titik masuk publik berbahasa Inggris untuk materi Provinsi Hainan saat ini.",
+        "ja": "現在の海南省の資料の公開英語エントリーポイント。",
+        "ko": "현재 하이난성 자료의 공용 영어 진입 지점입니다.",
+        "ru": "Публичная англоязычная точка входа для текущих материалов провинции Хайнань.",
+        "ar": "نقطة دخول عامة باللغة الإنجليزية لمواد مقاطعة هاينان الحالية."
+      },
+      "limitation": {
+        "en": "It is an orientation link, not a travel booking, schedule, service, eligibility, or policy decision.",
+        "zh": "这是信息导览链接，不构成旅行预订、时刻、服务、资格或政策判断。",
+        "id": "Ini adalah tautan orientasi, bukan pemesanan perjalanan, jadwal, layanan, kelayakan, atau keputusan kebijakan.",
+        "ja": "これはオリエンテーションリンクであり、旅行の予約、スケジュール、サービス、資格、またはポリシーの決定ではありません。",
+        "ko": "여행 예약, 일정, 서비스, 자격 또는 정책 결정이 아닌 오리엔테이션 링크입니다.",
+        "ru": "Это ссылка для ознакомления, а не бронирование поездки, расписание, услуга, право на участие или решение о правилах.",
+        "ar": "إنه رابط توجيه، وليس حجز سفر أو جدول زمني أو خدمة أو أهلية أو قرار سياسة."
+      },
+      "collaborationStatus": "no_partnership_claim"
+    },
+    {
+      "id": "travel-atlas-ai-curation-desk",
+      "sourceRecordId": "travel-atlas-route-compiler",
+      "displayKind": "ai_curation",
+      "status": "reviewed",
+      "title": {
+        "en": "Journey Compass route compiler",
+        "zh": "旅程罗盘路线编排器",
+        "id": "Kompilator rute Kompas Perjalanan",
+        "ja": "Journey Compassルートコンパイラ",
+        "ko": "Journey Compass 경로 컴파일러",
+        "ru": "Компилятор маршрута Journey Compass",
+        "ar": "مترجم مسار بوصلة الرحلة"
+      },
+      "publisher": "HAINAN QIONGVERSE project system",
+      "canonicalUrl": null,
+      "topics": [
+        "heritage",
+        "aerospace",
+        "free-trade-port"
+      ],
+      "scope": {
+        "en": "It may order only approved local catalogue IDs from visitor-selected themes, days, and rhythm.",
+        "zh": "它仅能根据访客选择的主题、天数与节奏，对本地批准目录中的条目 ID 排序。",
+        "id": "Ini hanya dapat memesan ID katalog lokal yang disetujui dari tema, hari, dan ritme yang dipilih pengunjung.",
+        "ja": "承認されたローカルカタログIDのみを、訪問者が選択したテーマ、曜日、リズムから注文することができます。",
+        "ko": "방문자가 선택한 테마, 요일 및 리듬에서 승인된 지역 카탈로그 ID만 주문할 수 있습니다.",
+        "ru": "Он может заказывать только утвержденные идентификаторы локального каталога из выбранных посетителями тем, дней и ритма.",
+        "ar": "قد تطلب فقط معرّفات الكتالوج المحلي المعتمدة من الموضوعات والأيام والإيقاع الذي يختاره الزائر."
+      },
+      "limitation": {
+        "en": "It cannot generate destinations, prices, bookings, navigation, schedules, eligibility advice, or policy conclusions.",
+        "zh": "不得生成目的地、价格、预订、导航、时刻、资格建议或政策结论。",
+        "id": "Ini tidak dapat menghasilkan destinasi, harga, pemesanan, navigasi, jadwal, saran kelayakan, atau kesimpulan kebijakan.",
+        "ja": "目的地、料金、予約、ナビゲーション、スケジュール、適格性のアドバイス、またはポリシーの結論を生成することはできません。",
+        "ko": "목적지, 가격, 예약, 내비게이션, 일정, 자격 요건에 대한 조언 또는 정책 결론을 생성할 수 없습니다.",
+        "ru": "Он не может генерировать пункты назначения, цены, бронирования, навигацию, расписания, рекомендации по соответствию требованиям или выводы о правилах.",
+        "ar": "لا يمكنه إنشاء وجهات أو أسعار أو حجوزات أو ملاحة أو جداول زمنية أو مشورة أهلية أو استنتاجات سياسية."
+      },
+      "collaborationStatus": "no_partnership_claim"
+    },
+    {
+      "id": "hainan-regional-reading-map-source-desk",
+      "sourceRecordId": "hainan-regional-reading-map-source-register",
+      "displayKind": "service_orientation",
+      "status": "reviewed",
+      "title": {
+        "en": "Hainan regional reading map: public-source register",
+        "zh": "海南区域阅读地图：公共来源登记",
+        "id": "Peta bacaan regional Hainan: daftar sumber publik",
+        "ja": "海南地域リーディングマップ：パブリックソース登録",
+        "ko": "하이난 지역 독서 지도: 공공 출처 등록",
+        "ru": "Хайнаньская региональная карта чтения: реестр из открытых источников",
+        "ar": "خريطة القراءة الإقليمية في هاينان: سجل المصدر العام"
+      },
+      "publisher": "Hainan Province and municipal/county people’s government public portals",
+      "canonicalUrl": "https://www.hainan.gov.cn/",
+      "topics": [
+        "hainan",
+        "regional-reading",
+        "map",
+        "travel-orientation"
+      ],
+      "scope": {
+        "en": "A source register for the map’s regional reading cards. Each selected region also provides its relevant official public-portal link.",
+        "zh": "地图区域阅读卡的来源登记；选择地区后，卡片还会提供对应的官方公开门户链接。",
+        "id": "Daftar sumber untuk kartu bacaan regional peta. Setiap wilayah yang dipilih juga menyediakan tautan portal publik resmi yang relevan.",
+        "ja": "マップの地域リーディングカードのソースレジスタ。選択された各地域には、関連する公式のパブリックポータルリンクも提供されます。",
+        "ko": "지도의 지역 읽기 카드를 위한 소스 레지스터. 선택한 각 지역은 관련 공식 포털 링크도 제공합니다.",
+        "ru": "Исходный регистр для региональных карточек карты. Каждый выбранный регион также предоставляет соответствующую официальную ссылку на публичный портал.",
+        "ar": "تسجيل مصدر لبطاقات القراءة الإقليمية للخريطة. توفر كل منطقة مختارة أيضًا رابطها الرسمي للبوابة العامة ذات الصلة."
+      },
+      "limitation": {
+        "en": "It is a cultural orientation layer, not an administrative map, route planner, booking service, schedule, transport, ticket, access, safety, or availability decision.",
+        "zh": "这是文化导览层，不构成行政地图、路线规划、预订服务、时刻、交通、票务、进入条件、安全或可用性判断。",
+        "id": "Ini adalah lapisan orientasi budaya, bukan peta administratif, perencana rute, layanan pemesanan, jadwal, transportasi, tiket, akses, keselamatan, atau keputusan ketersediaan.",
+        "ja": "これは文化オリエンテーションレイヤーであり、管理マップ、ルートプランナー、予約サービス、スケジュール、交通機関、チケット、アクセス、安全性、または予約可能状況の決定ではありません。",
+        "ko": "관리 지도, 경로 플래너, 예약 서비스, 일정, 교통, 티켓, 액세스, 안전 또는 가용성 결정이 아닌 문화적 지향 계층입니다.",
+        "ru": "Это уровень культурной ориентации, а не административная карта, планировщик маршрутов, служба бронирования, расписание, транспорт, билет, доступ, безопасность или решение о доступности.",
+        "ar": "إنها طبقة توجيه ثقافي، وليست خريطة إدارية أو مخطط طريق أو خدمة حجز أو جدول زمني أو نقل أو تذكرة أو وصول أو سلامة أو قرار توفر."
       },
       "collaborationStatus": "no_partnership_claim"
     }

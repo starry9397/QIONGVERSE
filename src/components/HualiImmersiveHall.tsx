@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import type * as ThreeTypes from 'three'
 import type { Language } from '../data'
+import { assertLocalizationTree, completeLocalizationTree, inline } from '../i18n'
 import { hualiExhibits, hualiReferenceImage, hualiStatusLabel, type HualiExhibit } from '../huali-data'
 import { createImmersiveCameraGuard } from '../immersive-controls'
 import { avatarWorldConfigs, createLuoyinAvatarController, type LuoyinAvatarController } from '../luoyin-avatar'
+import BrandLockup from './BrandLockup'
+import LanguageSelector from './LanguageSelector'
+completeLocalizationTree(hualiExhibits)
+assertLocalizationTree(hualiExhibits, 'rosewood hall exhibits')
 
-type Props = { language: Language; onToggleLanguage: () => void; onExit: () => void; onOpenGuide: (exhibit: HualiExhibit) => void }
+type Props = { language: Language; onChangeLanguage: (language: Language) => void; onExit: () => void; onOpenGuide: (exhibit: HualiExhibit) => void }
 type SceneStatus = 'loading' | 'ready' | 'fallback'
 type HallView = 'world' | 'index'
 type ModelTransform = { scale: number; rotation: number }
-const tx = (language: Language, en: string, zh: string) => language === 'en' ? en : zh
+const tx = (language: Language, en: string, zh: string) => inline(language, en, zh)
 
 function WoodResonance({ reduced, pulse }: { reduced: boolean; pulse: { x: number; y: number; key: number } }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -87,7 +92,7 @@ function DetailSheet({ exhibit, language, transform, onTransform, onClose, onAsk
   </section></div>
 }
 
-export default function HualiImmersiveHall({ language, onToggleLanguage, onExit, onOpenGuide }: Props) {
+export default function HualiImmersiveHall({ language, onChangeLanguage, onExit, onOpenGuide }: Props) {
   const mount = useRef<HTMLDivElement>(null)
   const [view, setView] = useState<HallView>('world'); const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading'); const [active, setActive] = useState(hualiExhibits[0]); const [detail, setDetail] = useState<HualiExhibit | null>(null); const [pulse, setPulse] = useState({ x: 0, y: 0, key: 0 }); const [transform, setTransform] = useState<ModelTransform>({ scale: 1, rotation: 0 })
   const avatarRef = useRef<LuoyinAvatarController | null>(null)
@@ -129,7 +134,7 @@ export default function HualiImmersiveHall({ language, onToggleLanguage, onExit,
 
   return <div className="huali-hall" data-avatar-state={avatarState}>
     {view === 'world' && <div className="luoyin-avatar-floating"><button className="luoyin-avatar-button" type="button" disabled={sceneStatus !== 'ready' || avatarState === 'loading'} onClick={toggleAvatar}>{avatarState === 'ready' ? tx(language, 'Hide Luoyin', '隐藏螺音') : avatarState === 'loading' ? tx(language, 'Loading Luoyin', '正在加载螺音') : tx(language, 'Show Luoyin', '显示螺音')}</button><span className="luoyin-avatar-status" aria-live="polite">{avatarState === 'failed' ? tx(language, '3D character unavailable. Free camera remains available.', '3D 角色暂不可用，仍可使用自由相机浏览。') : avatarState === 'ready' ? tx(language, 'Luoyin ready · WASD / arrows to walk · drag to orbit · wheel to zoom', '螺音已准备 · WASD / 方向键行走 · 拖动环绕 · 滚轮缩放') : ''}</span></div>}
-    <header className="huali-header"><a className="brand" href="#top" onClick={(event) => { event.preventDefault(); onExit() }}><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /></a><p>{view === 'world' ? 'DONGFANG ROSEWOOD / IMMERSIVE HALL' : 'DONGFANG ROSEWOOD / EXHIBIT INDEX'}</p><div><button type="button" onClick={onToggleLanguage}>EN / 中</button><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个展厅')}</button></div></header>
+    <header className="huali-header"><BrandLockup onNavigate={(event) => { event.preventDefault(); onExit() }} /><p>{view === 'world' ? 'DONGFANG ROSEWOOD / IMMERSIVE HALL' : 'DONGFANG ROSEWOOD / EXHIBIT INDEX'}</p><div><LanguageSelector language={language} onChange={onChangeLanguage} /><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个展厅')}</button></div></header>
     {view === 'world' ? <main className="huali-stage"><div className="huali-scene" ref={mount} onClick={(event) => triggerPulse(event)} role="application" tabIndex={0} aria-label={tx(language, 'Interactive Dongfang rosewood visual world', '可交互的东方花梨视觉世界')} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); triggerPulse() } }}>
       {sceneStatus !== 'ready' && <div className={sceneStatus === 'fallback' ? 'huali-scene-fallback is-static' : 'huali-scene-fallback'}><img src={hualiReferenceImage} alt={tx(language, 'Dongfang Rosewood Hall reference view', '东方花梨厅静态参考视图')} /><p>{sceneStatus === 'loading' ? tx(language, 'Opening the wood-grain archive…', '正在打开木纹档案馆…') : tx(language, 'This device is using the static hall view. The exhibit index and Luoyin remain available.', '当前设备正在使用静态展厅视图；展项索引与螺音仍可正常使用。')}</p></div>}
       <WoodResonance reduced={reduced} pulse={pulse} />

@@ -55,3 +55,29 @@ The script prompts for the key without echoing it, validates a real GLM response
 6. Confirm `GET /api/luoyin/status` shows `upstreamConfigured: true` and no secret fields.
 
 The service keeps only temporary, in-memory rate-limit data. Questions, answers, identities, and keys are not stored by this project.
+
+## Social Sharing And Visitor Publishing
+
+Set `VITE_PUBLIC_SITE_URL` during the client build and `SOCIAL_PUBLIC_BASE_URL` in the Node process to the same public HTTPS origin. This makes canonical and Open Graph image URLs absolute for X and Facebook share previews. A localhost or HTTP URL intentionally keeps public sharing disabled.
+
+X and Facebook can use their user-controlled share interfaces once the public origin exists. Real visitor-authorized publishing additionally requires platform developer approval and these deployment-only secrets:
+
+```text
+SOCIAL_OAUTH_STATE_SECRET=<random secret, at least 32 characters>
+X_CLIENT_ID=<secret-manager value>
+X_CLIENT_SECRET=<secret-manager value>
+TIKTOK_CLIENT_KEY=<secret-manager value>
+TIKTOK_CLIENT_SECRET=<secret-manager value>
+GOOGLE_CLIENT_ID=<secret-manager value>
+GOOGLE_CLIENT_SECRET=<secret-manager value>
+```
+
+Register exactly these HTTPS callback URLs in the corresponding developer portals:
+
+```text
+https://your-public-domain.example/api/social/x/callback
+https://your-public-domain.example/api/social/tiktok/callback
+https://your-public-domain.example/api/social/youtube/callback
+```
+
+Do not enable TikTok or YouTube publishing until their scopes, app review, public-upload rules, and test-account flows have passed. OAuth tokens are kept only in short-lived server memory and never belong in `.env` files, build variables, logs, or browser storage.

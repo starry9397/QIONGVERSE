@@ -1,14 +1,19 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import type * as ThreeTypes from 'three'
 import type { Language } from '../data'
+import { assertLocalizationTree, completeLocalizationTree, inline } from '../i18n'
 import { villageExhibits, villageReferenceImage, villageStatusLabel, type VillageExhibit } from '../village-data'
 import { createImmersiveCameraGuard } from '../immersive-controls'
 import { avatarWorldConfigs, createLuoyinAvatarController, type LuoyinAvatarController } from '../luoyin-avatar'
+import BrandLockup from './BrandLockup'
+import LanguageSelector from './LanguageSelector'
+completeLocalizationTree(villageExhibits)
+assertLocalizationTree(villageExhibits, 'village hall exhibits')
 
-type Props = { language: Language; onToggleLanguage: () => void; onExit: () => void; onOpenGuide: (exhibit: VillageExhibit) => void }
+type Props = { language: Language; onChangeLanguage: (language: Language) => void; onExit: () => void; onOpenGuide: (exhibit: VillageExhibit) => void }
 type SceneStatus = 'loading' | 'ready' | 'fallback'
 type ModelTransform = { scale: number; rotation: number }
-const tx = (language: Language, en: string, zh: string) => language === 'en' ? en : zh
+const tx = (language: Language, en: string, zh: string) => inline(language, en, zh)
 
 function VillagePulse({ reduced, pulse }: { reduced: boolean; pulse: { x: number; y: number; key: number } }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -85,7 +90,7 @@ function VillageDetailSheet({ exhibit, language, transform, onTransform, onClose
   </section></div>
 }
 
-export default function VillageImmersiveHall({ language, onToggleLanguage, onExit, onOpenGuide }: Props) {
+export default function VillageImmersiveHall({ language, onChangeLanguage, onExit, onOpenGuide }: Props) {
   const mount = useRef<HTMLDivElement>(null)
   const [view, setView] = useState<'world' | 'index'>('world'); const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading'); const [active, setActive] = useState(villageExhibits[0]); const [detail, setDetail] = useState<VillageExhibit | null>(null); const [pulse, setPulse] = useState({ x: 0, y: 0, key: 0 }); const [transform, setTransform] = useState<ModelTransform>({ scale: 1, rotation: 0 })
   const avatarRef = useRef<LuoyinAvatarController | null>(null)
@@ -124,7 +129,7 @@ export default function VillageImmersiveHall({ language, onToggleLanguage, onExi
 
   return <div className="village-hall" data-avatar-state={avatarState}>
     {view === 'world' && <div className="luoyin-avatar-floating"><button className="luoyin-avatar-button" type="button" disabled={sceneStatus !== 'ready' || avatarState === 'loading'} onClick={toggleAvatar}>{avatarState === 'ready' ? tx(language, 'Hide Luoyin', '隐藏螺音') : avatarState === 'loading' ? tx(language, 'Loading Luoyin', '正在加载螺音') : tx(language, 'Show Luoyin', '显示螺音')}</button><span className="luoyin-avatar-status" aria-live="polite">{avatarState === 'failed' ? tx(language, '3D character unavailable. Free camera remains available.', '3D 角色暂不可用，仍可使用自由相机浏览。') : avatarState === 'ready' ? tx(language, 'Luoyin ready · WASD / arrows to walk · drag to orbit · wheel to zoom', '螺音已准备 · WASD / 方向键行走 · 拖动环绕 · 滚轮缩放') : ''}</span></div>}
-    <header className="village-header"><a className="brand" href="#top" onClick={(event) => { event.preventDefault(); onExit() }}><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /></a><p>{view === 'world' ? 'BEAUTIFUL VILLAGES / IMMERSIVE HALL' : 'BEAUTIFUL VILLAGES / EXHIBIT INDEX'}</p><div><button type="button" onClick={onToggleLanguage}>EN / 中</button><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个展厅')}</button></div></header>
+    <header className="village-header"><BrandLockup onNavigate={(event) => { event.preventDefault(); onExit() }} /><p>{view === 'world' ? 'BEAUTIFUL VILLAGES / IMMERSIVE HALL' : 'BEAUTIFUL VILLAGES / EXHIBIT INDEX'}</p><div><LanguageSelector language={language} onChange={onChangeLanguage} /><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个展厅')}</button></div></header>
     {view === 'world' ? <main className="village-stage"><div className="village-scene" ref={mount} onClick={(event) => triggerPulse(event)} role="application" tabIndex={0} aria-label={tx(language, 'Interactive Beautiful Villages visual world', '可交互的美丽乡村视觉世界')} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); triggerPulse() } }}>
       {sceneStatus !== 'ready' && <div className={sceneStatus === 'fallback' ? 'village-scene-fallback is-static' : 'village-scene-fallback'}><img src={villageReferenceImage} alt={tx(language, 'Beautiful Villages Hall reference view', '美丽乡村厅静态参考视图')} /><p>{sceneStatus === 'loading' ? tx(language, 'Opening the village landscape archive…', '正在打开乡村景观档案馆…') : tx(language, 'Static hall view ready. The exhibit index and Luoyin remain available.', '静态展厅视图已准备好，展项索引与螺音仍可使用。')}</p></div>}
       <VillagePulse reduced={reduced} pulse={pulse} />

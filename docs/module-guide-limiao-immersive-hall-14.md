@@ -3,9 +3,9 @@
 ## 1. Module goal
 
 - Module name: Li & Miao Immersive Hall / 黎苗沉浸展厅.
-- Visitor task: enter from the four-room Hainan archive, freely explore a 3D visual world, select a visible exhibit, receive a tactile particle response, and read or watch the associated bilingual material.
+- Visitor task: enter from the five cultural-hall Hainan archive, freely explore a 3D visual world, select a visible exhibit, receive a tactile particle response, and read or watch the associated bilingual material.
 - Project relationship: this is a province-level cultural exploration room inside HAINAN QIONGVERSE. Hainan Province is the primary visitor frame; Dongfang may remain only where the supplied media creates a local scene.
-- Foreign-user path: English default -> Li & Miao Heritage -> immersive hall -> visible exhibit strip or 3D hotspot -> image, video, or concept-model reading sheet -> optional local-only hand gesture control -> return to the four rooms or Luoyin. Chinese is synchronized for every visitor-facing state.
+- Foreign-user path: English default -> Li & Miao Heritage -> immersive hall -> visible exhibit strip or 3D hotspot -> image, video, or concept-model reading sheet -> return to the five cultural halls or Luoyin. Chinese is synchronized for every visitor-facing state.
 
 ## 2. Content boundaries
 
@@ -52,19 +52,19 @@
 
 - Default: SPZ loading state with visible fallback image; mouse/touch/keyboard controls always available.
 - Click/tap/hotspot: Shell Gold tide-pulse particle ring, corresponding exhibit highlight, then a detail sheet. Reduced motion uses a static highlight and live text feedback instead.
-- Keyboard: Tab reaches exit, gestures, Luoyin, visible exhibits, and sheet controls; Enter/Space opens; Escape closes the sheet or hall. Arrow keys and WASD move the camera where focus is not in an input.
+- Keyboard: Tab reaches exit, Luoyin, visible exhibits, and sheet controls; Enter/Space opens; Escape closes the sheet or hall. Arrow keys and WASD move the camera where focus is not in an input.
 - Touch: drag rotates, pinch zooms, tap selects; every action control is at least 44px.
-- Gesture: only `Enable hand gestures / 开启手势交互` calls `getUserMedia`; local browser processing only. Pinch selects; open palm restores explore state; left/right sweep changes visible exhibit; fist pauses visual movement. Failure, denial, or unsupported browser leaves standard controls usable. Closing stops all media tracks.
+- Retired interaction note: the former camera-based hand-control proposal was removed. The live hall now uses mouse, touch, keyboard, and optional third-person controls only.
 - States have explicit text: loading, ready, unavailable, denied, paused, reduced motion, media error, and source status.
 - Luoyin is `focus / 专注` in the room and can open the current exhibit context, but does not receive camera data.
 
 ## 6. Technical constraints
 
-- React + Vite + TypeScript, dynamically imported `three@0.180.0`, `@sparkjsdev/spark@2.1.0`, and `@mediapipe/tasks-vision@1.0.1`.
+- React + Vite + TypeScript, dynamically imported `three@0.180.0` and `@sparkjsdev/spark@2.1.0`.
 - SPZ uses Spark; GLBs use Three GLTFLoader only when a model sheet is opened.
 - A canvas particle layer responds to the visitor pointer and supports throttled mobile performance; its loop pauses when the page is hidden.
 - No client API key, storage, cookie, new API route, user telemetry, camera persistence, `localStorage`, or `sessionStorage`. Existing GLM boundary stays unchanged.
-- WebGL / media / camera failure keeps the gallery and textual details usable.
+- WebGL or media failure keeps the gallery and textual details usable; no camera pipeline is present.
 
 ## 7. Internationalization
 

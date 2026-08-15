@@ -1,23 +1,24 @@
 import type { Language } from './data'
+import { localize, type Localized } from './i18n'
 
 export type SourceStatus = 'verified_source' | 'project_asset' | 'aigc_concept'
 
 export type LimiaoExhibit = {
   id: string
   kind: 'image' | 'video' | 'model'
-  title: Record<Language, string>
-  introduction: Record<Language, string>
-  note: Record<Language, string>
+  title: Localized
+  introduction: Localized
+  note: Localized
   asset: string
   poster?: string
   fallback?: string
-  sourceLabel: Record<Language, string>
+  sourceLabel: Localized
   sourceStatus: SourceStatus
   sourceUrl?: string
   modelAsset?: string
 }
 
-const unescoUrl = 'https://ich.unesco.org/en/RL/traditional-textile-techniques-of-the-li-ethnic-group-spinning-dyeing-weaving-and-embroidering-00202'
+const unescoUrl = 'https://ich.unesco.org/en/RL/traditional-textile-techniques-of-the-li-ethnic-group-spinning-dyeing-weaving-and-embroidering-00238'
 
 export const limiaoExhibits: LimiaoExhibit[] = [
   {
@@ -61,10 +62,10 @@ limiaoExhibits[2].introduction = { en: 'A project-supplied loom model for readin
 limiaoExhibits[2].asset = '/assets/user-media2/limiao-loom/黎锦织机（粒子展台基础模型）.png'
 
 export const sourceStatusLabel = (status: SourceStatus, language: Language) => {
-  const labels: Record<SourceStatus, Record<Language, string>> = {
+  const labels: Record<SourceStatus, Localized> = {
     verified_source: { en: 'Verified source', zh: '已核验来源' },
     project_asset: { en: 'Project-supplied asset', zh: '项目提供素材' },
     aigc_concept: { en: 'AIGC concept exhibit', zh: 'AIGC 策展概念展品' },
   }
-  return labels[status][language]
+  return localize(labels[status], language)
 }

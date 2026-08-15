@@ -1,16 +1,21 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import type * as ThreeTypes from 'three'
 import type { Language } from '../data'
+import { assertLocalizationTree, completeLocalizationTree, inline } from '../i18n'
 import { limiaoExhibits, type LimiaoExhibit, sourceStatusLabel } from '../limiao-data'
 import { createImmersiveCameraGuard } from '../immersive-controls'
 import { avatarWorldConfigs, createLuoyinAvatarController, type LuoyinAvatarController } from '../luoyin-avatar'
+import BrandLockup from './BrandLockup'
+import LanguageSelector from './LanguageSelector'
+completeLocalizationTree(limiaoExhibits)
+assertLocalizationTree(limiaoExhibits, 'Li and Miao hall exhibits')
 
-type Props = { language: Language; onToggleLanguage: () => void; onExit: () => void; onOpenGuide: (exhibit: LimiaoExhibit) => void }
+type Props = { language: Language; onChangeLanguage: (language: Language) => void; onExit: () => void; onOpenGuide: (exhibit: LimiaoExhibit) => void }
 type SceneStatus = 'loading' | 'ready' | 'fallback'
 type ModelTransform = { scale: number; rotation: number }
 type HallView = 'world' | 'index'
 
-const tx = (language: Language, en: string, zh: string) => language === 'en' ? en : zh
+const tx = (language: Language, en: string, zh: string) => inline(language, en, zh)
 
 function TidePulse({ reduced, paused, pulse }: { reduced: boolean; paused: boolean; pulse: { x: number; y: number; key: number } }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -96,7 +101,7 @@ function DetailSheet({ exhibit, language, onClose, onAsk, transform, onTransform
   </section></div>
 }
 
-export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit, onOpenGuide }: Props) {
+export default function LiMiaoImmersiveHall({ language, onChangeLanguage, onExit, onOpenGuide }: Props) {
   const mount = useRef<HTMLDivElement>(null); const [view, setView] = useState<HallView>('world'); const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading'); const [active, setActive] = useState(limiaoExhibits[0]); const [detail, setDetail] = useState<LimiaoExhibit | null>(null); const [pulse, setPulse] = useState({ x: 0, y: 0, key: 0 }); const [modelTransform, setModelTransform] = useState<ModelTransform>({ scale: 1, rotation: 0 })
   const activeRef = useRef(active); const detailRef = useRef(detail); const modelTransformRef = useRef(modelTransform); const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
   const avatarRef = useRef<LuoyinAvatarController | null>(null)
@@ -154,7 +159,7 @@ export default function LiMiaoImmersiveHall({ language, onToggleLanguage, onExit
   const videoRef = useRef<HTMLVideoElement>(null)
   return <div className="limiao-hall" data-avatar-state={avatarState}>
     {view === 'world' && <div className="luoyin-avatar-floating"><button className="luoyin-avatar-button" type="button" disabled={sceneStatus !== 'ready' || avatarState === 'loading'} onClick={toggleAvatar}>{avatarState === 'ready' ? tx(language, 'Hide Luoyin', '隐藏螺音') : avatarState === 'loading' ? tx(language, 'Loading Luoyin', '正在加载螺音') : tx(language, 'Show Luoyin', '显示螺音')}</button><span className="luoyin-avatar-status" aria-live="polite">{avatarState === 'failed' ? tx(language, '3D character unavailable. Free camera remains available.', '3D 角色暂不可用，仍可使用自由相机浏览。') : avatarState === 'ready' ? tx(language, 'Luoyin ready · WASD / arrows to walk · drag to orbit · wheel to zoom', '螺音已准备 · WASD / 方向键行走 · 拖动环绕 · 滚轮缩放') : ''}</span></div>}
-    <header className="limiao-header"><a className="brand" href="#top" onClick={(event) => { event.preventDefault(); onExit() }}><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /></a><p>{view === 'world' ? 'LI & MIAO / IMMERSIVE HALL' : 'LI & MIAO / EXHIBIT INDEX'}</p><div><button type="button" onClick={onToggleLanguage}>EN / 中</button><button type="button" onClick={onExit}>{tx(language, 'Back to four rooms', '返回四域展厅')}</button></div></header>
+    <header className="limiao-header"><BrandLockup onNavigate={(event) => { event.preventDefault(); onExit() }} /><p>{view === 'world' ? 'LI & MIAO / IMMERSIVE HALL' : 'LI & MIAO / EXHIBIT INDEX'}</p><div><LanguageSelector language={language} onChange={onChangeLanguage} /><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个分展厅')}</button></div></header>
     {view === 'world' ? <main className="limiao-stage">
       <div className="limiao-scene" ref={mount} onClick={(event) => { triggerPulse(event) }} aria-label={tx(language, 'Interactive Li and Miao visual world', '可交互的黎苗视觉世界')} role="application" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); triggerPulse() } }}>
         {sceneStatus !== 'ready' && <div className={sceneStatus === 'fallback' ? 'limiao-scene-fallback is-static' : 'limiao-scene-fallback'}><img src="/assets/3d/limiao/黎苗展厅参考图.png" alt={tx(language, 'Li and Miao immersive hall reference view', '黎苗沉浸展厅静态参考视图')} /><p>{sceneStatus === 'loading' ? tx(language, 'Opening the visual world…', '正在打开视觉世界…') : tx(language, 'This device is using the static hall view. Exhibit index and Luoyin remain available.', '当前设备正在使用静态展厅视图；展项索引与螺音仍可正常使用。')}</p></div>}

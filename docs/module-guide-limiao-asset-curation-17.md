@@ -48,15 +48,15 @@
 - Image, video and model selections open the accessible detail sheet. Hover/focus/active states remain visible; `Escape`, close button and backdrop close the sheet.
 - Keyboard: Tab reaches all actions; Enter/Space activates them. Touch uses normal tap; model preview additionally supports drag and pinch.
 - ShellSong is `focus` in this hall; its textual reply retains source class.
-- Hand controls are opt-in: pinch selects/pulses, open palm explores, swipe changes the highlighted object, fist pauses decoration; in model detail, pinch scales and horizontal hand movement rotates. The help text stays short and visible on demand.
-- Camera errors, permission denial and WebGL failure preserve mouse, touch, keyboard, still media and reading routes.
+- Historical note: the hand-control proposal is retired. Mouse, touch, keyboard, still media, model drag/pinch, and reading routes remain the supported interaction methods.
+- WebGL failure preserves mouse, touch, keyboard, still media, and reading routes; the current module requests no camera permission.
 - Motion conveys feedback only. Under `prefers-reduced-motion`, tide movement becomes a short static gold highlight.
 
 ## 6. Technical constraints
 
-- React + Vite + TypeScript, with route-level dynamic loading for Spark, Three, GLTFLoader and MediaPipe.
+- React + Vite + TypeScript, with route-level dynamic loading for Spark, Three, and GLTFLoader.
 - SPZ lifecycle is bound to the world view. Switching to the reading layer must release requestAnimationFrame, WebGL canvas and splat resources.
-- Switching to the reading layer must stop camera tracks, clear the invisible video binding and close the hand landmarker.
+- Switching to the reading layer releases SPZ and model resources; no camera tracks or hand-recognition resources exist in the current implementation.
 - GLB and video load only from a selected detail sheet; videos use `preload="metadata"` and a poster.
 - No API key, camera frame, user question, intent or exhibit preference is written into browser storage, URL or logs.
 - Do not replace static fallback with an unavailable external service.

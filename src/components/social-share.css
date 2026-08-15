@@ -1,0 +1,24 @@
+.social-share { display: grid; grid-template-columns: max-content max-content; align-items: center; justify-content: center; gap: 10px 14px; min-width: max-content; }
+.social-share > p { margin: 0; color: rgba(255, 243, 216, .8); font: 600 9px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+.social-share-actions { display: flex; flex-wrap: nowrap; gap: 7px; }
+.social-share-button { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid rgba(232, 201, 135, .42); padding: 0; color: #fff7e7; background: rgba(255, 255, 255, .035); cursor: pointer; transition: color .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease; }
+.social-share-button svg { width: 17px; height: 17px; }
+.social-share-button:hover, .social-share-button:focus-visible { border-color: #f8dda1; color: #082f32; background: #efd494; box-shadow: 0 0 18px rgba(239, 212, 148, .25); outline: none; transform: translateY(-2px); }
+.social-share-button:disabled { border-color: rgba(232, 201, 135, .2); color: rgba(255, 247, 231, .34); background: transparent; cursor: not-allowed; box-shadow: none; transform: none; }
+.social-share-status { grid-column: 1 / -1; max-width: 320px; color: rgba(255, 243, 216, .6); font: 9px/1.45 var(--mono); letter-spacing: .04em; }
+.social-publish-dialog { width: min(480px, calc(100vw - 32px)); border: 1px solid rgba(232, 201, 135, .78); padding: 28px; color: var(--ink); background: var(--paper); box-shadow: 0 28px 80px rgba(0, 0, 0, .46); }
+.social-publish-dialog::backdrop { background: rgba(3, 18, 20, .78); }
+.social-publish-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.social-publish-dialog .mono-label { margin: 0; color: var(--coral); }
+.social-publish-dialog h2 { margin: 20px 0 12px; font: 400 34px/1.1 var(--display); }
+.social-publish-dialog > p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.social-publish-dialog dl { display: grid; gap: 12px; margin: 22px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 16px 0; }
+.social-publish-dialog dl div { display: grid; grid-template-columns: 82px 1fr; gap: 12px; }
+.social-publish-dialog dt { color: var(--coral); font: 9px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.social-publish-dialog dd { margin: 0; color: var(--ink); font-size: 12px; line-height: 1.5; }
+.social-publish-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.social-publish-result { margin-top: 18px !important; padding: 12px 14px; border-left: 2px solid var(--gold); background: rgba(232, 201, 135, .14); }
+.social-publish-result.is-error { border-left-color: #b05245; background: rgba(176, 82, 69, .1); }
+@media (max-width: 1220px) { .site-footer { grid-template-columns: 190px minmax(0, 1fr) auto; } .site-footer .social-share { grid-column: 1 / -1; justify-content: start; } }
+@media (max-width: 760px) { .social-share { grid-template-columns: 1fr; justify-content: flex-start; gap: 12px; } .social-share-status { max-width: 300px; } .social-publish-dialog { padding: 24px 20px; } }
+@media (prefers-reduced-motion: reduce) { .social-share-button { transition: none; } .social-share-button:hover, .social-share-button:focus-visible { transform: none; } }

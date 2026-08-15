@@ -1,10 +1,11 @@
 import type { Language } from './data'
+import type { Localized } from './i18n'
 
 export type FreeTradePortExhibit = {
   id: string
-  title: Record<Language, string>
-  introduction: Record<Language, string>
-  note: Record<Language, string>
+  title: Localized
+  introduction: Localized
+  note: Localized
   asset: string
   fallback: string
 }

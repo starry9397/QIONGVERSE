@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "module": "travel-atlas",
+  "checkedAt": "2026-08-15",
+  "sources": [
+    { "id": "project-supplied-six-hall-archive", "classification": "project_supplied_visual_context" },
+    { "id": "unesco-li-traditional-textile-techniques", "classification": "reviewed_primary_source" },
+    { "id": "hainan-free-trade-port-english-portal", "classification": "reviewed_primary_source" },
+    { "id": "hainan-government-international-portal", "classification": "reviewed_primary_source" },
+    { "id": "cnsa-english-portal", "classification": "reviewed_primary_source" }
+  ],
+  "themes": ["coast", "culture", "village", "nature", "city"],
+  "paces": ["slow", "balanced", "deep"],
+  "stops": [
+    {
+      "id": "tide-edge",
+      "themes": ["coast", "nature"],
+      "hall": "tropical",
+      "sourceId": "project-supplied-six-hall-archive",
+      "title": { "en": "Tide Edge", "zh": "潮汐岸线" },
+      "summary": { "en": "A project-curated opening for looking at light, shade, and the edge of an island.", "zh": "从项目策展的开篇开始，观看光影与海岛边缘。" },
+      "note": { "en": "Project-supplied visual context, not a named beach, route, safety notice, or current-condition claim.", "zh": "项目提供的视觉语境，不指向具体海滩、路线、安全提示或当前状况。" },
+      "asset": "/assets/exhibits/tropical/shore-rest.png"
+    },
+    {
+      "id": "li-textile-thread",
+      "themes": ["culture", "city"],
+      "hall": "lijin",
+      "sourceId": "unesco-li-traditional-textile-techniques",
+      "title": { "en": "Li Textile Thread", "zh": "黎族纺织线索" },
+      "summary": { "en": "Begin a culture-focused day with a source-backed introduction to Li traditional textile techniques.", "zh": "以有来源支持的黎族传统纺织技艺介绍，开启文化主题的一天。" },
+      "note": { "en": "Use the UNESCO source page for the underlying cultural record; this atlas does not verify individual makers, products, or availability.", "zh": "文化记录以 UNESCO 来源页面为准；本图谱不核验个体传承人、产品或在地可得性。" },
+      "asset": "/assets/3d/limiao/黎苗展厅参考图.png"
+    },
+    {
+      "id": "village-rhythm",
+      "themes": ["village", "nature"],
+      "hall": "village",
+      "sourceId": "project-supplied-six-hall-archive",
+      "title": { "en": "Village Rhythm", "zh": "乡村节奏" },
+      "summary": { "en": "A project-curated village lens for reading stone, fields, pathways, and everyday gestures as one rhythm.", "zh": "以项目策展的乡村视角，阅读石材、田野、路径与日常动作之间的节奏。" },
+      "note": { "en": "This is not a named settlement, visitor service, access route, or current site description.", "zh": "这不对应具体村落、游客服务、抵达路线或现场状况描述。" },
+      "asset": "/assets/3d/countryside/美丽乡村参考图.png"
+    },
+    {
+      "id": "launchward-horizon",
+      "themes": ["city", "nature"],
+      "hall": "aerospace",
+      "sourceId": "cnsa-english-portal",
+      "title": { "en": "Launchward Horizon", "zh": "面向发射的地平线" },
+      "summary": { "en": "A public-information pause for looking outward from an island horizon.", "zh": "在面向远方的海岛地平线前，进行一次公共信息停留。" },
+      "note": { "en": "Use the official public portal for current aerospace information; this route makes no operational claim.", "zh": "当前航天信息请以官方公共门户为准；本路线不作运行状态声明。" },
+      "asset": "/assets/3d/aerospace/文昌航天展厅参考图.png"
+    },
+    {
+      "id": "grain-and-craft",
+      "themes": ["culture", "city"],
+      "hall": "huali",
+      "sourceId": "project-supplied-six-hall-archive",
+      "title": { "en": "Grain & Craft", "zh": "纹理与工艺" },
+      "summary": { "en": "A project-curated material study that slows the itinerary down to grain, carving, and attentive looking.", "zh": "一段项目策展的材料观察，让行程慢下来，阅读纹理、雕刻与凝视。" },
+      "note": { "en": "Project-supplied visual context only; it is not material authentication, a retail listing, or a heritage claim.", "zh": "仅为项目提供的视觉语境，不构成材质鉴定、零售展示或文化遗产主张。" },
+      "asset": "/assets/3d/huali/东方花梨展厅参考图.png"
+    },
+    {
+      "id": "harbour-exchange",
+      "themes": ["city", "coast"],
+      "hall": "free-trade-port",
+      "sourceId": "hainan-free-trade-port-english-portal",
+      "title": { "en": "Harbour Exchange", "zh": "海港交换" },
+      "summary": { "en": "A public-information stop that points outward to current Hainan Free Trade Port materials.", "zh": "一处指向当前海南自由贸易港公开资料的公共信息停留点。" },
+      "note": { "en": "An official portal is the source for current notices; this atlas does not determine policy, tax, customs, visa, or commercial outcomes.", "zh": "当前通知请以官方门户为准；本图谱不判断政策、税务、海关、签证或商业结果。" },
+      "asset": "/assets/user-media2/zimaogang-pictures/port-connection.jpg"
+    },
+    {
+      "id": "province-reading-desk",
+      "themes": ["city", "culture"],
+      "hall": "free-trade-port",
+      "sourceId": "hainan-government-international-portal",
+      "title": { "en": "Province Reading Desk", "zh": "海南省信息阅览台" },
+      "summary": { "en": "A closing reading pause that points visitors to the Hainan provincial international portal for current public materials.", "zh": "以海南省国际门户为入口，查阅当前公开资料的收束性停留。" },
+      "note": { "en": "This is an orientation entry point only; it does not provide bookings, schedules, or service availability.", "zh": "仅为信息导览入口，不提供预订、时刻或服务可用性判断。" },
+      "asset": "/assets/user-media2/zimaogang-pictures/open-exchange.jpg"
+    }
+  ]
+}

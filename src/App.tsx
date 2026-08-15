@@ -1,5 +1,11 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { copy, Language, zones } from './data'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { copy, zones } from './data'
+import { assertLocalizationTree, completeLocalizationTree, inline, isLanguage, languageMeta, localize, readLanguagePreference, runtimeCopy, saveLanguagePreference, type Language, type RuntimeLocalized } from './i18n'
+import BrandLockup from './components/BrandLockup'
+import LanguageSelector from './components/LanguageSelector'
+import LuoyinDesktopPet from './components/LuoyinDesktopPet'
+import SocialShare from './components/SocialShare'
+import HainanMap from './components/HainanMap'
 import sourceDeskData from '../knowledge/source-desk.json'
 import sourceRegistryData from '../knowledge/source-registry.json'
 
@@ -9,18 +15,29 @@ const HualiImmersiveHall = lazy(() => import('./components/HualiImmersiveHall'))
 const VillageImmersiveHall = lazy(() => import('./components/VillageImmersiveHall'))
 const TropicalImmersiveHall = lazy(() => import('./components/TropicalImmersiveHall'))
 const FreeTradePortImmersiveHall = lazy(() => import('./components/FreeTradePortImmersiveHall'))
+const LuoyinTidePage = lazy(() => import('./components/LuoyinTidePage'))
+const TravelAtlas = lazy(() => import('./components/TravelAtlas'))
+const TradePage = lazy(() => import('./components/TradePage'))
+
+type ExperienceRoute = 'luoyin-tide' | 'travel-atlas' | 'market'
+
+function experienceFromHash(hash: string): ExperienceRoute | null {
+  const route = hash.replace(/^#/, '').split('?')[0]
+  if (route === 'luoyin-tide' || route === 'travel-atlas') return route
+  return route === 'market' || route.startsWith('market/') || route === 'market-operator' ? 'market' : null
+}
 
 type SourceDeskEntry = {
   id: string
   sourceRecordId: string
-  displayKind: 'verified_source' | 'service_orientation'
+  displayKind: 'verified_source' | 'service_orientation' | 'project_context' | 'ai_curation'
   status: 'reviewed' | 'needs_review' | 'expired' | 'blocked'
-  title: { en: string; zh: string }
+  title: RuntimeLocalized
   publisher: string
-  canonicalUrl: string
+  canonicalUrl: string | null
   topics: string[]
-  scope: { en: string; zh: string }
-  limitation: { en: string; zh: string }
+  scope: RuntimeLocalized
+  limitation: RuntimeLocalized
   collaborationStatus: 'no_partnership_claim'
 }
 
@@ -38,14 +55,19 @@ type GuideMessage = {
 }
 
 const sourceDeskEntries = sourceDeskData.entries as SourceDeskEntry[]
+completeLocalizationTree(zones)
+assertLocalizationTree(zones, 'home zone records')
+assertLocalizationTree(sourceDeskEntries, 'source desk entries')
 const sourceCheckedAt = new Map(sourceRegistryData.records.map((record) => [record.id, record.checkedAt]))
 const publicApiBaseUrl = (import.meta.env.VITE_LUOYIN_API_BASE_URL || '').trim().replace(/\/+$/, '')
 const apiPath = (path: string) => `${publicApiBaseUrl}${path}`
 
 function App() {
-  const [language, setLanguage] = useState<Language>('en')
+  const [language, setLanguage] = useState<Language>(() => readLanguagePreference())
   const [activeZone, setActiveZone] = useState(0)
   const [guideOpen, setGuideOpen] = useState(false)
+  const [petVisible, setPetVisible] = useState(true)
+  const [heroImageFailed, setHeroImageFailed] = useState(false)
   const [question, setQuestion] = useState('')
   const [guideMessages, setGuideMessages] = useState<GuideMessage[]>([])
   const [loading, setLoading] = useState(false)
@@ -70,46 +92,92 @@ function App() {
   const [sourceDeskReference, setSourceDeskReference] = useState('')
   const [mediaOpen, setMediaOpen] = useState(false)
   const [mediaFailed, setMediaFailed] = useState(false)
+  const [previousZone, setPreviousZone] = useState<number | null>(null)
+  const [carouselPointerPaused, setCarouselPointerPaused] = useState(false)
+  const [carouselFocusPaused, setCarouselFocusPaused] = useState(false)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [activeNav, setActiveNav] = useState(1)
   const [exhibitionMenuOpen, setExhibitionMenuOpen] = useState(false)
+  const [exploreMenuOpen, setExploreMenuOpen] = useState(false)
   const [hallNotice, setHallNotice] = useState('')
+  const [activeExperience, setActiveExperience] = useState<ExperienceRoute | null>(() => experienceFromHash(window.location.hash))
   const [activeHall, setActiveHall] = useState<'tropical' | 'limiao' | 'aerospace' | 'huali' | 'village' | 'freeTradePort' | null>(() => window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : window.location.hash === '#free-trade-hall' ? 'freeTradePort' : null)
   const [guideZoneId, setGuideZoneId] = useState('tropical')
   const [guideZoneTitle, setGuideZoneTitle] = useState(zones[0].title)
   const exhibitionRef = useRef<HTMLElement>(null)
+  const carouselPointerDownRef = useRef(false)
   const guideTranscriptRef = useRef<HTMLDivElement>(null)
   const guideInputRef = useRef<HTMLInputElement>(null)
   const t = copy[language]
-  const heroSubtitle = language === 'en' ? 'Hainan, more than an island.' : '海南，不止一座岛'
+  const tx = (english: string, chinese: string) => inline(language, english, chinese)
+  const changeLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage)
+    saveLanguagePreference(nextLanguage)
+  }
+  const heroFreeTradeLabel = inline(language, 'Explore Free Trade Port', '探索自贸港')
+  const heroGuideLabel = inline(language, 'Meet Luoyin', '询问螺音')
   const zone = zones[activeZone]
   const guideState = loading ? 'listening' : zone.id === 'huali' ? 'resonance' : zone.id === 'lijin' ? 'focus' : 'listening'
-  const leadIntents = [
-    { id: 'culture-collaboration', en: 'Cultural collaboration', zh: '文化合作' },
-    { id: 'responsible-travel', en: 'Responsible travel planning', zh: '负责任的旅行规划' },
-    { id: 'craft-material', en: 'Craft & material inquiry', zh: '工艺与材料咨询' },
-    { id: 'media-partnership', en: 'Media partnership', zh: '媒体合作' },
-    { id: 'free-trade-port', en: 'Free Trade Port orientation', zh: '自贸港信息导览' },
+  const leadIntents: Array<{ id: string; label: RuntimeLocalized }> = [
+    { id: 'culture-collaboration', label: runtimeCopy('Cultural collaboration', '文化合作') },
+    { id: 'responsible-travel', label: runtimeCopy('Responsible travel planning', '负责任的旅行规划') },
+    { id: 'craft-material', label: runtimeCopy('Craft & material inquiry', '工艺与材料咨询') },
+    { id: 'media-partnership', label: runtimeCopy('Media partnership', '媒体合作') },
+    { id: 'free-trade-port', label: runtimeCopy('Free Trade Port orientation', '自贸港信息导览') },
   ]
-  const sourceDeskTopics = [
-    { id: 'all', en: 'All sources', zh: '全部来源' },
-    { id: 'heritage', en: 'Heritage', zh: '文化与非遗' },
-    { id: 'aerospace', en: 'Aerospace', zh: '航天' },
-    { id: 'free-trade-port', en: 'Free Trade Port', zh: '自贸港' },
+  const sourceDeskTopics: Array<{ id: string; label: RuntimeLocalized }> = [
+    { id: 'all', label: runtimeCopy('All sources', '全部来源') },
+    { id: 'heritage', label: runtimeCopy('Heritage', '文化与非遗') },
+    { id: 'aerospace', label: runtimeCopy('Aerospace', '航天') },
+    { id: 'free-trade-port', label: runtimeCopy('Free Trade Port', '自贸港') },
   ]
   const visibleSourceDeskEntries = sourceDeskEntries.filter((entry) => entry.status === 'reviewed' && (sourceDeskTopic === 'all' || entry.topics.includes(sourceDeskTopic)))
-
-  const scrollToExhibition = () => {
-    const target = exhibitionRef.current
-    if (target) window.scrollTo({ top: target.offsetTop - 72, behavior: 'smooth' })
-  }
+  const sourceDeskLayer = (entry: SourceDeskEntry) => entry.displayKind === 'verified_source'
+    ? tx('Reviewed source', '已核验来源')
+    : entry.displayKind === 'service_orientation'
+      ? tx('Public orientation', '公共信息导览')
+      : entry.displayKind === 'project_context'
+        ? tx('Project visual context', '项目视觉语境')
+        : tx('AI curation boundary', 'AI 编排边界')
 
   const switchZone = (index: number) => {
+    if (index !== activeZone) setPreviousZone(activeZone)
     setActiveZone(index)
     setGuideZoneId(zones[index]?.id || 'tropical')
     setGuideZoneTitle(zones[index]?.title || zones[0].title)
     setMediaOpen(false)
     setMediaFailed(false)
   }
+
+  const carouselPaused = carouselPointerPaused || carouselFocusPaused || mediaOpen || prefersReducedMotion
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const syncReducedMotion = () => setPrefersReducedMotion(mediaQuery.matches)
+    syncReducedMotion()
+    mediaQuery.addEventListener('change', syncReducedMotion)
+    return () => mediaQuery.removeEventListener('change', syncReducedMotion)
+  }, [])
+
+  useEffect(() => {
+    const meta = languageMeta[language]
+    document.documentElement.lang = meta.tag
+    document.documentElement.dir = meta.direction
+  }, [language])
+
+  useEffect(() => {
+    const syncStoredLanguage = (event: StorageEvent) => {
+      if (event.key === 'qiongverse.language' && isLanguage(event.newValue)) setLanguage(event.newValue)
+    }
+    window.addEventListener('storage', syncStoredLanguage)
+    return () => window.removeEventListener('storage', syncStoredLanguage)
+  }, [])
+
+  useEffect(() => {
+    if (activeHall || activeExperience || carouselPaused) return
+    const timeout = window.setTimeout(() => switchZone((activeZone + 1) % zones.length), 2000)
+    return () => window.clearTimeout(timeout)
+  }, [activeHall, activeExperience, activeZone, carouselPaused])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -118,6 +186,7 @@ function App() {
         setSourceDeskOpen(false)
         setMediaOpen(false)
         setExhibitionMenuOpen(false)
+        setExploreMenuOpen(false)
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -125,10 +194,34 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const syncHallRoute = () => setActiveHall(window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : window.location.hash === '#free-trade-hall' ? 'freeTradePort' : null)
-    window.addEventListener('hashchange', syncHallRoute)
-    return () => window.removeEventListener('hashchange', syncHallRoute)
+    const syncRoute = () => {
+      const experience = experienceFromHash(window.location.hash)
+      setActiveExperience(experience)
+      setActiveHall(experience ? null : window.location.hash === '#tropical-hall' ? 'tropical' : window.location.hash === '#limiao-hall' ? 'limiao' : window.location.hash === '#aerospace-hall' ? 'aerospace' : window.location.hash === '#huali-hall' ? 'huali' : window.location.hash === '#village-hall' ? 'village' : window.location.hash === '#free-trade-hall' ? 'freeTradePort' : null)
+      setExhibitionMenuOpen(false)
+      setExploreMenuOpen(false)
+    }
+    window.addEventListener('hashchange', syncRoute)
+    return () => window.removeEventListener('hashchange', syncRoute)
   }, [])
+
+  useEffect(() => {
+    if (!activeExperience) return
+    let frame = 0
+    let attempts = 0
+    const focusRouteHeading = () => {
+      const target = document.querySelector<HTMLElement>('[data-experience-main] h1, #market-main h1')
+      if (!target && attempts++ < 24) {
+        frame = window.requestAnimationFrame(focusRouteHeading)
+        return
+      }
+      if (!target) return
+      target.tabIndex = -1
+      target.focus({ preventScroll: true })
+    }
+    frame = window.requestAnimationFrame(focusRouteHeading)
+    return () => window.cancelAnimationFrame(frame)
+  }, [activeExperience])
 
   useEffect(() => {
     const transcript = guideTranscriptRef.current
@@ -211,6 +304,51 @@ function App() {
     setActiveHall('freeTradePort')
   }
 
+  const openExperience = (route: ExperienceRoute) => {
+    setExhibitionMenuOpen(false)
+    setExploreMenuOpen(false)
+    setActiveExperience(route)
+    window.location.hash = route
+  }
+
+  const exitExperience = () => {
+    setActiveExperience(null)
+    window.location.hash = 'top'
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'auto' }), 0)
+  }
+
+  const openGuideChat = () => {
+    setPetVisible(true)
+    setGuideOpen(true)
+  }
+
+  const closeGuideChat = () => {
+    setGuideOpen(false)
+    window.setTimeout(() => document.querySelector<HTMLButtonElement>('[data-luoyin-pet-toggle]')?.focus(), 0)
+  }
+
+  const closeGuidePet = () => {
+    setGuideOpen(false)
+    setPetVisible(false)
+  }
+
+  const openTideHall = (themeId: string) => {
+    if (themeId === 'tropical') return openTropicalHall()
+    if (themeId === 'lijin') return openLimiaoHall()
+    if (themeId === 'aerospace') return openAerospaceHall()
+    if (themeId === 'huali') return openHualiHall()
+    if (themeId === 'village') return openVillageHall()
+    openFreeTradePortHall()
+  }
+
+  const openTideGuide = (themeId: string) => {
+    const matchingZone = zones.find((item) => item.id === themeId)
+    setGuideZoneId(themeId)
+    setGuideZoneTitle(matchingZone?.title || { en: 'Free Trade Port', zh: '自贸港' })
+    setQuestion(language === 'en' ? `Tell me about ${matchingZone?.title.en || 'the Free Trade Port'}.` : `请介绍${matchingZone?.title.zh || '自贸港'}。`)
+    openGuideChat()
+  }
+
   const openZoneHall = (index: number) => {
     setExhibitionMenuOpen(false)
     if (zones[index]?.id === 'tropical') {
@@ -248,14 +386,14 @@ function App() {
     const trimmed = question.trim()
     if (!trimmed || loading) return
     setLoading(true)
-    const visitorMessage: GuideMessage = { id: `visitor-${Date.now()}`, role: 'visitor', text: trimmed, zoneTitle: zone.title[language] }
+    const visitorMessage: GuideMessage = { id: `visitor-${Date.now()}`, role: 'visitor', text: trimmed, zoneTitle: localize(zone.title, language) }
     setGuideMessages((messages) => [...messages, visitorMessage].slice(-24))
     let completed = false
     try {
       const response = await fetch(apiPath('/api/luoyin'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ question: trimmed, language, zoneId: guideZoneId }) })
       const payload = await response.json() as { answer?: string; layer?: string; sourceLabel?: string; sourceUrl?: string | null; sourceClass?: string; sourceStatus?: string; handoff?: boolean; mode?: 'local' | 'mock' | 'glm' | 'fallback' }
       if (!payload.answer) throw new Error('empty_response')
-      const guideMessage: GuideMessage = { id: `guide-${Date.now()}`, role: 'guide', text: payload.answer || '', zoneTitle: guideZoneTitle[language], layer: payload.layer || 'local_contextual_guide', sourceLabel: payload.sourceLabel || (language === 'en' ? 'Local contextual guide' : '本地语境导览'), sourceUrl: payload.sourceUrl || null, sourceClass: payload.sourceClass || '', sourceStatus: payload.sourceStatus || '', mode: payload.mode === 'glm' ? 'glm' : payload.mode === 'fallback' ? 'fallback' : payload.mode === 'local' ? 'local' : 'mock' }
+      const guideMessage: GuideMessage = { id: `guide-${Date.now()}`, role: 'guide', text: payload.answer || '', zoneTitle: localize(guideZoneTitle, language), layer: payload.layer || 'local_contextual_guide', sourceLabel: payload.sourceLabel || inline(language, 'Local contextual guide', '本地语境导览'), sourceUrl: payload.sourceUrl || null, sourceClass: payload.sourceClass || '', sourceStatus: payload.sourceStatus || '', mode: payload.mode === 'glm' ? 'glm' : payload.mode === 'fallback' ? 'fallback' : payload.mode === 'local' ? 'local' : 'mock' }
       setGuideMessages((messages) => [...messages, guideMessage].slice(-24))
       completed = true
     } catch {
@@ -263,8 +401,8 @@ function App() {
         ? language === 'en'
           ? 'This Free Trade Port room is a project-curated visual orientation. Check the official Hainan Free Trade Port English portal for current public information.'
           : '自贸港展厅提供项目策展的视觉导览。当前公共信息请查阅海南自由贸易港英文官方门户。'
-        : zone.guide[language]
-      const fallbackMessage: GuideMessage = { id: `fallback-${Date.now()}`, role: 'guide', text: fallbackText, zoneTitle: guideZoneTitle[language], layer: language === 'en' ? 'offline fallback' : '离线本地回退', sourceLabel: language === 'en' ? 'Offline local fallback' : '离线本地回退', sourceClass: 'ai_suggestion', sourceStatus: 'blocked', mode: 'error' }
+        : localize(zone.guide, language)
+      const fallbackMessage: GuideMessage = { id: `fallback-${Date.now()}`, role: 'guide', text: fallbackText, zoneTitle: localize(guideZoneTitle, language), layer: inline(language, 'offline fallback', '离线本地回退'), sourceLabel: inline(language, 'Offline local fallback', '离线本地回退'), sourceClass: 'ai_suggestion', sourceStatus: 'blocked', mode: 'error' }
       setGuideMessages((messages) => [...messages, fallbackMessage].slice(-24))
     } finally {
       setLoading(false)
@@ -330,15 +468,17 @@ function App() {
   }
 
   const zoneMeta = useMemo(() => `${zone.index} / 05`, [zone.index])
+  const guideBlocked = sourceDeskOpen || leadOpen || mediaOpen
 
   return <div className={activeHall === 'tropical' ? 'site-shell tropical-route-active' : 'site-shell'}>
-    {activeHall === 'tropical' && <Suspense fallback={<main className="tropical-loading">Opening the Tropical Island Hall…</main>}><TropicalImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(0)} onOpenGuide={(exhibit) => { setActiveZone(0); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : exhibit.title.zh); setGuideOpen(true) }} /></Suspense>}
-    {activeHall === 'limiao' ? <Suspense fallback={<main className="limiao-loading">Opening the Li &amp; Miao Immersive Hall…</main>}><LiMiaoImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(1)} onOpenGuide={(exhibit) => { setActiveZone(1); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'aerospace' ? <Suspense fallback={<main className="aerospace-loading">Opening the Wenchang Aerospace Hall…</main>}><AerospaceImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(2)} onOpenGuide={(exhibit) => { setActiveZone(2); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'huali' ? <Suspense fallback={<main className="huali-loading">Opening the Dongfang Rosewood Hall…</main>}><HualiImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(3)} onOpenGuide={(exhibit) => { setActiveZone(3); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'village' ? <Suspense fallback={<main className="village-loading">Opening the Beautiful Villages Hall…</main>}><VillageImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(4)} onOpenGuide={(exhibit) => { setActiveZone(4); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + '.' : '请介绍' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : activeHall === 'freeTradePort' ? <Suspense fallback={<main className="ftp-loading">Opening the Free Trade Port Immersive Hall…</main>}><FreeTradePortImmersiveHall language={language} onToggleLanguage={() => setLanguage(language === 'en' ? 'zh' : 'en')} onExit={() => exitHall(0)} onOpenReadingRoom={() => { window.location.hash = 'free-trade-port-hall'; setActiveHall(null); window.setTimeout(() => scrollToTarget('free-trade-port-hall', 2), 0) }} onOpenGuide={(exhibit) => { setGuideZoneId('free-trade-port'); setGuideZoneTitle({ en: 'Free Trade Port', zh: '自贸港' }); setQuestion(language === 'en' ? 'Tell me about ' + exhibit.title.en + ' in the Free Trade Port hall.' : '请介绍自贸港展厅中的' + exhibit.title.zh + '。'); setGuideOpen(true) }} /></Suspense> : <>
+    {activeExperience === 'luoyin-tide' && <Suspense fallback={<main className="tide-route-loading">Opening ShellSong…</main>}><LuoyinTidePage language={language} onChangeLanguage={changeLanguage} onExit={exitExperience} onOpenHall={openTideHall} onAskLuoyin={openTideGuide} /></Suspense>}
+    {activeExperience === 'travel-atlas' && <Suspense fallback={<main className="travel-atlas-loading">Opening Hainan Unfolded…</main>}><TravelAtlas language={language} onChangeLanguage={changeLanguage} onExit={exitExperience} apiPath={apiPath} /></Suspense>}
+    {activeExperience === 'market' && <Suspense fallback={<main className="market-loading">Opening the project demo market…</main>}><TradePage language={language} onChangeLanguage={changeLanguage} onExit={exitExperience} onOpenGuide={openGuideChat} /></Suspense>}
+    {!activeExperience && <>
+    {activeHall === 'tropical' && <Suspense fallback={<main className="tropical-loading">Opening the Tropical Island Hall…</main>}><TropicalImmersiveHall language={language} onChangeLanguage={changeLanguage} onExit={() => exitHall(0)} onOpenGuide={(exhibit) => { setActiveZone(0); setQuestion(language !== 'en' ? exhibit.title.zh : 'Tell me about ' + localize(exhibit.title, language) + '.'); openGuideChat() }} /></Suspense>}
+    {activeHall === 'limiao' ? <Suspense fallback={<main className="limiao-loading">Opening the Li &amp; Miao Immersive Hall…</main>}><LiMiaoImmersiveHall language={language} onChangeLanguage={changeLanguage} onExit={() => exitHall(1)} onOpenGuide={(exhibit) => { setActiveZone(1); setQuestion(language !== 'en' ? '请介绍' + exhibit.title.zh + '。' : 'Tell me about ' + localize(exhibit.title, language) + '.'); openGuideChat() }} /></Suspense> : activeHall === 'aerospace' ? <Suspense fallback={<main className="aerospace-loading">Opening the Wenchang Aerospace Hall…</main>}><AerospaceImmersiveHall language={language} onChangeLanguage={changeLanguage} onExit={() => exitHall(2)} onOpenGuide={(exhibit) => { setActiveZone(2); setQuestion(language !== 'en' ? '请介绍' + exhibit.title.zh + '。' : 'Tell me about ' + localize(exhibit.title, language) + '.'); openGuideChat() }} /></Suspense> : activeHall === 'huali' ? <Suspense fallback={<main className="huali-loading">Opening the Dongfang Rosewood Hall…</main>}><HualiImmersiveHall language={language} onChangeLanguage={changeLanguage} onExit={() => exitHall(3)} onOpenGuide={(exhibit) => { setActiveZone(3); setQuestion(language !== 'en' ? '请介绍' + exhibit.title.zh + '。' : 'Tell me about ' + localize(exhibit.title, language) + '.'); openGuideChat() }} /></Suspense> : activeHall === 'village' ? <Suspense fallback={<main className="village-loading">Opening the Beautiful Villages Hall…</main>}><VillageImmersiveHall language={language} onChangeLanguage={changeLanguage} onExit={() => exitHall(4)} onOpenGuide={(exhibit) => { setActiveZone(4); setQuestion(language !== 'en' ? '请介绍' + exhibit.title.zh + '。' : 'Tell me about ' + localize(exhibit.title, language) + '.'); openGuideChat() }} /></Suspense> : activeHall === 'freeTradePort' ? <Suspense fallback={<main className="ftp-loading">Opening the Free Trade Port Immersive Hall…</main>}><FreeTradePortImmersiveHall language={language} onChangeLanguage={changeLanguage} onExit={() => exitHall(0)} onOpenGuide={(exhibit) => { setGuideZoneId('free-trade-port'); setGuideZoneTitle({ en: 'Free Trade Port', zh: '自贸港' }); setQuestion(language !== 'en' ? '请介绍自贸港展厅中的' + exhibit.title.zh + '。' : 'Tell me about ' + localize(exhibit.title, language) + ' in the Free Trade Port hall.'); openGuideChat() }} /></Suspense> : <>
     <header className="site-header">
-      <a className="brand" href="#top" aria-label="HAINAN QIONGVERSE home">
-        <img className="project-logo" src="/assets/logo.png" alt="QIONGVERSE project logo" />
-        <span className="brand-name">HAINAN<br />QIONGVERSE</span>
-      </a>
+      <BrandLockup />
       <nav className="desktop-nav" aria-label="Primary navigation">
         <a className={activeNav === 0 ? 'nav-link active' : 'nav-link'} href="#top" onClick={(event) => { event.preventDefault(); setExhibitionMenuOpen(false); scrollToTarget('top', 0) }}>{t.nav[0]}</a>
         <div className="nav-menu-wrap">
@@ -346,40 +486,46 @@ function App() {
           {exhibitionMenuOpen && <>
             <button className="nav-menu-backdrop" aria-label={t.menuLabel} onClick={() => setExhibitionMenuOpen(false)} />
             <div id="exhibition-menu" className="nav-menu" role="menu" aria-label={t.nav[1]}>
+              <a className="nav-menu-main-hall" href="#free-trade-hall" role="menuitem" onClick={(event) => { event.preventDefault(); openFreeTradePortHall() }}><span>◎</span>{inline(language, 'Free Trade Port Main Hall', '自贸港主厅')}<b aria-hidden="true">↗</b></a>
+              <a href="#hainan-map" role="menuitem" onClick={(event) => { event.preventDefault(); setExhibitionMenuOpen(false); window.location.hash = 'hainan-map'; scrollToTarget('hainan-map', 1) }}><span>◇</span>{inline(language, 'Hainan Map', '海南地图')}</a>
               {zones.map((item, index) => <a key={item.id} href={item.id === 'tropical' ? '#tropical-hall' : item.id === 'lijin' ? '#limiao-hall' : item.id === 'aerospace' ? '#aerospace-hall' : item.id === 'huali' ? '#huali-hall' : item.id === 'village' ? '#village-hall' : '#exhibition'} role="menuitem" onClick={(event) => { event.preventDefault(); openZoneHall(index) }}><span>{item.index}</span>{item.title[language]}</a>)}
             </div>
           </>}
         </div>
-        <a className={activeNav === 2 ? 'nav-link active' : 'nav-link'} href="#free-trade-hall" onClick={(event) => { event.preventDefault(); openFreeTradePortHall() }}>{t.nav[2]}</a>
+        <button className="nav-link nav-experience-link" type="button" onClick={() => openExperience('travel-atlas')}>{inline(language, 'Travel', '旅行')}</button>
+        <button className="nav-link nav-experience-link" type="button" onClick={() => openExperience('market')}>{inline(language, 'Market', '商品')}</button>
+        <button className="nav-link nav-experience-link" type="button" onClick={() => openExperience('luoyin-tide')}>{inline(language, 'ShellSong', '螺音')}</button>
+        <button className="nav-link nav-archive-trigger" type="button" onClick={() => { setExhibitionMenuOpen(false); openSourceDesk() }} aria-haspopup="dialog">{inline(language, 'Archive', '档案馆')}</button>
       </nav>
       <div className="header-actions">
-        <button className="language-toggle" onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')} aria-label="Switch language">
-          <span className={language === 'en' ? 'selected' : ''}>EN</span><span className="slash">/</span><span className={language === 'zh' ? 'selected' : ''}>中</span>
-        </button>
-        <button className="guide-trigger" onClick={() => setGuideOpen(true)} aria-label={t.open}>◎ <span>Luoyin</span></button>
+        <button className="mobile-archive-trigger" type="button" onClick={() => { setExhibitionMenuOpen(false); openSourceDesk() }} aria-label={inline(language, 'Open verified source desk', '打开已核验来源服务台')} aria-haspopup="dialog"><span aria-hidden="true">□</span></button>
+        <div className="mobile-experience-wrap">
+          <button className="mobile-experience-trigger" type="button" aria-label={inline(language, 'Open experience menu', '打开体验菜单')} aria-expanded={exploreMenuOpen} aria-controls="mobile-experience-menu" onClick={() => setExploreMenuOpen((open) => !open)}><span aria-hidden="true">◇</span></button>
+          {exploreMenuOpen && <div id="mobile-experience-menu" className="mobile-experience-menu" role="menu" aria-label={inline(language, 'Explore experiences', '探索体验')}>
+            <button type="button" role="menuitem" onClick={() => openExperience('luoyin-tide')}>{inline(language, 'ShellSong / Luoyin', '螺音 / ShellSong')}</button>
+            <button type="button" role="menuitem" onClick={() => openExperience('travel-atlas')}>{inline(language, 'Travel / Hainan Unfolded', '旅行 / 海南图鉴')}</button>
+            <button type="button" role="menuitem" onClick={() => openExperience('market')}>{inline(language, 'Market / Project Demo', '商品 / 项目演示')}</button>
+            <button type="button" role="menuitem" onClick={() => { setExploreMenuOpen(false); window.location.hash = 'hainan-map'; scrollToTarget('hainan-map', 1) }}>{inline(language, 'Hainan Map', '海南地图')}</button>
+          </div>}
+        </div>
+        <LanguageSelector language={language} onChange={changeLanguage} className="language-toggle" />
+        <button className="guide-trigger" onClick={openGuideChat} aria-label={t.open}>◎ <span>Luoyin</span></button>
       </div>
     </header>
 
     <main id="top">
-      <section className="hero" aria-labelledby="hero-title">
+      <section className={heroImageFailed ? 'hero hero-dawn is-fallback' : 'hero hero-dawn'} aria-labelledby="hero-title">
         <picture className="hero-media">
-          <source media="(max-width: 700px)" srcSet="/assets/user-media2/interactive-map-overview/海南岛浮空微缩地图.png" />
-          <img src="/assets/user-media2/interactive-map-overview/海南岛浮空微缩地图.png" alt="A floating miniature map of Hainan Province" onError={(event) => { event.currentTarget.src = '/assets/hero/hero-dongfang-showroom-loop-poster.webp' }} />
+          {!heroImageFailed && <img src="/assets/hero/qiongverse-hero2.jpg" width="1932" height="1280" fetchPriority="high" alt="Project-supplied QIONGVERSE brand visual with a tropical coastline, star orbit and Hainan city horizon" onError={() => setHeroImageFailed(true)} />}
         </picture>
         <div className="hero-shade" />
-        <div className="hero-archive-index" aria-hidden="true"><span>01</span><i /><small>QIONGVERSE<br />FIELD ENTRY</small></div>
-        <div className="hero-shell-contour" aria-hidden="true"><span /><span /><span /></div>
         <div className="hero-content">
-          <p className="eyebrow">{t.heroEyebrow}</p>
-          <h1 id="hero-title"><span>HAINAN∞QIONGVERSE</span><span>琼境</span></h1>
-          <p className="hero-body">{heroSubtitle}</p>
+          <h1 id="hero-title" className="brand-sr-only">HAINAN QIONGVERSE</h1>
           <div className="hero-actions">
-            <button className="primary-button" onClick={scrollToExhibition}>{t.enter}<span>↗</span></button>
-            <button className="text-button" onClick={() => setGuideOpen(true)}>{t.listen}<span>◌</span></button>
+            <button className="primary-button" onClick={openFreeTradePortHall}>{heroFreeTradeLabel}<span>↗</span></button>
+            <button className="text-button" onClick={openGuideChat}>{heroGuideLabel}<span>◎</span></button>
           </div>
         </div>
-        <div className="hero-mark" aria-hidden="true"><span>01</span><i /></div>
-        <div className="hero-caption"><span>Hainan Province / 海南省</span><span>Archive opens now</span></div>
       </section>
 
       {false && <section className="intro-band" aria-label="Exhibition introduction">
@@ -388,97 +534,123 @@ function App() {
       </section>}
 
       <section className="free-trade-portal" id="free-trade-main-hall" aria-labelledby="free-trade-portal-title">
-        <div className="free-trade-portal-copy">
-          <p className="eyebrow">{language === 'en' ? '05 / HAINAN PROVINCE' : '05 / 海南省'}</p>
-          <h2 id="free-trade-portal-title">{language === 'en' ? 'Free Trade Port Main Hall' : '自贸港主展厅'}</h2>
-          <p>{language === 'en' ? 'A public reading entrance for checking current Hainan Free Trade Port information through reviewed official sources.' : '面向公众的阅读入口，通过已核验的官方来源了解当前海南自由贸易港信息。'}</p>
-          <div className="free-trade-portal-actions"><a className="primary-button" href="#free-trade-hall" onClick={(event) => { event.preventDefault(); openFreeTradePortHall() }}>{language === 'en' ? 'Enter main hall' : '进入主展厅'} <span>↗</span></a><button className="outline-button" onClick={() => scrollToTarget('exhibition', 1)}>{language === 'en' ? 'Open virtual halls' : '打开虚拟展厅'} <span>↗</span></button><button className="archive-text-action" onClick={() => setGuideOpen(true)}>{language === 'en' ? 'Ask Luoyin for orientation' : '询问螺音导览'}</button></div>
-          <small>{language === 'en' ? 'Public-information orientation only. Not a policy approval, eligibility check or commercial promise.' : '仅作公共信息导览，不构成政策审批、资格判断或商业承诺。'}</small>
+        <div className="free-trade-portal-layout">
+          <div className="free-trade-portal-index" aria-hidden="true"><strong>05</strong><i /><span>HFTP<br />SOURCE<br />ROOM</span></div>
+          <div className="free-trade-portal-copy">
+            <p className="eyebrow">{tx('HAINAN PROVINCE / PUBLIC READING', '海南省 / 公共阅览')}</p>
+            <h2 id="free-trade-portal-title"><span>{tx('Free Trade', '自贸港')}</span><span>{tx('Port Main', '主')}&nbsp;<em>{tx('Hall', '展厅')}</em></span></h2>
+            <p className="free-trade-portal-deck">{tx('A public reading entrance for checking current Hainan Free Trade Port information through reviewed official sources.', '面向公众的阅读入口，通过已核验的官方来源了解当前海南自由贸易港信息。')}</p>
+            <div className="free-trade-portal-actions"><a className="primary-button" href="#free-trade-hall" onClick={(event) => { event.preventDefault(); openFreeTradePortHall() }}>{tx('Enter main hall', '进入主展厅')} <span>↗</span></a><a className="free-trade-portal-source" href="https://en.hnftp.gov.cn/" target="_blank" rel="noopener noreferrer">{tx('Open official English portal', '打开英文官方门户')} <span>↗</span></a></div>
+            <small>{tx('For current notices and policy materials, verify details on the official English portal. This project does not determine eligibility or commercial outcomes.', '当前通知与政策资料请以英文官方门户为准；本项目不判断资格或商业结果。')}</small>
+          </div>
+          <div className="free-trade-portal-coordinate" aria-hidden="true"><span>HAINAN / 19.5 N</span><i /><b>∞</b></div>
         </div>
       </section>
 
-      <section className="exhibition" id="exhibition" ref={exhibitionRef} aria-labelledby="exhibition-title">
-        <div className="section-heading">
-          <div><p className="eyebrow dark">{t.zonesEyebrow}</p><h2 id="exhibition-title">{t.zonesTitle}</h2></div>
-          <p className="section-body">{t.zonesBody}</p>
-        </div>
-        <div className="zone-nav" role="tablist" aria-label="Exhibition zones">
-          {zones.map((item, index) => <button id={`zone-tab-${index}`} key={item.id} role="tab" aria-selected={activeZone === index} tabIndex={activeZone === index ? 0 : -1} className={activeZone === index ? 'zone-tab active' : 'zone-tab'} onClick={() => switchZone(index)} onKeyDown={(event) => { if (event.key === 'ArrowRight' || event.key === 'ArrowDown') { event.preventDefault(); moveZone(1) } if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') { event.preventDefault(); moveZone(-1) } }}><span>{item.index}</span>{item.title[language]}</button>)}
-        </div>
-        <div className={`zone-stage ${zone.tone}`}>
-          <div className="zone-image-wrap">
-            <picture><source media="(max-width: 700px)" srcSet={zone.mobileImage} /><img src={zone.image} alt={zone.title[language]} onError={(event) => { event.currentTarget.src = zone.poster }} /></picture>
-            <div className="image-caption"><span>{zoneMeta}</span><span>{t.source}</span></div>
-            <button className="media-play" aria-label={'Preview ' + zone.title.en} onClick={() => { setMediaFailed(false); setMediaOpen(true) }}>{zone.video ? '▶' : '◇'}</button>
-          </div>
-          <div className="zone-copy">
-            <div className="zone-copy-top"><span className="zone-tag">{zone.tag[language]}</span><span className="zone-signal" aria-label="Zone signal">◌ {zone.id === 'huali' ? 'resonance' : 'listening'}</span></div>
-            <h3>{zone.title[language]}</h3>
-            <p className="zone-kicker">{zone.kicker[language]}</p>
-            <p className="zone-description">{zone.description[language]}</p>
-            <div className="zone-detail-image"><img src={zone.banner} alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></div>
-            <div className="zone-footer"><span>{language === 'en' ? 'Read the room' : '阅读展室'}</span><span className="arrow">↗</span></div>
-            {zone.id === 'tropical' && <button className="limiao-entry" type="button" onClick={openTropicalHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
-            {zone.id === 'lijin' && <button className="limiao-entry" type="button" onClick={openLimiaoHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
-            {zone.id === 'aerospace' && <button className="limiao-entry" type="button" onClick={openAerospaceHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
-            {zone.id === 'huali' && <button className="limiao-entry" type="button" onClick={openHualiHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
-            {zone.id === 'village' && <button className="limiao-entry" type="button" onClick={openVillageHall}>{language === 'en' ? 'Enter immersive hall' : '进入沉浸展厅'} <span>↗</span></button>}
+      <section className="exhibition" id="exhibition" ref={exhibitionRef} aria-label="Five immersive halls" onMouseEnter={() => setCarouselPointerPaused(true)} onMouseLeave={() => setCarouselPointerPaused(false)} onPointerDown={() => { carouselPointerDownRef.current = true; setCarouselFocusPaused(false) }} onPointerUp={() => { carouselPointerDownRef.current = false }} onFocusCapture={() => { if (!carouselPointerDownRef.current) setCarouselFocusPaused(true) }} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCarouselFocusPaused(false) }}>
+        <div className={`hall-visual-stage ${zone.tone}`} id={`zone-panel-${activeZone}`} role="tabpanel" aria-labelledby={`zone-tab-${activeZone}`}>
+          <button className="zone-visual-enter" type="button" onClick={() => openZoneHall(activeZone)} aria-label={`Enter ${zone.title[language]}`}>
+            {previousZone !== null && previousZone !== activeZone && <picture className="zone-visual-image zone-visual-image--previous"><source media="(max-width: 700px)" srcSet={zones[previousZone].mobileImage} /><img src={zones[previousZone].image} alt="" aria-hidden="true" /></picture>}
+            <picture className="zone-visual-image zone-visual-image--current" key={zone.id}><source media="(max-width: 700px)" srcSet={zone.mobileImage} /><img src={zone.image} alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></picture>
+            <span className="zone-visual-shade" aria-hidden="true" />
+            <span className="zone-visual-label"><span>{zone.index} / 05</span><strong>{zone.title[language]}</strong></span>
+            <span className="zone-visual-arrow" aria-hidden="true">↗</span>
+          </button>
+          <div className="hall-wheel" role="tablist" aria-label="Choose an immersive hall">
+            <div className="hall-wheel-rotor" style={{ '--wheel-turn': `${activeZone * -72}deg` } as CSSProperties}>
+              {zones.map((item, index) => <button id={`zone-tab-${index}`} key={item.id} type="button" role="tab" aria-label={item.title[language]} aria-selected={activeZone === index} aria-controls={`zone-panel-${index}`} tabIndex={activeZone === index ? 0 : -1} className={'hall-wheel-item' + (activeZone === index ? ' active' : '')} style={{ '--wheel-angle': `${index * 72}deg` } as CSSProperties} onClick={() => switchZone(index)} onKeyDown={(event) => { if (event.key === 'ArrowRight' || event.key === 'ArrowDown') { event.preventDefault(); moveZone(1) } if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') { event.preventDefault(); moveZone(-1) } if (event.key === 'Home') { event.preventDefault(); switchZone(0); window.setTimeout(() => document.getElementById('zone-tab-0')?.focus(), 0) } if (event.key === 'End') { event.preventDefault(); switchZone(zones.length - 1); window.setTimeout(() => document.getElementById(`zone-tab-${zones.length - 1}`)?.focus(), 0) } }}><span className="hall-wheel-item-inner"><img src={item.image} alt="" aria-hidden="true" onError={(event) => { event.currentTarget.src = item.poster }} /><span>{item.index}</span></span></button>)}
+            </div>
           </div>
         </div>
-        <div className="tide-line" aria-hidden="true">{zones.map((item, index) => <span key={item.id} className={activeZone === index ? 'tide-dot active' : 'tide-dot'} />)}</div>
+        <div className="hall-carousel">
+          <aside className="hall-carousel-aside">
+            <div className="hall-carousel-heading"><p className="eyebrow">{t.zonesEyebrow}</p><h2 id="exhibition-title">{t.zonesTitle}</h2><p>{t.zonesBody}</p></div>
+            <div className="hall-carousel-dial" role="tablist" aria-label="Exhibition zones">
+              {zones.map((item, index) => {
+                const dialOffset = (index - activeZone + zones.length + 2) % zones.length - 2
+                return <button id={`zone-tab-${index}`} key={item.id} type="button" role="tab" aria-label={item.title[language]} aria-selected={activeZone === index} aria-controls={`zone-panel-${index}`} tabIndex={activeZone === index ? 0 : -1} className={`hall-dial-item offset-${dialOffset}${activeZone === index ? ' active' : ''}`} onClick={() => switchZone(index)} onKeyDown={(event) => { if (event.key === 'ArrowRight' || event.key === 'ArrowDown') { event.preventDefault(); moveZone(1) } if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') { event.preventDefault(); moveZone(-1) } if (event.key === 'Home') { event.preventDefault(); switchZone(0); window.setTimeout(() => document.getElementById('zone-tab-0')?.focus(), 0) } if (event.key === 'End') { event.preventDefault(); switchZone(zones.length - 1); window.setTimeout(() => document.getElementById(`zone-tab-${zones.length - 1}`)?.focus(), 0) } }}><img src={item.image} alt="" aria-hidden="true" onError={(event) => { event.currentTarget.src = item.poster }} /><span className="hall-dial-index">{item.index}</span><span className="hall-dial-title">{item.title[language]}</span></button>
+              })}
+            </div>
+          </aside>
+          <article id={`zone-panel-${activeZone}`} className={`zone-carousel-stage ${zone.tone}`} role="tabpanel" aria-labelledby={`zone-tab-${activeZone}`}>
+            <div className="zone-carousel-art">
+              {previousZone !== null && previousZone !== activeZone && <picture className="zone-carousel-image zone-carousel-image--previous"><source media="(max-width: 700px)" srcSet={zones[previousZone].mobileImage} /><img src={zones[previousZone].image} alt="" aria-hidden="true" /></picture>}
+              <picture className="zone-carousel-image zone-carousel-image--current" key={zone.id}><source media="(max-width: 700px)" srcSet={zone.mobileImage} /><img src={zone.image} alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></picture>
+              <button className="zone-carousel-media-trigger" type="button" aria-label={'Preview ' + zone.title.en} onClick={() => { setMediaFailed(false); setMediaOpen(true) }}>{zone.video ? '▶' : '◇'}</button>
+            </div>
+            <div className="zone-carousel-copy">
+              <div className="zone-carousel-copy-top"><span>{zoneMeta} / {t.source}</span><span>{zone.tag[language]}</span></div>
+              <h3>{zone.title[language]}</h3>
+              <p className="zone-carousel-kicker">{zone.kicker[language]}</p>
+              <p className="zone-carousel-description">{zone.description[language]}</p>
+              <div className="zone-carousel-footer"><span>{tx('Open immersive hall', '进入沉浸展厅')}</span><button type="button" onClick={() => openZoneHall(activeZone)}>{tx('Enter', '进入')} <span>↗</span></button></div>
+            </div>
+            <div className="zone-carousel-progress" aria-label={language === 'en' ? `Slide ${activeZone + 1} of ${zones.length}` : `第 ${activeZone + 1} 张，共 ${zones.length} 张`}>{zones.map((item, index) => <span key={item.id} className={activeZone === index ? 'active' : ''} />)}</div>
+          </article>
+        </div>
       </section>
 
-      <section className="archive-note" id="archive-note">
-        <div className="note-image"><img src="/assets/user-media2/ocean-wave.jpg" alt="Close-up texture of an ocean wave" onError={(event) => { event.currentTarget.src = '/assets/hero/hero-dongfang-showroom-safe.webp' }} /></div>
-        <div className="note-copy"><p className="eyebrow dark">{language === 'en' ? 'A NOTE ON THE ARCHIVE' : '关于这座档案馆'}</p><h2>{language === 'en' ? 'A museum can be a threshold.' : '博物馆也可以是一道门。'}</h2><p>{language === 'en' ? 'The archive is built from supplied project media and a fictional ShellSong guide layer. Every future fact, policy or partnership claim will carry a source before it enters the room.' : '档案馆由项目提供的媒体素材与虚构的螺音导览层构成。未来每一条事实、政策或合作信息，都将在进入展室前标注来源。'}</p><div className="note-actions"><button className="outline-button" onClick={openSourceDesk}>{language === 'en' ? 'Verified Source Desk' : '已核验来源服务台'} <span>↗</span></button><button className="archive-text-action" onClick={() => setGuideOpen(true)}>{t.open}</button></div></div>
+      <HainanMap language={language} />
+
+      <section className="experience-feature experience-feature--travel" aria-labelledby="experience-travel-title">
+        <img src="/assets/travel/hainan-unfolded-poster.jpg" alt={tx('Project travel film frame of the Hainan sea at sunset', '海南海上日落项目旅行影像画面')} loading="lazy" />
+        <span className="experience-feature-index" aria-hidden="true">01 / 03</span>
+        <div className="experience-feature-copy">
+          <p>HAINAN UNFOLDED / {tx('TRAVEL', '旅行')}</p>
+          <h2 id="experience-travel-title">{tx('Read Hainan by the light.', '沿着光，读海南。')}</h2>
+          <span>{tx('A visual island atlas where source status remains visible beside every invitation.', '一部让来源状态始终与每次视觉邀请并置的海岛图鉴。')}</span>
+          <button type="button" onClick={() => openExperience('travel-atlas')}>{tx('Open Hainan Unfolded', '打开海南图鉴')} <b aria-hidden="true">↗</b></button>
+          <small>{tx('REVIEWED-SOURCE ATLAS', '已核验来源图鉴')}</small>
+        </div>
+      </section>
+      <section className="experience-feature experience-feature--tide" aria-labelledby="experience-tide-title">
+        <img src="/shellsong/hero-poster.jpg" alt={tx('ShellSong project visual featuring Luoyin at sea', '螺音立于海潮中的 ShellSong 项目视觉')} loading="lazy" />
+        <span className="experience-feature-index" aria-hidden="true">02 / 03</span>
+        <div className="experience-feature-copy">
+          <p>SHELLSONG / {tx('LUOYIN', '螺音')}</p>
+          <h2 id="experience-tide-title">{tx('Hear the tide answer.', '听见潮汐的回声。')}</h2>
+          <span>{tx('Enter an original fictional guide layer shaped by tides, images, and small acts of listening.', '进入由潮汐、影像与聆听构成的原创虚构导览叙事。')}</span>
+          <button type="button" onClick={() => openExperience('luoyin-tide')}>{tx('Enter ShellSong', '进入 ShellSong')} <b aria-hidden="true">↗</b></button>
+          <small>{tx('ORIGINAL FICTION', '原创虚构叙事')}</small>
+        </div>
+      </section>
+      <section className="experience-feature experience-feature--market" aria-labelledby="experience-market-title">
+        <img src="/assets/demo-market/hero/blind-box-turntable.png" alt={tx('Project visual of a blind-box turntable for the project demo market', '用于项目演示商城的盲盒展示转台项目视觉')} loading="lazy" />
+        <span className="experience-feature-index" aria-hidden="true">03 / 03</span>
+        <div className="experience-feature-copy">
+          <p>PROJECT DEMO / {tx('MARKET', '商品')}</p>
+          <h2 id="experience-market-title">{tx('Let the story travel on.', '让故事，继续生长。')}</h2>
+          <span>{tx('Browse cultural concepts, Luoyin IP studies, and studio services in a session-only interface demonstration.', '在仅限当前会话的界面演示中浏览文化概念、螺音 IP 研究与工作室服务。')}</span>
+          <button type="button" onClick={() => openExperience('market')}>{tx('Open project market', '打开项目商城')} <b aria-hidden="true">↗</b></button>
+          <small>{tx('SESSION-ONLY PROJECT DEMO', '仅限当前会话的项目演示')}</small>
+        </div>
       </section>
 
-      <section className="free-trade-hall" id="free-trade-port-hall" aria-labelledby="free-trade-title">
-        <div className="free-trade-intro">
-          <div className="free-trade-index"><span>05</span><i /><small>HAINAN PROVINCE<br />PUBLIC READING ROOM</small></div>
-          <div>
-            <p className="eyebrow">{language === 'en' ? 'PROVINCE / PUBLIC INFORMATION' : '海南省 / 公共信息'}</p>
-            <h2 id="free-trade-title">{language === 'en' ? 'A reading room for the Free Trade Port.' : '一间关于自贸港的阅读室。'}</h2>
-            <p className="free-trade-lede">{language === 'en' ? 'Hainan is the wider field of this archive. This room points to public materials so visitors can check current information for themselves.' : '海南省是这座档案馆更大的叙事场域。本展室指向公开资料，方便访客自行核验当前信息。'}</p>
-          </div>
-        </div>
-        <div className="free-trade-reading">
-          <div className="free-trade-image"><img loading="lazy" src="/assets/user-media2/自贸港主厅/自贸港建设图.png" alt="Project-supplied visual context for a Hainan Free Trade Port main hall" onError={(event) => { event.currentTarget.src = '/assets/hero/hero-dongfang-showroom-safe.webp' }} /><span className="image-caption">{language === 'en' ? 'Project-supplied visual context / not an official policy document' : '项目提供的视觉语境 / 非官方政策文件'}</span></div>
-          <div className="free-trade-copy">
-            <p className="mono-label">SOURCE 02 / REVIEWED ENTRY POINT</p>
-            <h3>{language === 'en' ? 'Hainan Free Trade Port official English portal' : '海南自由贸易港英文官方门户'}</h3>
-            <p>{language === 'en' ? 'Use the official portal to check current public notices and policy materials. Luoyin can help you find the doorway, but cannot decide what applies to you.' : '可通过英文官方门户核查当前公开通知与政策资料。螺音可以帮助你找到入口，但不能替你判断具体规则是否适用。'}</p>
-            <div className="free-trade-scope"><div><span>{language === 'en' ? 'SCOPE' : '范围'}</span><p>{language === 'en' ? 'Public notices and policy reading entry point.' : '公开通知与政策资料的阅读入口。'}</p></div><div><span>{language === 'en' ? 'LIMIT' : '限制'}</span><p>{language === 'en' ? 'Not official advice, eligibility, tax, visa, customs, investment or commercial confirmation.' : '不构成官方建议、资格、税务、签证、通关、投资或商业确认。'}</p></div></div>
-            <div className="free-trade-actions"><a className="primary-button" href="https://en.hnftp.gov.cn/" target="_blank" rel="noopener noreferrer">{language === 'en' ? 'Open official portal' : '打开英文官方门户'} <span>↗</span></a><button className="outline-button" onClick={() => scrollToTarget('exhibition', 1)}>{language === 'en' ? 'Return to the five halls' : '返回五个分展厅'} <span>↗</span></button><button className="archive-text-action" onClick={() => setGuideOpen(true)}>{language === 'en' ? 'Ask Luoyin about this source' : '询问螺音关于此来源'}</button></div>
-            <p className="free-trade-disclaimer">{language === 'en' ? 'Reviewed source metadata: Hainan Free Trade Port official English portal / checked 2026-08-14. This project does not claim government affiliation.' : '已核验来源元数据：海南自由贸易港英文官方门户 / 核验日期 2026-08-14。本项目不宣称政府关联。'}</p>
-          </div>
-        </div>
-      </section>
     </main>
     {hallNotice && <div className="hall-notice" role="status" aria-live="polite">{hallNotice}</div>}
 
-    <footer className="site-footer"><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /><span>{t.footer}</span><span className="footer-code">TIDE ARCHIVE / 2026</span></footer>
-    </>}
+    <footer className="site-footer"><img className="footer-brand-mark" src="/assets/brand/qiongverse-logo2.jpg" alt="QIONGVERSE brand mark" /><img className="footer-wordmark" src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /><button className="footer-archive-trigger" type="button" onClick={openSourceDesk}>{tx('Open verified source desk', '已核验来源服务台')} <span aria-hidden="true">↗</span></button><SocialShare language={language} apiPath={apiPath} /><span className="footer-code">TIDE ARCHIVE / 2026</span></footer>
+    </>}</>}
 
-    <div className={guideOpen ? 'guide-drawer open' : 'guide-drawer'} role="dialog" aria-modal="true" aria-labelledby="guide-title">
-      <div className="guide-top"><div className="guide-identity"><div className="guide-orb">◎</div><div><p className="mono-label">SHELLSONG / 螺音</p><h2 id="guide-title">{t.guideTitle}</h2></div></div><button className="close-button" onClick={() => setGuideOpen(false)} aria-label={t.close}>×</button></div>
-      <div className="guide-character"><img src="/luoyin/luoyin.png" alt="Luoyin, the ShellSong digital guide" onError={(event) => { event.currentTarget.src = '/assets/luoyin/luoyin-guide-focus.webp' }} /><div className="guide-state"><span className="state-dot" /> {guideState} / {guideZoneTitle[language]}</div></div>
-      <p className="guide-body">{t.guideBody}</p>
-      <button className="source-desk-trigger" type="button" onClick={openSourceDesk}>{language === 'en' ? 'Verified Source Desk' : '已核验来源服务台'} <span>↗</span></button>
-      <button className="lead-trigger" type="button" onClick={() => { resetLead(); setLeadOpen(true) }}>{language === 'en' ? 'Request human follow-up' : '请求人工跟进'} <span>↗</span></button>
-      <div className="guide-answer-area" ref={guideTranscriptRef} aria-live="polite" aria-busy={loading} aria-label={language === 'en' ? 'Conversation with Luoyin' : '与螺音的对话'}>{guideMessages.length === 0 && <p className="guide-welcome">{language === 'en' ? 'Begin anywhere. I will keep this conversation here while the drawer stays open.' : '从任何问题开始。抽屉保持打开时，我会在这里保留这段对话。'}</p>}{guideMessages.map((message) => message.role === 'visitor' ? <div className="guide-message visitor-message" key={message.id}><span className="message-label">{language === 'en' ? 'YOU' : '你'} / {message.zoneTitle}</span><p>{message.text}</p></div> : <div className="guide-message guide-message-reply" key={message.id}><div className="answer-meta"><span className="answer-label">{message.mode === 'fallback' || message.mode === 'error' ? (language === 'en' ? 'offline fallback' : '离线本地回退') : message.mode === 'local' ? (language === 'en' ? 'local contextual guide' : '本地语境导览') : message.mode === 'glm' ? (language === 'en' ? 'GLM guide response' : 'GLM 导览回答') : message.layer || t.mock}</span>{message.sourceLabel && !(message.mode === 'local' && (message.sourceLabel === 'Local contextual guide' || message.sourceLabel === '本地语境导览')) && <span className="answer-source">{message.sourceLabel}</span>}{message.sourceUrl && <a className="answer-source answer-source-link" href={message.sourceUrl} target="_blank" rel="noopener noreferrer">{language === 'en' ? 'Open reviewed source' : '打开已核验来源'}</a>}{message.sourceClass && message.sourceClass !== 'local_contextual_guide' && <span className="answer-source-class">{message.sourceClass.replaceAll('_', ' ')}</span>}{message.sourceStatus && message.sourceStatus !== 'local' && <span className="answer-source-status">{message.sourceStatus}</span>}</div><p className="guide-answer">{message.text}</p></div>)}{loading && <p className="guide-answer loading">{language === 'en' ? 'Listening to the tide...' : '正在听潮声……'}</p>}</div>
-      <div className="guide-input"><input ref={guideInputRef} value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitQuestion() }} placeholder={t.guideInput} aria-label={t.guideInput} /><button onClick={submitQuestion} disabled={loading || !question.trim()} aria-label={t.send}>↗</button></div>
-      <p className="guide-disclaimer">{guideServiceMode === 'checking' ? (language === 'en' ? 'Checking guide service...' : '正在检查导览服务……') : guideServiceMode === 'glm' ? (language === 'en' ? 'Live GLM guide is connected. Current or regulated details should be checked against a primary source.' : '实时 GLM 导览已连接。涉及当前或受监管的详情，请以权威一手来源为准。') : guideServiceMode === 'local' ? (language === 'en' ? 'Local contextual guide is active. Live GLM needs a service-process API key.' : '本地语境导览正在运行。实时 GLM 需要在服务进程中配置 API 密钥。') : (language === 'en' ? 'Guide service status is unavailable. Local replies remain available.' : '导览服务状态暂不可用，本地回答仍可使用。')}</p>
-    </div>
-    {guideOpen && <button className="drawer-backdrop" onClick={() => setGuideOpen(false)} aria-label={t.close} />}
+    <LuoyinDesktopPet language={language} visible={petVisible} chatOpen={guideOpen} suspended={guideBlocked} onOpenChat={openGuideChat} onCloseChat={closeGuideChat} onClosePet={closeGuidePet}>
+      <div id="luoyin-chat-panel" className="luoyin-chat-panel" role="dialog" aria-labelledby="guide-title">
+        <div className="guide-top"><div className="guide-identity"><div className="guide-orb">◎</div><div><p className="mono-label">SHELLSONG / 螺音</p><h2 id="guide-title">{t.guideTitle}</h2></div></div><button className="close-button" type="button" onClick={closeGuideChat} aria-label={t.close}>×</button></div>
+        <p className="guide-body">{t.guideBody}</p>
+        <p className="guide-state"><span className="state-dot" /> {guideState} / {guideZoneTitle[language]}</p>
+        <div className="guide-utility-actions"><button className="source-desk-trigger" type="button" onClick={openSourceDesk}>{language === 'en' ? 'Verified Source Desk' : '已核验来源服务台'} <span>↗</span></button><button className="lead-trigger" type="button" onClick={() => { setGuideOpen(false); resetLead(); setLeadOpen(true) }}>{language === 'en' ? 'Request human follow-up' : '请求人工跟进'} <span>↗</span></button></div>
+        <div className="guide-answer-area" ref={guideTranscriptRef} aria-live="polite" aria-busy={loading} aria-label={language === 'en' ? 'Conversation with Luoyin' : '与螺音的对话'}>{guideMessages.length === 0 && <p className="guide-welcome">{language === 'en' ? 'Begin anywhere. I will keep this conversation here while the chat window stays open.' : '从任何问题开始。对话框保持打开时，我会在这里保留这段对话。'}</p>}{guideMessages.map((message) => message.role === 'visitor' ? <div className="guide-message visitor-message" key={message.id}><span className="message-label">{language === 'en' ? 'YOU' : '你'} / {message.zoneTitle}</span><p>{message.text}</p></div> : <div className="guide-message guide-message-reply" key={message.id}><div className="answer-meta"><span className="answer-label">{message.mode === 'fallback' || message.mode === 'error' ? (language === 'en' ? 'offline fallback' : '离线本地回退') : message.mode === 'local' ? (language === 'en' ? 'local contextual guide' : '本地语境导览') : message.mode === 'glm' ? (language === 'en' ? 'GLM guide response' : 'GLM 导览回答') : message.layer || t.mock}</span>{message.sourceLabel && !(message.mode === 'local' && (message.sourceLabel === 'Local contextual guide' || message.sourceLabel === '本地语境导览')) && <span className="answer-source">{message.sourceLabel}</span>}{message.sourceUrl && <a className="answer-source answer-source-link" href={message.sourceUrl} target="_blank" rel="noopener noreferrer">{language === 'en' ? 'Open reviewed source' : '打开已核验来源'}</a>}{message.sourceClass && message.sourceClass !== 'local_contextual_guide' && <span className="answer-source-class">{message.sourceClass.replaceAll('_', ' ')}</span>}{message.sourceStatus && message.sourceStatus !== 'local' && <span className="answer-source-status">{message.sourceStatus}</span>}</div><p className="guide-answer">{message.text}</p></div>)}{loading && <p className="guide-answer loading">{language === 'en' ? 'Listening to the tide...' : '正在听潮声……'}</p>}</div>
+        <div className="guide-input"><input ref={guideInputRef} value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitQuestion() }} placeholder={t.guideInput} aria-label={t.guideInput} /><button onClick={submitQuestion} disabled={loading || !question.trim()} aria-label={t.send}>↗</button></div>
+        <p className="guide-disclaimer">{guideServiceMode === 'checking' ? (language === 'en' ? 'Checking guide service...' : '正在检查导览服务……') : guideServiceMode === 'glm' ? (language === 'en' ? 'Live GLM guide is connected. Current or regulated details should be checked against a primary source.' : '实时 GLM 导览已连接。涉及当前或受监管的详情，请以权威一手来源为准。') : guideServiceMode === 'local' ? (language === 'en' ? 'Local contextual guide is active. Live GLM needs a service-process API key.' : '本地语境导览正在运行。实时 GLM 需要在服务进程中配置 API 密钥。') : (language === 'en' ? 'Guide service status is unavailable. Local replies remain available.' : '导览服务状态暂不可用，本地回答仍可使用。')}</p>
+      </div>
+    </LuoyinDesktopPet>
     {sourceDeskOpen && <div className="source-desk-modal" role="dialog" aria-modal="true" aria-labelledby="source-desk-title">
       <div className="source-desk-sheet">
         <div className="lead-sheet-head"><div><p className="mono-label">SOURCE DESK / REVIEWED ENTRY POINTS</p><h2 id="source-desk-title">{language === 'en' ? 'Verified Source Desk' : '已核验来源服务台'}</h2></div><button className="close-button" type="button" onClick={() => setSourceDeskOpen(false)} aria-label={language === 'en' ? 'Close source desk' : '关闭来源服务台'}>×</button></div>
-        <p className="source-desk-intro">{language === 'en' ? 'Reviewed public source and service entry points, not project partners. Read each scope and limitation before opening its official page. If the original page is currently unavailable, this publisher, scope, and limitation note remains the usable record.' : '已核验的公开来源与服务入口，不代表项目合作关系。打开官方页面前，请阅读每条来源的范围与限制。若原始页面当前不可用，这里的机构、范围与限制说明仍然保留。'}</p>
-        <div className="source-topic-filter" role="group" aria-label={language === 'en' ? 'Filter source topics' : '筛选来源主题'}>{sourceDeskTopics.map((topic) => <button key={topic.id} type="button" className={sourceDeskTopic === topic.id ? 'source-topic active' : 'source-topic'} aria-pressed={sourceDeskTopic === topic.id} onClick={() => setSourceDeskTopic(topic.id)}>{language === 'en' ? topic.en : topic.zh}</button>)}</div>
-        <div className="source-desk-list">{visibleSourceDeskEntries.map((entry) => <article className="source-entry" key={entry.id}><div className="source-entry-meta"><span>{entry.displayKind.replaceAll('_', ' ')}</span><span>{language === 'en' ? 'Reviewed' : '已核验'} / {sourceCheckedAt.get(entry.sourceRecordId) || '—'}</span><span>{language === 'en' ? 'No partnership claim' : '不宣称合作关系'}</span></div><div className="source-entry-copy"><h3>{entry.title[language]}</h3><p className="source-publisher">{entry.publisher}</p><dl><div><dt>{language === 'en' ? 'Scope' : '范围'}</dt><dd>{entry.scope[language]}</dd></div><div><dt>{language === 'en' ? 'Limitation' : '限制'}</dt><dd>{entry.limitation[language]}</dd></div></dl><a className="source-official-link" href={entry.canonicalUrl} target="_blank" rel="noopener noreferrer">{language === 'en' ? 'Open official HTTPS source' : '打开官方 HTTPS 来源'} <span aria-hidden="true">↗</span></a><button className={sourceDeskSourceId === entry.id ? 'source-select active' : 'source-select'} type="button" aria-pressed={sourceDeskSourceId === entry.id} onClick={() => { setSourceDeskSourceId(entry.id); setSourceDeskStatus('idle'); setSourceDeskError(''); setSourceDeskReference('') }}>{sourceDeskSourceId === entry.id ? (language === 'en' ? 'Selected for simulation' : '已选作模拟交接来源') : (language === 'en' ? 'Use for simulation' : '用于模拟交接')}</button></div></article>)}</div>
+        <p className="source-desk-intro">{language === 'en' ? 'Reviewed public sources, project visual context, and bounded AI curation are kept visibly separate. None of these records implies a project partnership. Read each scope and limitation before opening an original source.' : '已核验公开来源、项目视觉语境与受限 AI 编排会清晰区分，且均不代表项目合作关系。打开原始来源前，请阅读每条记录的范围与限制。'}</p>
+        <div className="source-topic-filter" role="group" aria-label={inline(language, 'Filter source topics', '筛选来源主题')}>{sourceDeskTopics.map((topic) => <button key={topic.id} type="button" className={sourceDeskTopic === topic.id ? 'source-topic active' : 'source-topic'} aria-pressed={sourceDeskTopic === topic.id} onClick={() => setSourceDeskTopic(topic.id)}>{localize(topic.label, language)}</button>)}</div>
+        <div className="source-desk-list">{visibleSourceDeskEntries.map((entry) => <article className="source-entry" key={entry.id}><div className="source-entry-meta"><span>{sourceDeskLayer(entry)}</span><span>{sourceCheckedAt.get(entry.sourceRecordId) || '—'}</span><span>{inline(language, 'No partnership claim', '不宣称合作关系')}</span></div><div className="source-entry-copy"><h3>{localize(entry.title, language)}</h3><p className="source-publisher">{entry.publisher}</p><dl><div><dt>{inline(language, 'Scope', '范围')}</dt><dd>{localize(entry.scope, language)}</dd></div><div><dt>{inline(language, 'Limitation', '限制')}</dt><dd>{localize(entry.limitation, language)}</dd></div></dl>{entry.canonicalUrl && <a className="source-official-link" href={entry.canonicalUrl} target="_blank" rel="noopener noreferrer">{inline(language, 'Open original HTTPS source', '打开原始 HTTPS 来源')} <span aria-hidden="true">↗</span></a>}{entry.canonicalUrl && <button className={sourceDeskSourceId === entry.id ? 'source-select active' : 'source-select'} type="button" aria-pressed={sourceDeskSourceId === entry.id} onClick={() => { setSourceDeskSourceId(entry.id); setSourceDeskStatus('idle'); setSourceDeskError(''); setSourceDeskReference('') }}>{sourceDeskSourceId === entry.id ? inline(language, 'Selected for simulation', '已选作模拟交接来源') : inline(language, 'Use for simulation', '用于模拟交接')}</button>}</div></article>)}</div>
         {visibleSourceDeskEntries.length === 0 && <p className="source-desk-empty" role="status">{language === 'en' ? 'No reviewed source matches this topic. Choose All sources to continue.' : '没有与此主题匹配的已核验来源。请选择“全部来源”继续。'}</p>}
-        {sourceDeskStatus === 'success' ? <div className="source-desk-receipt" aria-live="polite"><span className="mono-label">LOCAL SIMULATION RECEIPT</span><h3>{language === 'en' ? 'The simulation completed locally.' : '本地模拟交接已完成。'}</h3><p>{language === 'en' ? 'Reference' : '参考编号'}: <code>{sourceDeskReference}</code></p><p>{language === 'en' ? 'No real institution was contacted. No partnership, booking, order, quote, eligibility decision, or commercial outcome was created.' : '未联系任何真实机构；未建立合作，未产生预订、订单、报价、资格决定或商业结果。'}</p><button className="outline-button" type="button" onClick={() => setSourceDeskOpen(false)}>{language === 'en' ? 'Return to the exhibition' : '返回展厅'}</button></div> : <form className="source-simulation-form" onSubmit={(event) => { event.preventDefault(); submitSourceDeskHandoff() }}><fieldset><legend>{language === 'en' ? 'Simulation purpose' : '模拟交接目的'}</legend><div className="source-intents">{leadIntents.map((intent) => <button type="button" key={intent.id} className={sourceDeskIntent === intent.id ? 'source-intent active' : 'source-intent'} aria-pressed={sourceDeskIntent === intent.id} onClick={() => setSourceDeskIntent(intent.id)}>{language === 'en' ? intent.en : intent.zh}</button>)}</div></fieldset><label className="lead-consent"><input type="checkbox" checked={sourceDeskConsent} onChange={(event) => setSourceDeskConsent(event.target.checked)} /><span>{language === 'en' ? 'I understand this is a local simulation only. No identity, enquiry, or institutional contact will be stored or sent.' : '我理解这仅为本地模拟；不会存储或发送身份、咨询内容或机构联系信息。'}</span></label>{sourceDeskError && <p className="lead-error" role="alert">{sourceDeskError}</p>}<button className="lead-submit" type="submit" disabled={!sourceDeskConsent || sourceDeskStatus === 'sending' || !sourceDeskSourceId}>{sourceDeskStatus === 'sending' ? (language === 'en' ? 'Preparing local simulation…' : '正在准备本地模拟…') : (language === 'en' ? 'Simulate operational handoff' : '模拟运营交接')}</button></form>}
+        {sourceDeskStatus === 'success' ? <div className="source-desk-receipt" aria-live="polite"><span className="mono-label">LOCAL SIMULATION RECEIPT</span><h3>{inline(language, 'The simulation completed locally.', '本地模拟交接已完成。')}</h3><p>{inline(language, 'Reference', '参考编号')}: <code>{sourceDeskReference}</code></p><p>{inline(language, 'No real institution was contacted. No partnership, booking, order, quote, eligibility decision, or commercial outcome was created.', '未联系任何真实机构；未建立合作，未产生预订、订单、报价、资格决定或商业结果。')}</p><button className="outline-button" type="button" onClick={() => setSourceDeskOpen(false)}>{inline(language, 'Return to the exhibition', '返回展厅')}</button></div> : <form className="source-simulation-form" onSubmit={(event) => { event.preventDefault(); submitSourceDeskHandoff() }}><fieldset><legend>{inline(language, 'Simulation purpose', '模拟交接目的')}</legend><div className="source-intents">{leadIntents.map((intent) => <button type="button" key={intent.id} className={sourceDeskIntent === intent.id ? 'source-intent active' : 'source-intent'} aria-pressed={sourceDeskIntent === intent.id} onClick={() => setSourceDeskIntent(intent.id)}>{localize(intent.label, language)}</button>)}</div></fieldset><label className="lead-consent"><input type="checkbox" checked={sourceDeskConsent} onChange={(event) => setSourceDeskConsent(event.target.checked)} /><span>{inline(language, 'I understand this is a local simulation only. No identity, enquiry, or institutional contact will be stored or sent.', '我理解这仅为本地模拟；不会存储或发送身份、咨询内容或机构联系信息。')}</span></label>{sourceDeskError && <p className="lead-error" role="alert">{sourceDeskError}</p>}<button className="lead-submit" type="submit" disabled={!sourceDeskConsent || sourceDeskStatus === 'sending' || !sourceDeskSourceId}>{sourceDeskStatus === 'sending' ? inline(language, 'Preparing local simulation…', '正在准备本地模拟…') : inline(language, 'Simulate operational handoff', '模拟运营交接')}</button></form>}
       </div>
     </div>}
     {leadOpen && <div className="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lead-title">
@@ -486,7 +658,7 @@ function App() {
         <div className="lead-sheet-head"><div><p className="mono-label">HUMAN HANDOFF / LOCAL MVP</p><h2 id="lead-title">{language === 'en' ? 'Continue with a person' : '与真人继续沟通'}</h2></div><button className="close-button" type="button" onClick={() => setLeadOpen(false)} aria-label={language === 'en' ? 'Close handoff form' : '关闭交接表单'}>×</button></div>
         {leadStatus === 'success' ? <div className="lead-receipt" aria-live="polite"><span className="mono-label">LOCAL RECEIPT</span><h3>{language === 'en' ? 'Your request was accepted locally.' : '你的请求已在本地接收。'}</h3><p>{language === 'en' ? 'Reference' : '参考编号'}: <code>{leadReference}</code></p><p>{language === 'en' ? 'This is not a booking, quote, official service, or response guarantee. No commercial outcome has been confirmed.' : '这不是预订、报价、官方服务或响应保证，尚未确认任何商业结果。'}</p><button className="outline-button" type="button" onClick={() => setLeadOpen(false)}>{language === 'en' ? 'Return to the exhibition' : '返回展厅'}</button></div> : <form className="lead-form" onSubmit={(event) => { event.preventDefault(); submitLead() }}>
           <p className="lead-intro">{language === 'en' ? 'Choose one reason for a human follow-up. This form is not an order, booking, visa application, legal consultation, investment approval, or government service.' : '请选择一个需要人工跟进的原因。本表单不是订单、预订、签证申请、法律咨询、投资审批或政府服务。'}</p>
-          <fieldset><legend>{language === 'en' ? 'Your purpose' : '你的目的'}</legend><div className="lead-intents">{leadIntents.map((intent) => <button type="button" key={intent.id} className={leadIntent === intent.id ? 'lead-intent active' : 'lead-intent'} aria-pressed={leadIntent === intent.id} onClick={() => setLeadIntent(intent.id)}><span>{intent.id.slice(0, 2).toUpperCase()}</span>{language === 'en' ? intent.en : intent.zh}</button>)}</div></fieldset>
+          <fieldset><legend>{inline(language, 'Your purpose', '你的目的')}</legend><div className="lead-intents">{leadIntents.map((intent) => <button type="button" key={intent.id} className={leadIntent === intent.id ? 'lead-intent active' : 'lead-intent'} aria-pressed={leadIntent === intent.id} onClick={() => setLeadIntent(intent.id)}><span>{intent.id.slice(0, 2).toUpperCase()}</span>{localize(intent.label, language)}</button>)}</div></fieldset>
           <label>{language === 'en' ? 'Email address' : '电子邮箱'}<input value={leadEmail} onChange={(event) => setLeadEmail(event.target.value)} type="email" autoComplete="email" required /></label>
           <div className="lead-optional"><label>{language === 'en' ? 'Name (optional)' : '姓名（可选）'}<input value={leadName} onChange={(event) => setLeadName(event.target.value)} autoComplete="name" maxLength={120} /></label><label>{language === 'en' ? 'Organisation (optional)' : '机构（可选）'}<input value={leadOrganization} onChange={(event) => setLeadOrganization(event.target.value)} autoComplete="organization" maxLength={160} /></label></div>
           <label>{language === 'en' ? 'Message' : '留言'}<textarea value={leadMessage} onChange={(event) => setLeadMessage(event.target.value)} required maxLength={1200} rows={5} /></label>

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "id": "tropical-curatorial-orientation",
+      "zoneId": "tropical",
+      "status": "project_content",
+      "sourceRecordId": "project-supplied-six-hall-archive",
+      "title": { "en": "Tropical Island Hall curatorial orientation", "zh": "热带海岛厅策展导览" },
+      "statement": { "en": "The hall presents project-supplied visual material for attentive coastal looking.", "zh": "本展厅以项目提供的视觉素材进行海岸观察导览。" },
+      "useBoundary": "Visual orientation only; not an ecological measurement, named-site service, or travel availability claim."
+    },
+    {
+      "id": "li-textile-source-orientation",
+      "zoneId": "lijin",
+      "status": "reviewed",
+      "sourceRecordId": "unesco-li-traditional-textile-techniques",
+      "title": { "en": "UNESCO Li textile source orientation", "zh": "UNESCO 黎族纺织技艺来源导览" },
+      "statement": { "en": "The hall links visitors to the reviewed UNESCO page on Li traditional textile techniques.", "zh": "本展厅为访客提供通往已核验 UNESCO 黎族传统纺织技艺页面的入口。" },
+      "useBoundary": "Does not verify individual makers, objects, products, prices, or local availability."
+    },
+    {
+      "id": "aerospace-general-source-orientation",
+      "zoneId": "aerospace",
+      "status": "reviewed",
+      "sourceRecordId": "cnsa-english-portal",
+      "title": { "en": "CNSA general aerospace source orientation", "zh": "CNSA 航天一般来源导览" },
+      "statement": { "en": "The hall links to the reviewed CNSA English portal for general public background.", "zh": "本展厅链接已核验的 CNSA 英文门户，用于一般公共背景导览。" },
+      "useBoundary": "Does not verify project images, mission dates, technical specifications, tickets, or operations."
+    },
+    {
+      "id": "rosewood-curatorial-orientation",
+      "zoneId": "huali",
+      "status": "project_content",
+      "sourceRecordId": "project-supplied-six-hall-archive",
+      "title": { "en": "Dongfang Rosewood Hall curatorial orientation", "zh": "东方花梨厅策展导览" },
+      "statement": { "en": "The hall presents project-supplied material studies and AIGC concept objects.", "zh": "本展厅呈现项目提供的材质研究与 AIGC 策展概念展品。" },
+      "useBoundary": "Not a material-authentication, heritage, product, price, inventory, or commerce claim."
+    },
+    {
+      "id": "village-curatorial-orientation",
+      "zoneId": "village",
+      "status": "project_content",
+      "sourceRecordId": "project-supplied-six-hall-archive",
+      "title": { "en": "Beautiful Villages Hall curatorial orientation", "zh": "美丽乡村厅策展导览" },
+      "statement": { "en": "The hall presents project-supplied village scenes and concept studies.", "zh": "本展厅呈现项目提供的乡村场景与概念研究。" },
+      "useBoundary": "Not a named-village, service, travel, visitor, or booking claim."
+    },
+    {
+      "id": "free-trade-port-source-orientation",
+      "zoneId": "free-trade-port",
+      "status": "reviewed",
+      "sourceRecordId": "hainan-free-trade-port-english-portal",
+      "title": { "en": "Free Trade Port official source orientation", "zh": "自贸港官方来源导览" },
+      "statement": { "en": "The hall directs visitors to the reviewed Hainan Free Trade Port English portal for current public information.", "zh": "本展厅引导访客前往已核验的海南自由贸易港英文门户查阅当前公开信息。" },
+      "useBoundary": "Not legal, tax, customs, visa, investment, eligibility, or commercial advice."
+    }
+  ]
+}
