@@ -472,6 +472,8 @@ async function aiTravelStopIds(days, themes, pace, language) {
         model,
         temperature: 0.2,
         max_tokens: 120,
+        stream: false,
+        thinking: { type: 'disabled' },
         messages: [
           { role: 'system', content: `Return strict JSON only: {"stopIds":["catalogue-id"]}. Choose exactly ${days} IDs from this allowlisted catalogue. Do not provide destinations, facts, prices, booking, transport, weather, policy, advice, dates, names, or prose. Preferences: themes=${themes.join(',')}; pace=${pace}; language=${language}. Catalogue: ${JSON.stringify(catalogue)}` },
           { role: 'user', content: 'Select route stop IDs.' },
@@ -838,7 +840,7 @@ async function upstreamResponse(zone, language, question) {
       method: 'POST',
       signal: controller.signal,
       headers: { authorization: `Bearer ${process.env.GLM_API_KEY}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ model, temperature: 0.4, max_tokens: 220, messages: [{ role: 'system', content: systemPrompt(zone, language, source, knowledgeItem) }, { role: 'user', content: question }] }),
+      body: JSON.stringify({ model, temperature: 0.4, max_tokens: 220, stream: false, thinking: { type: 'disabled' }, messages: [{ role: 'system', content: systemPrompt(zone, language, source, knowledgeItem) }, { role: 'user', content: question }] }),
     })
     if (!response.ok) throw new Error(`upstream_${response.status}`)
     const data = await response.json()
