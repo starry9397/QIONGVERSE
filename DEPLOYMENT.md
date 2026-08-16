@@ -99,3 +99,9 @@ The repository cannot register a domain, change DNS, obtain certificates, or per
 ## Free demonstration route
 
 For a no-cost public demonstration, deploy the frontend to Cloudflare Pages and the Node API from `render.yaml`. Follow `deploy/cloudflare-pages-free.md`. This uses separate origins and exact CORS; it is not the same as the preferred Caddy architecture, and it must not enable provider OAuth secrets or promise uninterrupted availability.
+
+The current GitHub Pages deployment uses `https://starry9397.github.io/QIONGVERSE` for the static frontend and `https://qiongverse-api.onrender.com` for the guide API. Set `VITE_LUOYIN_API_BASE_URL` in the Pages workflow/build environment, and allow the browser origin `https://starry9397.github.io` in Render. The `/QIONGVERSE` path belongs in public links, but never in the CORS origin value.
+
+## Tencent CloudBase Webify route
+
+For Tencent Cloud hosting without a VPS, publish the Vite frontend through CloudBase Webify and keep `server.mjs` on Render. Webify must use `npm ci`, `npm run build`, and `dist`; Hash routes do not require SPA rewrites. Configure only the public `VITE_PUBLIC_SITE_URL` and `VITE_LUOYIN_API_BASE_URL` build variables in Webify. Keep `GLM_API_KEY`, OAuth secrets, and all server-only variables in Render. Follow [docs/module-guide-cloudbase-webify-deployment-47.md](docs/module-guide-cloudbase-webify-deployment-47.md).

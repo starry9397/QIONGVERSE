@@ -10,6 +10,8 @@
     "check:i18n": "node scripts/check-runtime-locales.mjs",
     "build": "tsc -b && vite build",
     "prepare:pages": "node scripts/prepare-pages.mjs",
+    "build:webify": "npm run build",
+    "verify:webify": "node scripts/verify-webify-build.mjs",
     "package:tencent": "powershell -ExecutionPolicy Bypass -File scripts/package-tencent-release.ps1",
     "preview": "vite preview --host 127.0.0.1",
     "verify:deployment": "node scripts/verify-deployment.mjs"
@@ -26,6 +28,7 @@
     "vite": "latest"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@types/three": "0.180.0"

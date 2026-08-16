@@ -5,7 +5,6 @@ import BrandLockup from './components/BrandLockup'
 import LanguageSelector from './components/LanguageSelector'
 import LuoyinDesktopPet from './components/LuoyinDesktopPet'
 import SocialShare from './components/SocialShare'
-import HainanMap from './components/HainanMap'
 import sourceDeskData from '../knowledge/source-desk.json'
 import sourceRegistryData from '../knowledge/source-registry.json'
 
@@ -15,11 +14,40 @@ const HualiImmersiveHall = lazy(() => import('./components/HualiImmersiveHall'))
 const VillageImmersiveHall = lazy(() => import('./components/VillageImmersiveHall'))
 const TropicalImmersiveHall = lazy(() => import('./components/TropicalImmersiveHall'))
 const FreeTradePortImmersiveHall = lazy(() => import('./components/FreeTradePortImmersiveHall'))
+const HainanMap = lazy(() => import('./components/HainanMap'))
 const LuoyinTidePage = lazy(() => import('./components/LuoyinTidePage'))
 const TravelAtlas = lazy(() => import('./components/TravelAtlas'))
 const TradePage = lazy(() => import('./components/TradePage'))
 
 type ExperienceRoute = 'luoyin-tide' | 'travel-atlas' | 'market'
+
+function DeferredHainanMap({ language }: { language: Language }) {
+  const slotRef = useRef<HTMLDivElement>(null)
+  const [shouldLoad, setShouldLoad] = useState(() => window.location.hash === '#hainan-map')
+
+  useEffect(() => {
+    if (shouldLoad) return
+    const slot = slotRef.current
+    if (!slot) return
+    if (!('IntersectionObserver' in window)) {
+      setShouldLoad(true)
+      return
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return
+      setShouldLoad(true)
+      observer.disconnect()
+    }, { rootMargin: '900px 0px' })
+    observer.observe(slot)
+    return () => observer.disconnect()
+  }, [shouldLoad])
+
+  return <div id={shouldLoad ? undefined : 'hainan-map'} ref={slotRef} className="hainan-map-deferred">
+    {shouldLoad
+      ? <Suspense fallback={<p className="hainan-map-loading" role="status">{inline(language, 'Opening the regional reading map…', '正在打开区域阅读地图……')}</p>}><HainanMap language={language} sectionId="hainan-map" /></Suspense>
+      : <p className="hainan-map-loading" aria-hidden="true" />}
+  </div>
+}
 
 function experienceFromHash(hash: string): ExperienceRoute | null {
   const route = hash.replace(/^#/, '').split('?')[0]
@@ -61,6 +89,7 @@ assertLocalizationTree(sourceDeskEntries, 'source desk entries')
 const sourceCheckedAt = new Map(sourceRegistryData.records.map((record) => [record.id, record.checkedAt]))
 const publicApiBaseUrl = (import.meta.env.VITE_LUOYIN_API_BASE_URL || '').trim().replace(/\/+$/, '')
 const apiPath = (path: string) => `${publicApiBaseUrl}${path}`
+const deliveryImage = (path: string) => path.replace(/\.(jpe?g|png)$/i, '.webp')
 
 function App() {
   const [language, setLanguage] = useState<Language>(() => readLanguagePreference())
@@ -515,9 +544,9 @@ function App() {
 
     <main id="top">
       <section className={heroImageFailed ? 'hero hero-dawn is-fallback' : 'hero hero-dawn'} aria-labelledby="hero-title">
-        <picture className="hero-media">
-          {!heroImageFailed && <img src="/assets/hero/qiongverse-hero2.jpg" width="1932" height="1280" fetchPriority="high" alt="Project-supplied QIONGVERSE brand visual with a tropical coastline, star orbit and Hainan city horizon" onError={() => setHeroImageFailed(true)} />}
-        </picture>
+        <div className="hero-media">
+          {!heroImageFailed && <picture><source type="image/webp" srcSet="/assets/hero/qiongverse-hero2.webp" /><img src="/assets/hero/qiongverse-hero2.jpg" width="1932" height="1280" fetchPriority="high" decoding="async" alt="Project-supplied QIONGVERSE brand visual with a tropical coastline, star orbit and Hainan city horizon" onError={() => setHeroImageFailed(true)} /></picture>}
+        </div>
         <div className="hero-shade" />
         <div className="hero-content">
           <h1 id="hero-title" className="brand-sr-only">HAINAN QIONGVERSE</h1>
@@ -550,8 +579,8 @@ function App() {
       <section className="exhibition" id="exhibition" ref={exhibitionRef} aria-label="Five immersive halls" onMouseEnter={() => setCarouselPointerPaused(true)} onMouseLeave={() => setCarouselPointerPaused(false)} onPointerDown={() => { carouselPointerDownRef.current = true; setCarouselFocusPaused(false) }} onPointerUp={() => { carouselPointerDownRef.current = false }} onFocusCapture={() => { if (!carouselPointerDownRef.current) setCarouselFocusPaused(true) }} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCarouselFocusPaused(false) }}>
         <div className={`hall-visual-stage ${zone.tone}`} id={`zone-panel-${activeZone}`} role="tabpanel" aria-labelledby={`zone-tab-${activeZone}`}>
           <button className="zone-visual-enter" type="button" onClick={() => openZoneHall(activeZone)} aria-label={`Enter ${zone.title[language]}`}>
-            {previousZone !== null && previousZone !== activeZone && <picture className="zone-visual-image zone-visual-image--previous"><source media="(max-width: 700px)" srcSet={zones[previousZone].mobileImage} /><img src={zones[previousZone].image} loading="lazy" decoding="async" alt="" aria-hidden="true" /></picture>}
-            <picture className="zone-visual-image zone-visual-image--current" key={zone.id}><source media="(max-width: 700px)" srcSet={zone.mobileImage} /><img src={zone.image} loading="lazy" decoding="async" alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></picture>
+            {previousZone !== null && previousZone !== activeZone && <picture className="zone-visual-image zone-visual-image--previous"><source type="image/webp" media="(max-width: 700px)" srcSet={deliveryImage(zones[previousZone].mobileImage)} /><source media="(max-width: 700px)" srcSet={zones[previousZone].mobileImage} /><source type="image/webp" srcSet={deliveryImage(zones[previousZone].image)} /><img src={zones[previousZone].image} loading="lazy" decoding="async" alt="" aria-hidden="true" /></picture>}
+            <picture className="zone-visual-image zone-visual-image--current" key={zone.id}><source type="image/webp" media="(max-width: 700px)" srcSet={deliveryImage(zone.mobileImage)} /><source media="(max-width: 700px)" srcSet={zone.mobileImage} /><source type="image/webp" srcSet={deliveryImage(zone.image)} /><img src={zone.image} loading="lazy" decoding="async" alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></picture>
             <span className="zone-visual-shade" aria-hidden="true" />
             <span className="zone-visual-label"><span>{zone.index} / 05</span><strong>{zone.title[language]}</strong></span>
             <span className="zone-visual-arrow" aria-hidden="true">↗</span>
@@ -574,8 +603,8 @@ function App() {
           </aside>
           <article id={`zone-panel-${activeZone}`} className={`zone-carousel-stage ${zone.tone}`} role="tabpanel" aria-labelledby={`zone-tab-${activeZone}`}>
             <div className="zone-carousel-art">
-              {previousZone !== null && previousZone !== activeZone && <picture className="zone-carousel-image zone-carousel-image--previous"><source media="(max-width: 700px)" srcSet={zones[previousZone].mobileImage} /><img src={zones[previousZone].image} loading="lazy" decoding="async" alt="" aria-hidden="true" /></picture>}
-              <picture className="zone-carousel-image zone-carousel-image--current" key={zone.id}><source media="(max-width: 700px)" srcSet={zone.mobileImage} /><img src={zone.image} loading="lazy" decoding="async" alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></picture>
+              {previousZone !== null && previousZone !== activeZone && <picture className="zone-carousel-image zone-carousel-image--previous"><source type="image/webp" media="(max-width: 700px)" srcSet={deliveryImage(zones[previousZone].mobileImage)} /><source media="(max-width: 700px)" srcSet={zones[previousZone].mobileImage} /><source type="image/webp" srcSet={deliveryImage(zones[previousZone].image)} /><img src={zones[previousZone].image} loading="lazy" decoding="async" alt="" aria-hidden="true" /></picture>}
+              <picture className="zone-carousel-image zone-carousel-image--current" key={zone.id}><source type="image/webp" media="(max-width: 700px)" srcSet={deliveryImage(zone.mobileImage)} /><source media="(max-width: 700px)" srcSet={zone.mobileImage} /><source type="image/webp" srcSet={deliveryImage(zone.image)} /><img src={zone.image} loading="lazy" decoding="async" alt="" onError={(event) => { event.currentTarget.src = zone.poster }} /></picture>
               <button className="zone-carousel-media-trigger" type="button" aria-label={'Preview ' + zone.title.en} onClick={() => { setMediaFailed(false); setMediaOpen(true) }}>{zone.video ? '▶' : '◇'}</button>
             </div>
             <div className="zone-carousel-copy">
@@ -590,7 +619,7 @@ function App() {
         </div>
       </section>
 
-      <HainanMap language={language} />
+      <DeferredHainanMap language={language} />
 
       <section className="experience-feature experience-feature--travel" aria-labelledby="experience-travel-title">
         <img src="/assets/travel/hainan-unfolded-poster.jpg" alt={tx('Project travel film frame of the Hainan sea at sunset', '海南海上日落项目旅行影像画面')} loading="lazy" />
@@ -629,7 +658,7 @@ function App() {
     </main>
     {hallNotice && <div className="hall-notice" role="status" aria-live="polite">{hallNotice}</div>}
 
-    <footer className="site-footer"><img className="footer-brand-mark" src="/assets/brand/qiongverse-logo2.jpg" alt="QIONGVERSE brand mark" /><img className="footer-wordmark" src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /><button className="footer-archive-trigger" type="button" onClick={openSourceDesk}>{tx('Open verified source desk', '已核验来源服务台')} <span aria-hidden="true">↗</span></button><SocialShare language={language} apiPath={apiPath} /><span className="footer-code">TIDE ARCHIVE / 2026</span></footer>
+    <footer className="site-footer"><picture><source type="image/webp" srcSet="/assets/brand/qiongverse-logo2.webp" /><img className="footer-brand-mark" src="/assets/brand/qiongverse-logo2.jpg" loading="lazy" decoding="async" alt="QIONGVERSE brand mark" /></picture><img className="footer-wordmark" src="/assets/brand/qiongverse-wordmark-en.svg" loading="lazy" decoding="async" alt="HAINAN QIONGVERSE" /><button className="footer-archive-trigger" type="button" onClick={openSourceDesk}>{tx('Open verified source desk', '已核验来源服务台')} <span aria-hidden="true">↗</span></button><SocialShare language={language} apiPath={apiPath} /><span className="footer-code">TIDE ARCHIVE / 2026</span></footer>
     </>}</>}
 
     <LuoyinDesktopPet language={language} visible={petVisible} chatOpen={guideOpen} suspended={guideBlocked} onOpenChat={openGuideChat} onCloseChat={closeGuideChat} onClosePet={closeGuidePet}>

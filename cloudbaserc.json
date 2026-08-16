@@ -1,0 +1,17 @@
+{
+  "version": "2.0",
+  "envId": "qiongverse-webify-d5drsw1e9a5fd4",
+  "$schema": "https://framework-1258016615.tcloudbaseapp.com/schema/latest.json",
+  "app": {
+    "serviceName": "qiongverse-webify",
+    "framework": "vite",
+    "installCommand": "npm ci",
+    "buildCommand": "npm run build:webify",
+    "outputDir": "dist",
+    "deployPath": "/",
+    "envVariables": {
+      "VITE_PUBLIC_SITE_URL": "https://qiongverse-webify-qiongverse-webify-d5drsw1e9a5fd4.webapps.tcloudbase.com",
+      "VITE_LUOYIN_API_BASE_URL": "https://qiongverse-api.onrender.com"
+    }
+  }
+}

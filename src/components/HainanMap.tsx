@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { hainanMapCopy, hainanMapRegions, type HainanMapRegionId } from '../hainan-map-data'
 import { completeLocalizationTree, type Language } from '../i18n'
 
-type HainanMapProps = { language: Language }
+type HainanMapProps = { language: Language; sectionId?: string }
 
 const provinceSource = {
   publisher: 'Hainan Provincial People’s Government international portal',
@@ -11,7 +11,7 @@ const provinceSource = {
 }
 completeLocalizationTree(hainanMapRegions)
 
-export default function HainanMap({ language }: HainanMapProps) {
+export default function HainanMap({ language, sectionId }: HainanMapProps) {
   const copy = hainanMapCopy[language]
   const [selectedId, setSelectedId] = useState<HainanMapRegionId | null>(null)
   const [mapImageFailed, setMapImageFailed] = useState(false)
@@ -51,7 +51,7 @@ export default function HainanMap({ language }: HainanMapProps) {
   }
 
   return (
-    <section id="hainan-map" className="hainan-map-section" aria-labelledby="hainan-map-title">
+    <section id={sectionId} className="hainan-map-section" aria-labelledby="hainan-map-title">
       <div className="hainan-map-layout">
         <h2 id="hainan-map-title" className="hainan-map-accessible-title">{copy.title}</h2>
 

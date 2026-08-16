@@ -121,7 +121,7 @@ export default function LuoyinDesktopPet({ language, visible, chatOpen, suspende
   return <div className={`luoyin-desktop-pet${chatOpen ? ' is-chat-open' : ''}${dragging ? ' is-dragging' : ''}${opensDown ? ' chat-opens-down' : ''}${opensRight ? ' chat-opens-right' : ''}`} style={{ left: position.x, top: position.y, '--luoyin-chat-space': `${chatSpace}px` } as CSSProperties}>
     {chatOpen && <div className="luoyin-chat-anchor" onKeyDownCapture={(event) => { if (event.key === 'Escape') { event.preventDefault(); closeChat() } }}>{children}</div>}
     <button ref={petButtonRef} data-luoyin-pet-toggle className="luoyin-pet-surface" type="button" aria-label={label} aria-expanded={chatOpen} aria-controls="luoyin-chat-panel" onClick={() => { if (!suppressClickRef.current) onOpenChat() }} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerEnd} onPointerCancel={onPointerEnd}>
-      {imageFailed ? <span className="luoyin-pet-fallback" aria-hidden="true">◎</span> : <img src="/assets/luoyin/luoyin-resonance-deskpet.png" alt="" draggable={false} onError={() => setImageFailed(true)} />}
+      {imageFailed ? <span className="luoyin-pet-fallback" aria-hidden="true">◎</span> : <picture><source type="image/webp" srcSet="/assets/luoyin/luoyin-resonance-deskpet.webp" /><img src="/assets/luoyin/luoyin-resonance-deskpet.png" decoding="async" alt="" draggable={false} onError={() => setImageFailed(true)} /></picture>}
     </button>
     <button className="luoyin-pet-close" type="button" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onClosePet() }} aria-label={closeLabel}>×</button>
   </div>
