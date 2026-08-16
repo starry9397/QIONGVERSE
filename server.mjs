@@ -836,12 +836,19 @@ async function upstreamResponse(zone, language, question) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 9000)
   try {
-    const response = await fetch(upstreamUrl, {
+    const requestBody = { model, temperature: 0.4, max_tokens: 220, stream: false, thinking: { type: 'disabled' }, messages: [{ role: 'system', content: systemPrompt(zone, language, source, knowledgeItem) }, { role: 'user', content: question }] }
+    const requestOptions = {
       method: 'POST',
       signal: controller.signal,
       headers: { authorization: `Bearer ${process.env.GLM_API_KEY}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ model, temperature: 0.4, max_tokens: 220, stream: false, thinking: { type: 'disabled' }, messages: [{ role: 'system', content: systemPrompt(zone, language, source, knowledgeItem) }, { role: 'user', content: question }] }),
-    })
+    }
+    let response = await fetch(upstreamUrl, { ...requestOptions, body: JSON.stringify(requestBody) })
+    if (!response.ok && [400, 422].includes(response.status)) {
+      // Older compatible GLM deployments may reject the optional thinking field.
+      const compatibleBody = { ...requestBody }
+      delete compatibleBody.thinking
+      response = await fetch(upstreamUrl, { ...requestOptions, body: JSON.stringify(compatibleBody) })
+    }
     if (!response.ok) throw new Error(`upstream_${response.status}`)
     const data = await response.json()
     const answer = data?.choices?.[0]?.message?.content?.trim()
