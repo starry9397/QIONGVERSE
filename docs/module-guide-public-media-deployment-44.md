@@ -23,6 +23,9 @@ source desk, social sharing, and static fallbacks remain unchanged.
   `raw.githubusercontent.com` origin. The smaller MP4 derivatives are served
   directly by GitHub Pages with the correct `video/mp4` type. No upload, user
   media, remote scraping, analytics, or third-party tracking is introduced.
+- The Pages checkout enables Git LFS so the two derivative MP4 blobs are
+  materialized before Vite copies `public/` into the artifact; the browser
+  never receives an LFS pointer file.
 - No API key, OAuth token, browser secret, camera stream, location, dialogue,
   or user profile data is included in the media URL configuration.
 - The media remains project-supplied/AIGC-labeled where the existing page marks
