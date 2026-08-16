@@ -1,0 +1,26 @@
+# Install only after qiongverse.com and www.qiongverse.com resolve to this VPS.
+
+www.qiongverse.com {
+	redir https://qiongverse.com{uri} permanent
+}
+
+qiongverse.com {
+	encode gzip zstd
+
+	@api path /api/*
+	handle @api {
+		reverse_proxy 127.0.0.1:8787
+	}
+
+	handle {
+		root * /srv/qiongverse/current/dist
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}

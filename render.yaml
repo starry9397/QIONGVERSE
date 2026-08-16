@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: qiongverse-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm run server
+    healthCheckPath: /healthz
+    envVars:
+      - key: LUOYIN_SERVER_HOST
+        value: 0.0.0.0
+      - key: LUOYIN_TRUST_PROXY
+        value: "1"
+      - key: LUOYIN_ALLOWED_ORIGINS
+        value: https://qiongverse.pages.dev
+      - key: SOCIAL_PUBLIC_BASE_URL
+        value: https://qiongverse.pages.dev
+      - key: GLM_API_KEY
+        sync: false
+

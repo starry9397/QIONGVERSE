@@ -30,6 +30,8 @@ LUOYIN_TRUST_PROXY=1
 
 Do not use `*` for `LUOYIN_ALLOWED_ORIGINS`. When more than one frontend origin is needed, use a comma-separated exact list.
 
+Managed hosts commonly inject `PORT`. The service accepts that value first and retains `LUOYIN_SERVER_PORT` for same-host Caddy deployments. `GET /healthz` is a generic liveness endpoint with no model, source, secret, token, or deployment detail.
+
 ## Local launch
 
 For local preview, keep the default loopback listener and run:
@@ -81,3 +83,19 @@ https://your-public-domain.example/api/social/youtube/callback
 ```
 
 Do not enable TikTok or YouTube publishing until their scopes, app review, public-upload rules, and test-account flows have passed. OAuth tokens are kept only in short-lived server memory and never belong in `.env` files, build variables, logs, or browser storage.
+
+## VPS + Caddy release procedure
+
+`qiongverse.com` is the intended canonical `.com` domain pending operator registration. Its DNS currently has no public records; finish domain purchase and DNS ownership verification before attempting certificate issuance. Use `deploy/Caddyfile.qiongverse.com.example` and `deploy/qiongverse.service.example` for this domain, or use the generic `deploy/Caddyfile.example` for a later domain. Copy `deploy/qiongverse.env.example` to `/etc/qiongverse/qiongverse.env`, fill secrets through the VPS secret workflow, and keep the file mode at `600`.
+
+1. Create the DNS A record (and AAAA only when IPv6 is stable) plus the `www` CNAME.
+2. Install the release into a timestamped directory under `/srv/qiongverse/releases/`, then update the `current` symlink after build checks pass.
+3. Store production variables in `/etc/qiongverse/qiongverse.env` with mode `600`; never put secrets in the repository.
+4. Enable the systemd service, reload Caddy, and verify `/api/luoyin/status` and `/api/social/status` before switching traffic.
+5. Run `npm run verify:deployment -- https://qiongverse.com`, then perform the external X/Facebook preview checks and mobile first-load network assertions.
+
+The repository cannot register a domain, change DNS, obtain certificates, or perform external platform debugging without operator access. Until the final domain resolves, local HTTP builds intentionally leave public share metadata disabled.
+
+## Free demonstration route
+
+For a no-cost public demonstration, deploy the frontend to Cloudflare Pages and the Node API from `render.yaml`. Follow `deploy/cloudflare-pages-free.md`. This uses separate origins and exact CORS; it is not the same as the preferred Caddy architecture, and it must not enable provider OAuth secrets or promise uninterrupted availability.

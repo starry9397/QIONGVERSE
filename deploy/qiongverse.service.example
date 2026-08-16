@@ -1,0 +1,23 @@
+[Unit]
+Description=HAINAN QIONGVERSE Luoyin guide service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qiongverse
+Group=qiongverse
+WorkingDirectory=/srv/qiongverse/current
+EnvironmentFile=/etc/qiongverse/qiongverse.env
+ExecStart=/usr/bin/node /srv/qiongverse/current/server.mjs
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/qiongverse
+
+[Install]
+WantedBy=multi-user.target
+

@@ -2,8 +2,16 @@ import http from 'node:http'
 import { readFileSync, statSync } from 'node:fs'
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 
-const port = Number(process.env.LUOYIN_SERVER_PORT || 8787)
-const host = process.env.LUOYIN_SERVER_HOST || '127.0.0.1'
+function deploymentPort() {
+  for (const candidate of [process.env.PORT, process.env.LUOYIN_SERVER_PORT]) {
+    const parsed = Number(candidate)
+    if (Number.isInteger(parsed) && parsed > 0 && parsed <= 65_535) return parsed
+  }
+  return 8787
+}
+
+const port = deploymentPort()
+const host = process.env.LUOYIN_SERVER_HOST || (process.env.PORT ? '0.0.0.0' : '127.0.0.1')
 const upstreamUrl = process.env.GLM_API_URL || 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
 const model = 'GLM-4.6V-Flash'
 const maxBodyBytes = 8 * 1024
@@ -906,6 +914,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return json(res, 204, {})
   const requestUrl = new URL(req.url || '/', 'http://local.invalid')
   const socialRoute = requestUrl.pathname.match(/^\/api\/social\/(x|tiktok|youtube)\/(authorize|callback|publish)$/)
+  if (req.method === 'GET' && requestUrl.pathname === '/healthz') return json(res, 200, { status: 'ok' })
   if (req.method === 'GET' && requestUrl.pathname === '/api/social/status') return json(res, 200, socialStatusPayload())
   if (socialRoute) {
     const [, platform, action] = socialRoute
@@ -1084,6 +1093,8 @@ async function runSelfTest() {
   }
   try {
     check('CORS has no wildcard policy by default', Object.keys(corsHeadersForOrigin('https://untrusted.example')).length === 0)
+    const health = await requestGet(`${baseUrl}/healthz`)
+    check('health endpoint exposes only generic liveness', health.status === 200 && health.body.status === 'ok' && Object.keys(health.body).length === 1)
     const configuredOrigin = [...allowedOrigins][0]
     if (configuredOrigin) {
       const headers = corsHeadersForOrigin(configuredOrigin)
