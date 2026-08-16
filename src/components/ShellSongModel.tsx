@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { inline, type Language } from '../i18n'
+import { publicMedia } from '../public-media'
 
 type ModelOption = {
   id: string
@@ -19,13 +20,13 @@ type DisposableModel = {
 }
 
 const modelOptions: ModelOption[] = [
-  { id: 'body', file: '/shellsong/models/luoyin_body.glb', en: 'Core form', zh: '本体' },
-  { id: 'awakened', file: '/shellsong/models/luoyin_awakened.glb', en: 'Awakening', zh: '苏醒' },
-  { id: 'awakened-ii', file: '/shellsong/models/luoyin_awakened2.glb', en: 'Awakening II', zh: '苏醒 II' },
-  { id: 'resonance', file: '/shellsong/models/luoyin_resonance.glb', en: 'Resonance', zh: '共振' },
-  { id: 'celebration', file: '/shellsong/models/luoyin_celebration.glb', en: 'Celebration', zh: '庆祝' },
-  { id: 'flying', file: '/shellsong/models/luoyin_flying.glb', en: 'Flying', zh: '飞行' },
-  { id: 'shell-closed', file: '/shellsong/models/luoyin_shell_closed.glb', en: 'Resting shell', zh: '合螺休眠' },
+  { id: 'body', file: publicMedia('/shellsong/models/luoyin_body.glb'), en: 'Core form', zh: '本体' },
+  { id: 'awakened', file: publicMedia('/shellsong/models/luoyin_awakened.glb'), en: 'Awakening', zh: '苏醒' },
+  { id: 'awakened-ii', file: publicMedia('/shellsong/models/luoyin_awakened2.glb'), en: 'Awakening II', zh: '苏醒 II' },
+  { id: 'resonance', file: publicMedia('/shellsong/models/luoyin_resonance.glb'), en: 'Resonance', zh: '共振' },
+  { id: 'celebration', file: publicMedia('/shellsong/models/luoyin_celebration.glb'), en: 'Celebration', zh: '庆祝' },
+  { id: 'flying', file: publicMedia('/shellsong/models/luoyin_flying.glb'), en: 'Flying', zh: '飞行' },
+  { id: 'shell-closed', file: publicMedia('/shellsong/models/luoyin_shell_closed.glb'), en: 'Resting shell', zh: '合螺休眠' },
 ]
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)

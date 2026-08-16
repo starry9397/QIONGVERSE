@@ -33,6 +33,10 @@ jobs:
         env:
           VITE_BASE_PATH: /QIONGVERSE/
           VITE_PUBLIC_SITE_URL: https://starry9397.github.io/QIONGVERSE
+          # GitHub Pages artifacts intentionally omit files >= 24 MiB. Keep
+          # existing large project media in the repository and load it from
+          # GitHub's read-only Raw CDN in the public build.
+          VITE_LARGE_MEDIA_BASE_URL: https://raw.githubusercontent.com/starry9397/QIONGVERSE/main/public
         run: npm run build
       - name: Adapt root asset references for project Pages path
         env:

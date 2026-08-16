@@ -4,6 +4,7 @@ import { assertLocalizationTree, completeLocalizationTree, inline, localize, typ
 import atlasRaw from '../../knowledge/travel-atlas.json'
 import BrandLockup from './BrandLockup'
 import LanguageSelector from './LanguageSelector'
+import { publicMedia } from '../public-media'
 import './travel-atlas.css'
 
 type Theme = 'coast' | 'culture' | 'village' | 'nature' | 'city'
@@ -182,7 +183,7 @@ export default function TravelAtlas({ language, onChangeLanguage, onExit, apiPat
     <header className="island-header"><BrandLockup href="#top" /><nav aria-label={language !== 'en' ? '旅行专栏导航' : 'Travel column navigation'}>{navItem('island-index', language !== 'en' ? '图鉴' : 'Index')}{navItem('journey-compass', language !== 'en' ? '路线' : 'Routes')}{navItem('travel-desk', language !== 'en' ? '资讯台' : 'Desk')}{navItem('source-ledger', language !== 'en' ? '来源' : 'Sources')}</nav><div className="island-actions"><LanguageSelector language={language} onChange={onChangeLanguage} /><button type="button" onClick={onExit}>{language !== 'en' ? '首页' : 'Home'} <span aria-hidden="true">↗</span></button></div></header>
     <section className={'island-hero' + (videoFailed ? ' video-failed' : '')} id="island-hero" aria-label={language === 'en' ? 'Hainan Unfolded film' : '海南展开影像'}>
       <img className="island-hero-poster" src="/assets/travel/hainan-unfolded-poster.jpg" alt={language === 'en' ? 'Project film frame of a Hainan sea sunset' : '海南海上日落项目影像画面'} />
-      <video ref={videoRef} className="island-hero-video" autoPlay muted={muted} loop playsInline preload="metadata" poster="/assets/travel/hainan-unfolded-poster.jpg" onError={() => { setVideoFailed(true); setAudioUnavailable(true) }} onPause={() => setVideoPaused(true)} onPlay={() => setVideoPaused(false)} onLoadedMetadata={(event) => { const media = event.currentTarget as HTMLVideoElement & { audioTracks?: { length: number } }; setAudioUnavailable(Boolean(media.audioTracks && media.audioTracks.length === 0)) }}><source src="/assets/travel/hainan-unfolded-hero.mp4" type="video/mp4" /></video>
+      <video ref={videoRef} className="island-hero-video" autoPlay muted={muted} loop playsInline preload="metadata" poster="/assets/travel/hainan-unfolded-poster.jpg" onError={() => { setVideoFailed(true); setAudioUnavailable(true) }} onPause={() => setVideoPaused(true)} onPlay={() => setVideoPaused(false)} onLoadedMetadata={(event) => { const media = event.currentTarget as HTMLVideoElement & { audioTracks?: { length: number } }; setAudioUnavailable(Boolean(media.audioTracks && media.audioTracks.length === 0)) }}><source src={publicMedia('/assets/travel/hainan-unfolded-hero.mp4')} type="video/mp4" /></video>
       <div className="island-hero-veil" />
       <div className="island-hero-copy"><p className="island-kicker">HAINAN UNFOLDED / 海南展开</p><h1 ref={pageTitleRef} tabIndex={-1} className="island-hero-title-sr-only">{language === 'en' ? 'Hainan Unfolded' : '海南，徐徐展开。'}</h1><button type="button" className="island-primary-action" onClick={() => scrollTo('island-index')}>{language === 'en' ? 'Open island index' : '打开海岛图鉴'} <span aria-hidden="true">↓</span></button></div>
       <div className="island-hero-tools" aria-label={language === 'en' ? 'Film controls' : '影片控制'}>
