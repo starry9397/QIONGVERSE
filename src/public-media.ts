@@ -10,3 +10,13 @@ export function publicMedia(path: string): string {
   const configuredBase = (import.meta.env.VITE_LARGE_MEDIA_BASE_URL || '').trim().replace(/\/+$/, '')
   return configuredBase ? `${configuredBase}${normalized}` : normalized
 }
+
+/** Resolve a small route-scoped asset against the current app base path. */
+export function localMedia(path: string): string {
+  let normalized = path.startsWith('/') ? path : `/${path}`
+  const buildBase = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '')
+  if (buildBase && buildBase !== '/' && normalized.startsWith(`${buildBase}/`)) {
+    normalized = normalized.slice(buildBase.length)
+  }
+  return `${buildBase === '/' ? '' : buildBase}${normalized}` || '/'
+}

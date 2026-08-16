@@ -8,7 +8,7 @@ const base = (process.env.VITE_BASE_PATH || '/').trim() === '/'
   : `/${String(process.env.VITE_BASE_PATH).trim().replace(/^\/+|\/+$/g, '')}/`
 
 const textExtensions = new Set(['.html', '.css', '.js', '.mjs', '.json', '.svg', '.txt', '.webmanifest'])
-const rootAssetPattern = /(["'`(= :]|url\()\/(assets|shellsong|luoyin)(?=\/|["'`)])/g
+const rootAssetPattern = /(["'`(= :]|url\()\/(assets|shellsong|luoyin|draco)(?=\/|["'`)])/g
 const pagesFileLimit = 24 * 1024 * 1024
 const removedLargeAssets = []
 

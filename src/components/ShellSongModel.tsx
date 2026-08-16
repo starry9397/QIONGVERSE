@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { inline, type Language } from '../i18n'
-import { publicMedia } from '../public-media'
+import { localMedia } from '../public-media'
 
 type ModelOption = {
   id: string
@@ -20,13 +20,13 @@ type DisposableModel = {
 }
 
 const modelOptions: ModelOption[] = [
-  { id: 'body', file: publicMedia('/shellsong/models/luoyin_body.glb'), en: 'Core form', zh: '本体' },
-  { id: 'awakened', file: publicMedia('/shellsong/models/luoyin_awakened.glb'), en: 'Awakening', zh: '苏醒' },
-  { id: 'awakened-ii', file: publicMedia('/shellsong/models/luoyin_awakened2.glb'), en: 'Awakening II', zh: '苏醒 II' },
-  { id: 'resonance', file: publicMedia('/shellsong/models/luoyin_resonance.glb'), en: 'Resonance', zh: '共振' },
-  { id: 'celebration', file: publicMedia('/shellsong/models/luoyin_celebration.glb'), en: 'Celebration', zh: '庆祝' },
-  { id: 'flying', file: publicMedia('/shellsong/models/luoyin_flying.glb'), en: 'Flying', zh: '飞行' },
-  { id: 'shell-closed', file: publicMedia('/shellsong/models/luoyin_shell_closed.glb'), en: 'Resting shell', zh: '合螺休眠' },
+  { id: 'body', file: localMedia('/shellsong/models/web/luoyin_body.glb?v=web-20260816-1'), en: 'Core form', zh: '本体' },
+  { id: 'awakened', file: localMedia('/shellsong/models/web/luoyin_awakened.glb?v=web-20260816-1'), en: 'Awakening', zh: '苏醒' },
+  { id: 'awakened-ii', file: localMedia('/shellsong/models/web/luoyin_awakened2.glb?v=web-20260816-1'), en: 'Awakening II', zh: '苏醒 II' },
+  { id: 'resonance', file: localMedia('/shellsong/models/web/luoyin_resonance.glb?v=web-20260816-1'), en: 'Resonance', zh: '共振' },
+  { id: 'celebration', file: localMedia('/shellsong/models/web/luoyin_celebration.glb?v=web-20260816-1'), en: 'Celebration', zh: '庆祝' },
+  { id: 'flying', file: localMedia('/shellsong/models/web/luoyin_flying.glb?v=web-20260816-1'), en: 'Flying', zh: '飞行' },
+  { id: 'shell-closed', file: localMedia('/shellsong/models/web/luoyin_shell_closed.glb?v=web-20260816-1'), en: 'Resting shell', zh: '合螺休眠' },
 ]
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
@@ -212,6 +212,7 @@ export function ShellSongModel({ language }: { language: Language }) {
         setFailed(false)
         const THREE = await import('three')
         const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js')
+        const { DRACOLoader } = await import('three/examples/jsm/loaders/DRACOLoader.js')
         if (disposed) return
         const scene = new THREE.Scene()
         const camera = new THREE.PerspectiveCamera(34, 1, .1, 100)
@@ -229,7 +230,11 @@ export function ShellSongModel({ language }: { language: Language }) {
         const rim = new THREE.PointLight(0x8ef4f0, 4.2, 8)
         rim.position.set(-2, 1.6, -1)
         scene.add(rim)
-        new GLTFLoader().load(selectedModel.file, (gltf) => {
+        const dracoLoader = new DRACOLoader()
+        dracoLoader.setDecoderPath('/draco/')
+        const loader = new GLTFLoader()
+        loader.setDRACOLoader(dracoLoader)
+        loader.load(selectedModel.file, (gltf) => {
           if (disposed) { disposeModel(gltf.scene as unknown as DisposableModel); return }
           object = gltf.scene as unknown as DisposableModel
           const box = new THREE.Box3().setFromObject(gltf.scene)
@@ -258,6 +263,7 @@ export function ShellSongModel({ language }: { language: Language }) {
         const render = () => { camera.position.z += (distanceRef.current - camera.position.z) * .12; group.rotation.y += (yawRef.current - group.rotation.y) * .08; renderer?.render(scene, camera); frame = requestAnimationFrame(render) }
         render()
         return () => {
+          dracoLoader.dispose()
           host.removeEventListener('pointerdown', pointerDown)
           host.removeEventListener('pointermove', pointerMove)
           host.removeEventListener('pointerup', pointerUp)
