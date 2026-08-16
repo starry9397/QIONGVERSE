@@ -20,6 +20,14 @@ This is a deployment change only. Existing homepage content, six exhibition rout
 
 The Webify public origin is the browser origin for the frontend. It must be an HTTPS URL before it is used for canonical metadata, social previews, or CORS configuration.
 
+## Current deployment record
+
+- CloudBase environment: `qiongverse-webify-d5drsw1e9a5fd4` (Shanghai, free trial)
+- Webify service: `qiongverse-webify`
+- Current public URL: `https://qiongverse-webify-qiongverse-webify-d5drsw1e9a5fd4.webapps.tcloudbase.com/`
+- Current deployed version: `qiongverse-webify-002` (build status `SUCCESS`)
+- API origin: `https://qiongverse-api.onrender.com` (Render CORS must be redeployed with the Webify origin before browser chat requests succeed)
+
 ## Split-origin API boundary
 
 The current Node API remains deployed on Render at `https://qiongverse-api.onrender.com` unless a later migration is explicitly approved. Configure the Webify build variable below in the Webify project settings, never in source code:
