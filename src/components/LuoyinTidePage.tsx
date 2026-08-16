@@ -3,7 +3,6 @@ import type { Language } from '../data'
 import { inline, translateProjectText } from '../i18n'
 import LanguageSelector from './LanguageSelector'
 import { ShellSongModel } from './ShellSongModel'
-import { publicMedia } from '../public-media'
 import './luoyin-tide.css'
 
 type PosterRatio = 'square' | 'portrait' | 'story'
@@ -253,7 +252,7 @@ export default function LuoyinTidePage({ language, onChangeLanguage, onExit }: P
 
     <section className="ss-hero" id="top" aria-label={inline(language, 'ShellSong CG film', '螺音 CG 短片')}>
       {!videoError && <video ref={videoRef} className="ss-hero-video" muted playsInline loop preload="metadata" poster="/shellsong/hero-poster.jpg" onError={() => setVideoError(true)} onPlay={() => setPaused(false)} onPause={() => setPaused(true)}>
-        <source src={publicMedia('/shellsong/video/luoyin-cg.mp4')} type="video/mp4" />
+        <source src="/shellsong/video/luoyin-cg-pages.mp4" type="video/mp4" />
       </video>}
       {videoError && <img className="ss-hero-poster" src="/shellsong/hero-poster.jpg" alt={inline(language, 'Luoyin beside a glowing sea portal', '螺音站在发光的海洋之门旁')} />}
       <div className="ss-hero-veil" />

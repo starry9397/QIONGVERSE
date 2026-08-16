@@ -15,10 +15,14 @@ source desk, social sharing, and static fallbacks remain unchanged.
 ## Asset and source boundary
 
 - Only files already tracked under `public/shellsong/models`,
-  `public/shellsong/video`, and `public/assets/travel` are addressed.
-- Production-only large-media URLs may use the repository's read-only
-  `raw.githubusercontent.com` origin. No upload, user media, remote scraping,
-  analytics, or third-party tracking is introduced.
+  `public/shellsong/video`, and `public/assets/travel` are addressed. The two
+  `*-pages.mp4` files are non-destructive, 1280x720 H.264/AAC derivatives of
+  the existing source videos, kept below the Pages per-file limit for reliable
+  range playback; the original videos remain unchanged.
+- Production-only large GLB URLs may use the repository's read-only
+  `raw.githubusercontent.com` origin. The smaller MP4 derivatives are served
+  directly by GitHub Pages with the correct `video/mp4` type. No upload, user
+  media, remote scraping, analytics, or third-party tracking is introduced.
 - No API key, OAuth token, browser secret, camera stream, location, dialogue,
   or user profile data is included in the media URL configuration.
 - The media remains project-supplied/AIGC-labeled where the existing page marks
