@@ -14,9 +14,8 @@ The service accepts the host platform's `PORT` only as a listener setting. `GLM_
 
 ## Deployment variables
 
-For Render, set `LUOYIN_SERVER_HOST=0.0.0.0`, leave `LUOYIN_SERVER_PORT` unset so the host `PORT` is used, and allow only the final Cloudflare Pages URL through `LUOYIN_ALLOWED_ORIGINS`. Build the frontend with its exact public URL and the exact API base URL. Do not use wildcard CORS origins or build-time secrets.
+For Render, set `LUOYIN_SERVER_HOST=0.0.0.0`, leave `LUOYIN_SERVER_PORT` unset so the host `PORT` is used, and allow only the exact deployed frontend URL through `LUOYIN_ALLOWED_ORIGINS`. The current frontend URL is `https://starry9397.github.io/QIONGVERSE`. Build the frontend with its exact public URL and the exact API base URL. Do not use wildcard CORS origins or build-time secrets.
 
 ## Verification
 
 Run `npm run build`, `npm run check:i18n`, `npm run test:server`, `node --check server.mjs`, and `git diff --check`. In the host, verify `/healthz`, `/api/luoyin/status`, and `/api/social/status`; ensure liveness output contains no model key, token, secret, origin list, or internal path. Confirm a cross-origin request succeeds only from the configured Pages origin and fails from an untrusted origin.
-

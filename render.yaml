@@ -12,9 +12,8 @@ services:
       - key: LUOYIN_TRUST_PROXY
         value: "1"
       - key: LUOYIN_ALLOWED_ORIGINS
-        value: https://qiongverse.pages.dev
+        value: https://starry9397.github.io/QIONGVERSE
       - key: SOCIAL_PUBLIC_BASE_URL
-        value: https://qiongverse.pages.dev
+        value: https://starry9397.github.io/QIONGVERSE
       - key: GLM_API_KEY
         sync: false
-
