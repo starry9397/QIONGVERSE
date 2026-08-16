@@ -59,6 +59,8 @@ export default function HainanMap({ language }: HainanMapProps) {
           <img
             className={`hainan-map-asset${mapImageFailed ? ' is-hidden' : ''}`}
             src="/assets/hainan-map/hainan-administrative-map-user-provided.png"
+            loading="lazy"
+            decoding="async"
             alt=""
             aria-hidden="true"
             onError={() => setMapImageFailed(true)}

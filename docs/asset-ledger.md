@@ -19,6 +19,7 @@
 | `public/assets/social/` | 9:16 Luoyin CG social-video derivative | TikTok visitor-authorized post only | Supplied project media derivative | OAuth disabled state; no upload |
 | `public/assets/travel/hainan-unfolded-hero.mp4` | Hainan travel film | YouTube visitor-authorized upload only | Supplied project visual media | OAuth disabled state; no upload |
 | `public/assets/travel/hainan-unfolded-hero-pages.mp4` and `public/shellsong/video/luoyin-cg-pages.mp4` | 1280x720 H.264/AAC delivery derivatives | Travel Atlas and ShellSong public playback | Supplied project media derivative; source originals retained | Poster/static reading state |
+| `public/assets/home-thumbs/` | Five 640px WebP derivatives for the homepage wheel and dial | Initial homepage navigation only | Supplied project media delivery derivative; source originals retained | Original hall image, then poster |
 | `public/assets/exhibits/` and `public/assets/user-media2/` | Hall and exhibit images | Wheel and details | Supplied project visual archive | Readable caption |
 
 All current runtime roots are `project-provided / evidence collection pending`, except the reviewed external source metadata in `knowledge/source-registry.json`. Local media provides visual context only and cannot establish geographic, historical, technical, policy, product, price, inventory, or availability facts.
