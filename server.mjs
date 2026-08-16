@@ -20,7 +20,10 @@ const leadIntents = new Set(['culture-collaboration', 'responsible-travel', 'cra
 const acceptedLeadReferences = new Map()
 let upstreamRequestCount = 0
 const selfTestMode = process.argv.includes('--self-test') || process.env.LUOYIN_SELF_TEST === '1'
-const allowedOrigins = new Set((process.env.LUOYIN_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter((origin) => origin.startsWith('https://') || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')))
+const configuredAllowedOrigins = (process.env.LUOYIN_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter((origin) => origin.startsWith('https://') || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))
+// Keep the published GitHub Pages origin available even if an older Render
+// environment variable has not yet been synchronized from render.yaml.
+const allowedOrigins = new Set(['https://starry9397.github.io', ...configuredAllowedOrigins])
 const trustProxy = process.env.LUOYIN_TRUST_PROXY === '1'
 const socialStateTtlMs = 10 * 60 * 1000
 const socialPublishTtlMs = 10 * 60 * 1000

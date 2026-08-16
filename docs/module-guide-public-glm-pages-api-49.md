@@ -24,8 +24,10 @@ answer/source metadata.
 - Server secret: `GLM_API_KEY` in Render's secret environment only
 
 The Render allowlist uses exact HTTPS origins and may retain the existing
-`qiongverse.pages.dev` origin for the alternate deployment. It must not use `*`,
-an origin with a path, or a broad domain wildcard.
+`qiongverse.pages.dev` origin for the alternate deployment. The server also
+keeps the published GitHub Pages origin as an explicit code-level production
+entry so a stale Render variable cannot break the current site. It must not use
+`*`, an origin with a path, or a broad domain wildcard.
 
 ## Runtime and privacy contract
 
