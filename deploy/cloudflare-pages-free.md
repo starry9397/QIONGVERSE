@@ -3,7 +3,7 @@
 Use Cloudflare Pages to publish the Vite frontend at the stable project subdomain created by Pages, for example `https://qiongverse.pages.dev`. This does not register a `.com` domain.
 
 1. Push the repository to a Git provider accessible to Cloudflare Pages.
-2. Create a Pages project with build command `npm run build` and output directory `dist`.
+2. Create a Pages project with build command `npm run build && npm run prepare:pages` and output directory `dist`. The preparation step keeps source media in Git while omitting individual assets above Cloudflare Pages' 25 MiB limit; the UI retains poster/static fallbacks for those optional media.
 3. Set non-secret build variables:
 
 ```text
@@ -16,4 +16,3 @@ VITE_LUOYIN_API_BASE_URL=https://qiongverse-api.onrender.com
 6. Add the deployed Render HTTPS URL to the Cloudflare Pages build variable and rebuild the frontend.
 
 The free split-origin route supports the guide API and user-controlled X/Facebook link sharing. Do not set social OAuth provider secrets in this topology: callback endpoints would need a separately reviewed same-origin HTTPS deployment. Free services can have limits or cold starts; confirm their current terms before presenting the site as continuously available.
-
