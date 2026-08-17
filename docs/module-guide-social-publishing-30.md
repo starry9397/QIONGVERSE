@@ -30,3 +30,10 @@ Add a restrained social-sharing band to the HAINAN∞QIONGVERSE homepage. The pr
 - Run `npm run build`, `npm run test:server`, `node --check server.mjs`, and `git diff --check`.
 - Test share intent encoding, absent production URL, disabled OAuth configuration, invalid/expired/reused state, invalid platform or asset, OAuth cancellation, upstream failure, token redaction, focus handling, language switching, and 320px through wide desktop layouts.
 - Before production enablement, configure the deployment domain and platform credentials in host secrets, complete each platform's review, and run end-to-end tests with authorized test accounts.
+
+For the current Webify + Render topology, set `SOCIAL_PUBLIC_BASE_URL` to the Webify HTTPS origin and `SOCIAL_CALLBACK_BASE_URL` to `https://qiongverse-api.onrender.com`. Register these exact API callbacks with the providers:
+
+```text
+https://qiongverse-api.onrender.com/api/social/tiktok/callback
+https://qiongverse-api.onrender.com/api/social/youtube/callback
+```

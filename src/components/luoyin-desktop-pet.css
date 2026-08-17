@@ -7,23 +7,52 @@
 .luoyin-pet-fallback { display: grid; width: 76%; height: 76%; place-items: center; margin: 12%; border: 1px solid rgba(235, 207, 146, .82); border-radius: 50%; color: #f5dd9d; background: rgba(4, 39, 44, .92); box-shadow: 0 0 0 8px rgba(110, 223, 217, .14), 0 10px 25px rgba(0, 0, 0, .28); font: 400 46px/1 Georgia, serif; }
 .luoyin-pet-close { position: absolute; z-index: 2; top: 7%; right: 7%; display: grid; width: 25px; height: 25px; place-items: center; border: 1px solid rgba(246, 224, 171, .92); border-radius: 50%; padding: 0; color: #fff9eb; background: rgba(7, 43, 47, .9); box-shadow: 0 3px 12px rgba(0, 0, 0, .22); font: 400 18px/1 Arial, sans-serif; opacity: .92; }
 .luoyin-pet-close:hover, .luoyin-pet-close:focus-visible { color: #0a3335; border-color: #fff0c7; background: #f2d998; outline: 2px solid transparent; box-shadow: 0 0 18px rgba(242, 217, 152, .54); }
-.luoyin-chat-anchor { position: absolute; z-index: 1; right: 0; bottom: calc(100% - 18px); width: min(384px, calc(100vw - 32px)); }
-.luoyin-desktop-pet.chat-opens-right .luoyin-chat-anchor { right: auto; left: 0; }
-.luoyin-desktop-pet.chat-opens-down .luoyin-chat-anchor { top: calc(100% - 18px); bottom: auto; }
-.luoyin-chat-panel { display: flex; max-height: min(620px, var(--luoyin-chat-space, calc(100svh - 32px))); flex-direction: column; overflow: hidden; padding: 22px; border: 1px solid rgba(232, 201, 135, .72); color: #103638; background: rgba(249, 246, 235, .97); box-shadow: 0 24px 64px rgba(0, 0, 0, .36); backdrop-filter: blur(16px); }
+.luoyin-chat-anchor { position: fixed; z-index: 46; top: var(--luoyin-chat-top); left: var(--luoyin-chat-left); width: min(384px, calc(100vw - 32px)); max-height: var(--luoyin-chat-max-height); }
+.luoyin-tour-cue { position: fixed; z-index: 46; top: var(--luoyin-cue-top); left: var(--luoyin-cue-left); width: min(260px, calc(100vw - 32px)); padding: 12px 14px 11px; border: 1px solid rgba(199, 123, 74, .58); border-radius: 30px 36px 28px 34px / 32px 26px 34px 28px; color: var(--luoyin-cloud-ink, #173f40); background: rgba(255, 255, 255, .2); box-shadow: 0 12px 30px rgba(0, 0, 0, .16), 0 0 0 1px rgba(255, 255, 255, .25) inset; backdrop-filter: blur(12px) saturate(1.08); color-scheme: light dark; pointer-events: none; }
+.luoyin-tour-cue::after { position: absolute; width: 15px; height: 15px; content: ''; border: 1px solid rgba(199, 123, 74, .58); background: rgba(255, 255, 255, .2); transform: rotate(45deg); }
+.luoyin-tour-cue.cue-side-right::after { left: -8px; bottom: 24px; border-top: 0; border-right: 0; }
+.luoyin-tour-cue.cue-side-left::after { right: -8px; bottom: 24px; border-bottom: 0; border-left: 0; }
+.luoyin-tour-cue.cue-vertical-below::after { top: 24px; bottom: auto; }
+.luoyin-tour-cue-title { margin: 0 25px 6px 0; color: #9e6645; font: 10px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.luoyin-tour-cue p:not(.luoyin-tour-cue-title) { margin: 0; color: var(--luoyin-cloud-ink, #173f40); font-size: 11px; line-height: 1.5; text-shadow: 0 1px 8px rgba(255, 255, 255, .35); }
+.luoyin-tour-cue-close { position: absolute; top: 7px; right: 8px; display: grid; width: 25px; height: 25px; place-items: center; border: 0; border-radius: 50%; color: var(--luoyin-cloud-ink, #173f40); background: transparent; font-size: 19px; pointer-events: auto; }
+.luoyin-tour-cue-close:focus-visible, .luoyin-tour-cue-close:hover { color: #143437; background: rgba(232, 201, 135, .35); outline: 2px solid #8dd9d7; outline-offset: 2px; }
+.luoyin-tour-cue-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.luoyin-tour-cue-actions button { min-height: 29px; border: 1px solid rgba(23, 63, 64, .35); border: 1px solid color-mix(in srgb, var(--luoyin-cloud-ink, #173f40) 38%, transparent); border-radius: 999px; padding: 4px 9px; color: var(--luoyin-cloud-ink, #173f40); background: rgba(255, 255, 255, .12); font: 9px var(--mono); pointer-events: auto; }
+.luoyin-tour-cue-actions button:first-child { border-color: #c77b4a; color: #8e5538; background: rgba(255, 243, 219, .14); }
+.luoyin-chat-panel { position: relative; display: flex; max-height: min(100%, var(--luoyin-chat-max-height, calc(100svh - 32px))); flex-direction: column; overflow: hidden; padding: 18px 19px 16px; border: 1px solid rgba(199, 123, 74, .62); border-radius: 38px 52px 44px 48px / 42px 40px 48px 38px; color: var(--luoyin-cloud-ink, #173f40); background: var(--luoyin-cloud-bg, rgba(255, 250, 238, .78)); box-shadow: 0 20px 54px rgba(0, 0, 0, .28), 0 0 0 1px rgba(255, 255, 255, .18) inset; backdrop-filter: blur(18px) saturate(1.08); color-scheme: light dark; isolation: isolate; }
+.luoyin-chat-panel::before, .luoyin-chat-panel::after { position: absolute; z-index: -1; display: block; border: 1px solid rgba(199, 123, 74, .62); border-radius: 50%; background: var(--luoyin-cloud-bg, rgba(255, 250, 238, .78)); content: ''; pointer-events: none; }
+.luoyin-chat-panel::before { top: -15px; left: 54px; width: 58px; height: 42px; }
+.luoyin-chat-panel::after { right: -12px; bottom: 30px; width: 30px; height: 30px; transform: rotate(28deg); }
+.luoyin-chat-panel .guide-top, .luoyin-chat-panel .guide-body, .luoyin-chat-panel .guide-state, .luoyin-chat-panel .guide-utility-actions, .luoyin-chat-panel .guide-answer-area, .luoyin-chat-panel .guide-input, .luoyin-chat-panel .guide-disclaimer { position: relative; z-index: 1; }
 .luoyin-chat-panel .guide-top { flex: 0 0 auto; }
-.luoyin-chat-panel .guide-top h2 { font-size: 22px; }
-.luoyin-chat-panel .guide-body { margin-top: 14px; }
-.luoyin-chat-panel .guide-state { position: static; margin: 0 0 8px; color: var(--muted); text-align: right; }
-.luoyin-chat-panel .guide-utility-actions { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 8px; }
+.luoyin-chat-panel .guide-top h2 { color: var(--luoyin-cloud-ink, #173f40); font-size: 20px; }
+.luoyin-chat-panel .guide-body { margin: 5px 0 0; color: var(--luoyin-cloud-muted, #4d6461); font-size: 12px; line-height: 1.5; }
+.luoyin-chat-panel .guide-state { position: static; margin: 0 0 7px; color: var(--luoyin-cloud-muted, #4d6461); text-align: right; font-size: 11px; }
+.luoyin-chat-panel .guide-utility-actions { display: flex; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 7px; }
 .luoyin-chat-panel .source-desk-trigger, .luoyin-chat-panel .lead-trigger { min-height: 34px; margin: 0; padding: 4px 0; }
-.luoyin-chat-panel .guide-answer-area { min-height: 132px; }
-.luoyin-chat-panel .guide-disclaimer { margin-top: 12px; }
+.luoyin-chat-panel .guide-answer-area { min-height: 132px; scrollbar-color: rgba(199, 123, 74, .6) transparent; }
+.luoyin-chat-panel .guide-disclaimer { margin-top: 8px; color: var(--luoyin-cloud-muted, #4d6461); font-size: 11px; line-height: 1.45; }
+.luoyin-chat-panel .guide-message, .luoyin-chat-panel .guide-welcome, .luoyin-chat-panel .guide-answer { color: var(--luoyin-cloud-ink, #173f40); }
+.luoyin-chat-panel .guide-input input { border-color: rgba(199, 123, 74, .58); color: var(--luoyin-cloud-ink, #173f40); background: rgba(255, 255, 255, .14); }
+.luoyin-chat-panel .guide-input input::placeholder { color: var(--luoyin-cloud-muted, #4d6461); }
+.luoyin-desktop-pet.tone-dark { --luoyin-cloud-ink: #fff; --luoyin-cloud-muted: #eef7f4; --luoyin-cloud-bg: rgba(5, 31, 34, .78); }
+.luoyin-desktop-pet.tone-dark .luoyin-tour-cue { --luoyin-cloud-ink: #fff; --luoyin-cloud-muted: #eef7f4; --luoyin-cloud-bg: rgba(5, 31, 34, .38); color: #fff; background: var(--luoyin-cloud-bg); text-shadow: 0 1px 4px rgba(0, 0, 0, .62); }
+.luoyin-desktop-pet.tone-dark .luoyin-tour-cue-title { color: #f2d998; text-shadow: 0 1px 4px rgba(0, 0, 0, .7); }
+.luoyin-desktop-pet.tone-dark .luoyin-tour-cue p:not(.luoyin-tour-cue-title) { color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, .68); }
+.luoyin-desktop-pet.tone-dark .luoyin-tour-cue::after { background: var(--luoyin-cloud-bg); }
+.luoyin-desktop-pet.tone-dark .luoyin-tour-cue-close, .luoyin-desktop-pet.tone-dark .luoyin-tour-cue-actions button { color: var(--luoyin-cloud-ink); }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) { .luoyin-pet-surface { transition: filter .2s ease, transform .2s ease; } .luoyin-pet-surface:hover { filter: drop-shadow(0 13px 20px rgba(2, 21, 26, .4)) drop-shadow(0 0 13px rgba(121, 225, 220, .34)); transform: translateY(-3px); } }
-@media (max-width: 760px) { .luoyin-desktop-pet { width: 120px; height: 120px; } .luoyin-pet-close { width: 24px; height: 24px; } .luoyin-chat-anchor, .luoyin-desktop-pet.chat-opens-right .luoyin-chat-anchor, .luoyin-desktop-pet.chat-opens-down .luoyin-chat-anchor { position: fixed; top: auto; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); left: 16px; width: auto; } .luoyin-chat-panel { max-height: min(68svh, 560px); padding: 20px 18px; } .luoyin-chat-panel .guide-answer-area { min-height: 118px; } }
+@media (max-width: 760px) { .luoyin-desktop-pet { width: 120px; height: 120px; } .luoyin-pet-close { width: 24px; height: 24px; } .luoyin-chat-anchor { top: auto !important; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); left: 16px !important; width: auto; max-height: min(68svh, 560px); } .luoyin-chat-panel { max-height: min(68svh, 560px); padding: 18px 16px 15px; } .luoyin-chat-panel::before, .luoyin-chat-panel::after { display: none; } .luoyin-chat-panel .guide-answer-area { min-height: 118px; } .luoyin-tour-cue { top: auto !important; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); left: 16px !important; width: auto; } .luoyin-tour-cue::after { display: none; } }
 @media (prefers-reduced-motion: reduce) { .luoyin-pet-surface, .luoyin-pet-close { transition: none; } }
 
 html[dir='rtl'] .luoyin-chat-panel { direction: rtl; text-align: start; }
 html[dir='rtl'] .luoyin-pet-close { right: auto; left: 7%; }
 html[dir='rtl'] .luoyin-chat-panel .guide-state { text-align: start; }
 html[dir='rtl'] .luoyin-chat-panel input { direction: rtl; text-align: start; }
+html[dir='rtl'] .luoyin-chat-panel::after { right: auto; left: -12px; transform: rotate(-28deg); }
+html[dir='rtl'] .luoyin-tour-cue-title { margin-right: 0; margin-left: 25px; }
+html[dir='rtl'] .luoyin-tour-cue-close { right: auto; left: 8px; }
+html[dir='rtl'] .luoyin-tour-cue.cue-side-right::after { left: auto; right: -8px; }
+html[dir='rtl'] .luoyin-tour-cue.cue-side-left::after { right: auto; left: -8px; }
+@media (prefers-reduced-motion: reduce) { .luoyin-pet-surface, .luoyin-pet-close, .luoyin-chat-panel, .luoyin-tour-cue { transition: none; animation: none; } }

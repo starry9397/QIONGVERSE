@@ -19,3 +19,11 @@ services:
         value: https://qiongverse-api.onrender.com
       - key: GLM_API_KEY
         sync: false
+      - key: LUOYIN_TTS_API_URL
+        sync: false
+      - key: LUOYIN_TTS_API_KEY
+        sync: false
+      - key: LUOYIN_TTS_VOICE_ID
+        sync: false
+      - key: LUOYIN_TTS_VOICE_STYLE
+        value: sweet-playful-storybook

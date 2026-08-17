@@ -62,6 +62,15 @@ The service keeps only temporary, in-memory rate-limit data. Questions, answers,
 
 Set `VITE_PUBLIC_SITE_URL` during the client build and `SOCIAL_PUBLIC_BASE_URL` in the Node process to the same public HTTPS origin. This makes canonical and Open Graph image URLs absolute for X and Facebook share previews. A localhost or HTTP URL intentionally keeps public sharing disabled.
 
+For split-origin OAuth publishing, keep the public share origin and callback origin separate:
+
+```text
+SOCIAL_PUBLIC_BASE_URL=https://your-webify-domain.example
+SOCIAL_CALLBACK_BASE_URL=https://your-api-domain.example
+```
+
+Register TikTok and YouTube callbacks on the API origin (`/api/social/tiktok/callback` and `/api/social/youtube/callback`), not on the static Webify origin.
+
 X and Facebook can use their user-controlled share interfaces once the public origin exists. Real visitor-authorized publishing additionally requires platform developer approval and these deployment-only secrets:
 
 ```text
@@ -92,7 +101,7 @@ Do not enable TikTok or YouTube publishing until their scopes, app review, publi
 2. Install the release into a timestamped directory under `/srv/qiongverse/releases/`, then update the `current` symlink after build checks pass.
 3. Store production variables in `/etc/qiongverse/qiongverse.env` with mode `600`; never put secrets in the repository.
 4. Enable the systemd service, reload Caddy, and verify `/api/luoyin/status` and `/api/social/status` before switching traffic.
-5. Run `npm run verify:deployment -- https://qiongverse.com`, then perform the external X/Facebook preview checks and mobile first-load network assertions.
+5. Run `npm run verify:deployment -- https://qiongverse.com` for same-origin hosting, or `npm run verify:deployment -- https://<webify-domain> https://qiongverse-api.onrender.com` for the split-origin Webify + Render topology. Then perform the external X/Facebook preview checks and mobile first-load network assertions.
 
 The repository cannot register a domain, change DNS, obtain certificates, or perform external platform debugging without operator access. Until the final domain resolves, local HTTP builds intentionally leave public share metadata disabled.
 

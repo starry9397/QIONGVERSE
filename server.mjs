@@ -282,7 +282,13 @@ function glmConfigured() {
   return !selfTestMode && typeof process.env.GLM_API_KEY === 'string' && process.env.GLM_API_KEY.trim().length > 0
 }
 
+// Keep the character direction provider-agnostic: the deployment voice ID selects
+// the authorized synthetic voice, while these bounded hints keep Luoyin's delivery
+// warm and playful without imitating a real person.
 const ttsVoiceProfile = 'luoyin-sweet-original'
+const configuredTtsVoiceStyle = typeof process.env.LUOYIN_TTS_VOICE_STYLE === 'string' ? process.env.LUOYIN_TTS_VOICE_STYLE.trim() : ''
+const ttsVoiceStyle = /^[a-z0-9-]{1,48}$/i.test(configuredTtsVoiceStyle) ? configuredTtsVoiceStyle : 'sweet-playful-storybook'
+const ttsVoiceDirection = 'Warm, sweet, playful storybook guide. Use a gentle smile, clear short phrases, and light tide imagery. Never imitate a real person or child.'
 
 function ttsConfigured() {
   return !selfTestMode
@@ -316,7 +322,7 @@ async function synthesizeSpeech(text, language) {
           method: 'POST',
           signal: controller.signal,
           headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-          body: JSON.stringify({ text: segment, locale: language, voice: voiceId, voiceProfile: ttsVoiceProfile, format: 'mp3' }),
+          body: JSON.stringify({ text: segment, locale: language, voice: voiceId, voiceProfile: ttsVoiceProfile, voiceStyle: ttsVoiceStyle, voiceDirection: ttsVoiceDirection, speakingRate: 0.96, pitchSemitones: 1.5, format: 'mp3' }),
         })
         if (!response.ok) return unavailable
         const contentType = response.headers.get('content-type') || ''
@@ -1075,7 +1081,7 @@ const server = http.createServer(async (req, res) => {
     return json(res, 405, { accepted: false, error: 'method_not_allowed' })
   }
   if (req.method === 'GET' && req.url === '/api/luoyin/status') {
-    return json(res, 200, { model, mode: glmConfigured() ? 'glm_configured' : 'local_fallback', upstreamConfigured: glmConfigured(), ttsConfigured: ttsConfigured(), voiceProfile: ttsVoiceProfile })
+    return json(res, 200, { model, mode: glmConfigured() ? 'glm_configured' : 'local_fallback', upstreamConfigured: glmConfigured(), ttsConfigured: ttsConfigured(), voiceProfile: ttsVoiceProfile, voiceStyle: ttsVoiceStyle })
   }
   if (req.method === 'POST' && req.url === '/api/luoyin/tts') {
     try {
@@ -1241,7 +1247,7 @@ async function runSelfTest() {
     check('reviewed UNESCO source can be displayed', desk.status === 200 && deskEntries.some((entry) => entry.id === 'unesco-li-textile-source-desk' && entry.status === 'reviewed' && entry.publisher === 'UNESCO Intangible Cultural Heritage'))
     check('reviewed Free Trade Port source can be displayed', desk.status === 200 && deskEntries.some((entry) => entry.id === 'hainan-free-trade-port-source-desk' && entry.status === 'reviewed' && entry.canonicalUrl === 'https://en.hnftp.gov.cn/'))
     const guideStatus = await requestGet(`${baseUrl}/api/luoyin/status`)
-    check('guide status exposes only safe TTS capability state', guideStatus.status === 200 && guideStatus.body.model === 'GLM-4.6V-Flash' && guideStatus.body.upstreamConfigured === false && guideStatus.body.ttsConfigured === false && guideStatus.body.voiceProfile === ttsVoiceProfile && !Object.hasOwn(guideStatus.body, 'apiKey'))
+    check('guide status exposes only safe TTS capability state', guideStatus.status === 200 && guideStatus.body.model === 'GLM-4.6V-Flash' && guideStatus.body.upstreamConfigured === false && guideStatus.body.ttsConfigured === false && guideStatus.body.voiceProfile === ttsVoiceProfile && guideStatus.body.voiceStyle === ttsVoiceStyle && !Object.hasOwn(guideStatus.body, 'apiKey'))
     const unavailableTts = await requestJson(`${baseUrl}/api/luoyin/tts`, { text: 'Hello tide', locale: 'en' })
     check('unconfigured TTS keeps text-only fallback honest', unavailableTts.status === 200 && unavailableTts.body.status === 'unavailable' && unavailableTts.body.voice === ttsVoiceProfile && !JSON.stringify(unavailableTts.body).match(/browser_fallback|speechSynthesis/i))
     const invalidTts = await requestJson(`${baseUrl}/api/luoyin/tts`, { text: 'Hello tide', locale: 'fr' })

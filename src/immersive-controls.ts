@@ -60,6 +60,8 @@ export function createImmersiveCameraGuard(
   let pitch = 0
   let activePointer: number | null = null
   let lastPointer = { x: 0, y: 0 }
+  let lastTourPosition = camera.position.clone()
+  let lastTourEventAt = 0
   const canvas = pointer?.canvas
 
   const syncOrientation = () => {
@@ -135,6 +137,12 @@ export function createImmersiveCameraGuard(
     const activeBounds = getBounds()
     if (activeBounds) camera.position.clamp(activeBounds.min, activeBounds.max)
     else camera.position.clamp(fallbackMin, fallbackMax)
+    const now = performance.now()
+    if (now - lastTourEventAt > 1400 && camera.position.distanceToSquared(lastTourPosition) > .035) {
+      lastTourEventAt = now
+      lastTourPosition.copy(camera.position)
+      window.dispatchEvent(new CustomEvent('luoyin-world-move'))
+    }
 
   }
 
