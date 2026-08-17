@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { assertLocalizationTree, localize, type Language, type RuntimeLocalized } from '../i18n'
+import { inline, type Language } from '../i18n'
 import { localMedia } from '../public-media'
 
 type ModelOption = {
   id: string
   file: string
-  label: RuntimeLocalized<string>
+  en: string
+  zh: string
 }
 
 type GestureRuntime = {
@@ -19,15 +20,14 @@ type DisposableModel = {
 }
 
 const modelOptions: ModelOption[] = [
-  { id: 'body', file: localMedia('/shellsong/models/web/luoyin_body.glb?v=web-20260816-1'), label: { en: 'Core form', zh: '本体', id: 'Bentuk inti', ja: '基本形', ko: '기본 형태', ru: 'Основная форма', ar: 'الهيئة الأساسية' } },
-  { id: 'awakened', file: localMedia('/shellsong/models/web/luoyin_awakened.glb?v=web-20260816-1'), label: { en: 'Awakening', zh: '苏醒', id: 'Terbangun', ja: '目覚め', ko: '깨어남', ru: 'Пробуждение', ar: 'اليقظة' } },
-  { id: 'awakened-ii', file: localMedia('/shellsong/models/web/luoyin_awakened2.glb?v=web-20260816-1'), label: { en: 'Awakening II', zh: '苏醒 II', id: 'Terbangun II', ja: '目覚め II', ko: '깨어남 II', ru: 'Пробуждение II', ar: 'اليقظة II' } },
-  { id: 'resonance', file: localMedia('/shellsong/models/web/luoyin_resonance.glb?v=web-20260816-1'), label: { en: 'Resonance', zh: '共振', id: 'Resonansi', ja: '共鳴', ko: '공명', ru: 'Резонанс', ar: 'الرنين' } },
-  { id: 'celebration', file: localMedia('/shellsong/models/web/luoyin_celebration.glb?v=web-20260816-1'), label: { en: 'Celebration', zh: '庆祝', id: 'Perayaan', ja: '祝福', ko: '축하', ru: 'Праздник', ar: 'الاحتفال' } },
-  { id: 'flying', file: localMedia('/shellsong/models/web/luoyin_flying.glb?v=web-20260816-1'), label: { en: 'Flying', zh: '飞行', id: 'Terbang', ja: '飛行', ko: '비행', ru: 'Полёт', ar: 'التحليق' } },
-  { id: 'shell-closed', file: localMedia('/shellsong/models/web/luoyin_shell_closed.glb?v=web-20260816-1'), label: { en: 'Resting shell', zh: '合螺休眠', id: 'Cangkang beristirahat', ja: '休む殻', ko: '쉬는 소라', ru: 'Отдыхающая раковина', ar: 'صدفة مستريحة' } },
+  { id: 'body', file: localMedia('/shellsong/models/web/luoyin_body.glb?v=web-20260816-1'), en: 'Core form', zh: '本体' },
+  { id: 'awakened', file: localMedia('/shellsong/models/web/luoyin_awakened.glb?v=web-20260816-1'), en: 'Awakening', zh: '苏醒' },
+  { id: 'awakened-ii', file: localMedia('/shellsong/models/web/luoyin_awakened2.glb?v=web-20260816-1'), en: 'Awakening II', zh: '苏醒 II' },
+  { id: 'resonance', file: localMedia('/shellsong/models/web/luoyin_resonance.glb?v=web-20260816-1'), en: 'Resonance', zh: '共振' },
+  { id: 'celebration', file: localMedia('/shellsong/models/web/luoyin_celebration.glb?v=web-20260816-1'), en: 'Celebration', zh: '庆祝' },
+  { id: 'flying', file: localMedia('/shellsong/models/web/luoyin_flying.glb?v=web-20260816-1'), en: 'Flying', zh: '飞行' },
+  { id: 'shell-closed', file: localMedia('/shellsong/models/web/luoyin_shell_closed.glb?v=web-20260816-1'), en: 'Resting shell', zh: '合螺休眠' },
 ]
-assertLocalizationTree(modelOptions, 'ShellSong model options')
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
@@ -288,10 +288,10 @@ export function ShellSongModel({ language }: { language: Language }) {
   const stateMessage = gestureReadout || (gestureMode === 'loading' ? localized.loading : gestureMode === 'unsupported' ? localized.unsupported : gestureMode === 'error' ? localized.error : localized.off)
 
   return <>
-    <div className="ss-model-stage" ref={hostRef} tabIndex={0} aria-label={`${localized.select}: ${localize(selectedModel.label, language)}`} />
+    <div className="ss-model-stage" ref={hostRef} tabIndex={0} aria-label={inline(language, `Interactive 3D Luoyin: ${selectedModel.en}`, `可交互的螺音 3D 角色：${selectedModel.zh}`)} />
     {failed && <p className="ss-model-error" role="status">{localized.modelUnavailable}</p>}
     <div className="ss-model-switcher" role="group" aria-label={localized.select}>
-      {modelOptions.map((model) => <button type="button" key={model.id} className={model.id === selectedModel.id ? 'active' : ''} aria-pressed={model.id === selectedModel.id} onClick={() => setSelectedModel(model)}>{localize(model.label, language)}</button>)}
+      {modelOptions.map((model) => <button type="button" key={model.id} className={model.id === selectedModel.id ? 'active' : ''} aria-pressed={model.id === selectedModel.id} onClick={() => setSelectedModel(model)}>{inline(language, model.en, model.zh)}</button>)}
     </div>
     <div className="ss-gesture-panel">
       <button type="button" onClick={gestureMode === 'active' || gestureMode === 'loading' ? () => { stopGestureTracking(); setGestureMode('off'); setReadout('') } : startGestureTracking} disabled={gestureMode === 'loading'}>{gestureMode === 'active' || gestureMode === 'loading' ? localized.gestureStop : localized.gestureStart}</button>

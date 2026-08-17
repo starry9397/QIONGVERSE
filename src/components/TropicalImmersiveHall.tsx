@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import type * as ThreeTypes from "three";
 import type { Language } from "../data";
-import { assertLocalizationTree, completeLocalizationTree } from "../i18n";
-import { hallTx } from "../immersive-copy";
+import { assertLocalizationTree, completeLocalizationTree, inline } from "../i18n";
 import { createImmersiveCameraGuard } from "../immersive-controls";
 import {
   avatarWorldConfigs,
@@ -26,7 +25,7 @@ type Props = {
   onOpenGuide: (exhibit: TropicalExhibit) => void;
 };
 type SceneStatus = "loading" | "ready" | "fallback";
-const tx = (language: Language, en: string, _zh?: string) => hallTx(language, en);
+const tx = (language: Language, en: string, zh: string) => inline(language, en, zh);
 
 function TidePulse({
   reduced,
@@ -139,7 +138,7 @@ function DetailSheet({
         <div className="tropical-sheet-head">
           <div>
             <p className="mono-label">
-              {hallTx(language, "Project-supplied curatorial asset")}
+              PROJECT-SUPPLIED CURATORIAL ASSET / 项目提供策展素材
             </p>
             <h2 id="tropical-detail-title">{exhibit.title[language]}</h2>
           </div>
@@ -378,7 +377,9 @@ export default function TropicalImmersiveHall({
       <header className="tropical-header">
         <BrandLockup onNavigate={(event) => { event.preventDefault(); onExit(); }} />
         <p>
-          {hallTx(language, view === "world" ? "TROPICAL ISLAND / IMMERSIVE HALL" : "TROPICAL ISLAND / EXHIBIT INDEX")}
+          {view === "world"
+            ? "TROPICAL ISLAND / IMMERSIVE HALL"
+            : "TROPICAL ISLAND / EXHIBIT INDEX"}
         </p>
         <div>
           <LanguageSelector language={language} onChange={onChangeLanguage} />
@@ -441,7 +442,7 @@ export default function TropicalImmersiveHall({
             <TidePulse reduced={reduced} pulse={pulse} />
           </div>
           <aside className="tropical-overlay">
-            <p className="mono-label">{hallTx(language, "Project-supplied curatorial asset")}</p>
+            <p className="mono-label">HAINAN PROVINCE / PROJECT-CURATED VIEW</p>
             <h1>{tx(language, "Tropical Island Hall", "热带海岛厅")}</h1>
             <p>
               {tx(
@@ -488,7 +489,7 @@ export default function TropicalImmersiveHall({
                 >
                   <span>◌</span>
                   <b>{exhibit.title[language]}</b>
-                  <small>{hallTx(language, "Project-supplied asset")}</small>
+                  <small>PROJECT-SUPPLIED ASSET</small>
                 </button>
               ))}
             </nav>
@@ -505,7 +506,7 @@ export default function TropicalImmersiveHall({
         <main className="tropical-index-page">
           <div className="tropical-index-intro">
             <div>
-              <p className="mono-label">{hallTx(language, "TROPICAL ISLAND / EXHIBIT INDEX")}</p>
+              <p className="mono-label">HAINAN PROVINCE / TROPICAL ISLAND</p>
               <h1>{tx(language, "Exhibit Index", "展项索引")}</h1>
             </div>
             <img src={tropicalReferenceImage} alt="" />
@@ -539,7 +540,7 @@ export default function TropicalImmersiveHall({
                 />
                 <div>
                   <p className="mono-label">
-                    {hallTx(language, "Project-supplied curatorial asset")}
+                    PROJECT-SUPPLIED CURATORIAL ASSET / 项目提供策展素材
                   </p>
                   <h2>{exhibit.title[language]}</h2>
                   <p>{exhibit.introduction[language]}</p>

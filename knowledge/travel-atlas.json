@@ -17,9 +17,9 @@
       "themes": ["coast", "nature"],
       "hall": "tropical",
       "sourceId": "project-supplied-six-hall-archive",
-      "title": { "en": "Tide Edge", "zh": "潮汐岸线", "id": "Tepi Pasang", "ja": "潮の縁", "ko": "조수의 가장자리", "ru": "Кромка прилива", "ar": "حافة المدّ" },
-      "summary": { "en": "A project-curated opening for looking at light, shade, and the edge of an island.", "zh": "从项目策展的开篇开始，观看光影与海岛边缘。", "id": "Pembuka kurasi proyek untuk mengamati cahaya, teduh, dan tepi sebuah pulau.", "ja": "光と影、島の縁を見つめるプロジェクト編成の入口です。", "ko": "빛과 그늘, 섬의 가장자리를 바라보는 프로젝트 큐레이션의 시작입니다.", "ru": "Кураторское начало проекта для наблюдения за светом, тенью и краем острова.", "ar": "مدخل منسّق للمشروع لمشاهدة الضوء والظل وحافة الجزيرة." },
-      "note": { "en": "Project-supplied visual context, not a named beach, route, safety notice, or current-condition claim.", "zh": "项目提供的视觉语境，不指向具体海滩、路线、安全提示或当前状况。", "id": "Konteks visual dari proyek, bukan pantai, rute, pemberitahuan keselamatan, atau klaim kondisi terkini tertentu.", "ja": "プロジェクト提供の視覚的文脈であり、特定の浜、ルート、安全通知、現在の状況を示すものではありません。", "ko": "프로젝트 제공 시각 맥락이며 특정 해변, 경로, 안전 공지 또는 현재 상태를 주장하지 않습니다.", "ru": "Визуальный контекст проекта, а не конкретный пляж, маршрут, уведомление о безопасности или заявление о текущем состоянии.", "ar": "سياق بصري من المشروع، وليس شاطئاً أو طريقاً أو إشعار سلامة أو ادعاءً عن حالة راهنة محددة." },
+      "title": { "en": "Tide Edge", "zh": "潮汐岸线" },
+      "summary": { "en": "A project-curated opening for looking at light, shade, and the edge of an island.", "zh": "从项目策展的开篇开始，观看光影与海岛边缘。" },
+      "note": { "en": "Project-supplied visual context, not a named beach, route, safety notice, or current-condition claim.", "zh": "项目提供的视觉语境，不指向具体海滩、路线、安全提示或当前状况。" },
       "asset": "/assets/exhibits/tropical/shore-rest.png"
     },
     {
@@ -27,9 +27,9 @@
       "themes": ["culture", "city"],
       "hall": "lijin",
       "sourceId": "unesco-li-traditional-textile-techniques",
-      "title": { "en": "Li Textile Thread", "zh": "黎族纺织线索", "id": "Benang Tekstil Li", "ja": "黎族の織物の糸", "ko": "리족 섬유의 실", "ru": "Текстильная нить народа ли", "ar": "خيط منسوجات شعب لي" },
-      "summary": { "en": "Begin a culture-focused day with a source-backed introduction to Li traditional textile techniques.", "zh": "以有来源支持的黎族传统纺织技艺介绍，开启文化主题的一天。", "id": "Mulai hari bertema budaya dengan pengantar bersumber tentang teknik tekstil tradisional Li.", "ja": "出典に基づく黎族の伝統的な織物技法の紹介から、文化に焦点を当てた一日を始めます。", "ko": "출처에 근거한 리족 전통 섬유 기술 소개로 문화 중심의 하루를 시작하세요.", "ru": "Начните день культуры с основанного на источнике знакомства с традиционными текстильными техниками народа ли.", "ar": "ابدأ يوماً ثقافياً بمقدمة موثقة عن تقنيات النسيج التقليدية لشعب لي." },
-      "note": { "en": "Use the UNESCO source page for the underlying cultural record; this atlas does not verify individual makers, products, or availability.", "zh": "文化记录以 UNESCO 来源页面为准；本图谱不核验个体传承人、产品或在地可得性。", "id": "Gunakan halaman sumber UNESCO untuk catatan budaya; atlas ini tidak memverifikasi perajin, produk, atau ketersediaan tertentu.", "ja": "文化記録の根拠にはユネスコの出典ページを使用します。このアトラスは個々の作り手、商品、入手可能性を確認しません。", "ko": "문화 기록은 유네스코 출처 페이지를 확인하세요. 이 아틀라스는 개별 제작자, 제품 또는 이용 가능 여부를 검증하지 않습니다.", "ru": "За культурной записью обращайтесь к странице ЮНЕСКО; атлас не подтверждает отдельных мастеров, товары или доступность.", "ar": "استخدم صفحة مصدر اليونسكو للسجل الثقافي؛ لا يتحقق هذا الأطلس من صانعين أو منتجات أو توافر بعينه." },
+      "title": { "en": "Li Textile Thread", "zh": "黎族纺织线索" },
+      "summary": { "en": "Begin a culture-focused day with a source-backed introduction to Li traditional textile techniques.", "zh": "以有来源支持的黎族传统纺织技艺介绍，开启文化主题的一天。" },
+      "note": { "en": "Use the UNESCO source page for the underlying cultural record; this atlas does not verify individual makers, products, or availability.", "zh": "文化记录以 UNESCO 来源页面为准；本图谱不核验个体传承人、产品或在地可得性。" },
       "asset": "/assets/3d/limiao/黎苗展厅参考图.png"
     },
     {
@@ -37,9 +37,9 @@
       "themes": ["village", "nature"],
       "hall": "village",
       "sourceId": "project-supplied-six-hall-archive",
-      "title": { "en": "Village Rhythm", "zh": "乡村节奏", "id": "Irama Desa", "ja": "農村のリズム", "ko": "마을의 리듬", "ru": "Ритм деревни", "ar": "إيقاع القرية" },
-      "summary": { "en": "A project-curated village lens for reading stone, fields, pathways, and everyday gestures as one rhythm.", "zh": "以项目策展的乡村视角，阅读石材、田野、路径与日常动作之间的节奏。", "id": "Lensa desa kurasi proyek untuk membaca batu, ladang, jalur, dan gestur sehari-hari sebagai satu irama.", "ja": "石、畑、小道、日々の所作をひとつのリズムとして読む、プロジェクト編成の農村レンズです。", "ko": "돌과 들판, 길, 일상의 몸짓을 하나의 리듬으로 읽는 프로젝트 큐레이션의 마을 시선입니다.", "ru": "Кураторская оптика проекта на деревню, где камень, поля, тропы и повседневные жесты складываются в единый ритм.", "ar": "عدسة ريفية منسّقة للمشروع تقرأ الحجر والحقول والمسارات والإيماءات اليومية كإيقاع واحد." },
-      "note": { "en": "This is not a named settlement, visitor service, access route, or current site description.", "zh": "这不对应具体村落、游客服务、抵达路线或现场状况描述。", "id": "Ini bukan permukiman, layanan pengunjung, rute akses, atau deskripsi lokasi terkini tertentu.", "ja": "特定の集落、訪問者サービス、アクセスルート、現在の現地説明ではありません。", "ko": "특정 마을, 방문자 서비스, 접근 경로 또는 현재 현장 설명이 아닙니다.", "ru": "Это не конкретный населённый пункт, сервис для посетителей, маршрут доступа или описание текущего места.", "ar": "ليس هذا مستوطنة أو خدمة زوار أو طريق وصول أو وصفاً راهناً لموقع محدد." },
+      "title": { "en": "Village Rhythm", "zh": "乡村节奏" },
+      "summary": { "en": "A project-curated village lens for reading stone, fields, pathways, and everyday gestures as one rhythm.", "zh": "以项目策展的乡村视角，阅读石材、田野、路径与日常动作之间的节奏。" },
+      "note": { "en": "This is not a named settlement, visitor service, access route, or current site description.", "zh": "这不对应具体村落、游客服务、抵达路线或现场状况描述。" },
       "asset": "/assets/3d/countryside/美丽乡村参考图.png"
     },
     {
@@ -47,9 +47,9 @@
       "themes": ["city", "nature"],
       "hall": "aerospace",
       "sourceId": "cnsa-english-portal",
-      "title": { "en": "Launchward Horizon", "zh": "面向发射的地平线", "id": "Cakrawala Menuju Peluncuran", "ja": "打上げへ向く地平線", "ko": "발사를 향한 지평선", "ru": "Горизонт, обращённый к запуску", "ar": "أفق يتجه نحو الإطلاق" },
-      "summary": { "en": "A public-information pause for looking outward from an island horizon.", "zh": "在面向远方的海岛地平线前，进行一次公共信息停留。", "id": "Jeda informasi publik untuk memandang ke luar dari cakrawala pulau.", "ja": "島の地平線から外へ目を向けるための公開情報の小休止です。", "ko": "섬의 지평선에서 바깥을 바라보는 공공 정보의 쉼표입니다.", "ru": "Пауза для знакомства с публичной информацией у горизонта острова, обращённого наружу.", "ar": "استراحة للمعلومات العامة والنظر إلى الخارج من أفق الجزيرة." },
-      "note": { "en": "Use the official public portal for current aerospace information; this route makes no operational claim.", "zh": "当前航天信息请以官方公共门户为准；本路线不作运行状态声明。", "id": "Gunakan portal publik resmi untuk informasi antariksa terkini; rute ini tidak membuat klaim operasional.", "ja": "現在の宇宙開発情報は公式公開ポータルで確認してください。このルートは運用状況を主張しません。", "ko": "최신 우주항공 정보는 공식 공공 포털에서 확인하세요. 이 경로는 운영 상태를 주장하지 않습니다.", "ru": "Актуальную информацию о космосе смотрите на официальном публичном портале; маршрут не делает заявлений о работе объектов.", "ar": "استخدم البوابة العامة الرسمية للمعلومات الفضائية الحالية؛ لا يقدم هذا المسار ادعاءً عن التشغيل." },
+      "title": { "en": "Launchward Horizon", "zh": "面向发射的地平线" },
+      "summary": { "en": "A public-information pause for looking outward from an island horizon.", "zh": "在面向远方的海岛地平线前，进行一次公共信息停留。" },
+      "note": { "en": "Use the official public portal for current aerospace information; this route makes no operational claim.", "zh": "当前航天信息请以官方公共门户为准；本路线不作运行状态声明。" },
       "asset": "/assets/3d/aerospace/文昌航天展厅参考图.png"
     },
     {
@@ -57,9 +57,9 @@
       "themes": ["culture", "city"],
       "hall": "huali",
       "sourceId": "project-supplied-six-hall-archive",
-      "title": { "en": "Grain & Craft", "zh": "纹理与工艺", "id": "Serat & Kerajinan", "ja": "木目と工芸", "ko": "결과 공예", "ru": "Текстура и ремесло", "ar": "العروق والحرفة" },
-      "summary": { "en": "A project-curated material study that slows the itinerary down to grain, carving, and attentive looking.", "zh": "一段项目策展的材料观察，让行程慢下来，阅读纹理、雕刻与凝视。", "id": "Kajian material kurasi proyek yang memperlambat rencana untuk memperhatikan serat, ukiran, dan tatapan.", "ja": "木目、彫刻、丁寧なまなざしへ旅の速度を落とす、プロジェクト編成の素材研究です。", "ko": "결, 조각, 세심한 시선에 여정의 속도를 늦추는 프로젝트 큐레이션 소재 연구입니다.", "ru": "Кураторское исследование материала, замедляющее маршрут ради фактуры, резьбы и внимательного взгляда.", "ar": "دراسة مواد منسّقة للمشروع تُبطئ الرحلة أمام العروق والنحت والنظر المتأني." },
-      "note": { "en": "Project-supplied visual context only; it is not material authentication, a retail listing, or a heritage claim.", "zh": "仅为项目提供的视觉语境，不构成材质鉴定、零售展示或文化遗产主张。", "id": "Hanya konteks visual yang disediakan proyek; bukan autentikasi bahan, daftar ritel, atau klaim warisan.", "ja": "プロジェクト提供の視覚的文脈のみで、素材鑑定、販売リスト、文化遺産の主張ではありません。", "ko": "프로젝트 제공 시각 맥락일 뿐이며 소재 인증, 소매 목록 또는 유산 주장이 아닙니다.", "ru": "Только визуальный контекст проекта; это не экспертиза материала, торговая карточка или заявление о наследии.", "ar": "سياق بصري يقدمه المشروع فقط؛ ليس توثيقاً للمادة أو قائمة بيع أو ادعاءً تراثياً." },
+      "title": { "en": "Grain & Craft", "zh": "纹理与工艺" },
+      "summary": { "en": "A project-curated material study that slows the itinerary down to grain, carving, and attentive looking.", "zh": "一段项目策展的材料观察，让行程慢下来，阅读纹理、雕刻与凝视。" },
+      "note": { "en": "Project-supplied visual context only; it is not material authentication, a retail listing, or a heritage claim.", "zh": "仅为项目提供的视觉语境，不构成材质鉴定、零售展示或文化遗产主张。" },
       "asset": "/assets/3d/huali/东方花梨展厅参考图.png"
     },
     {
@@ -67,9 +67,9 @@
       "themes": ["city", "coast"],
       "hall": "free-trade-port",
       "sourceId": "hainan-free-trade-port-english-portal",
-      "title": { "en": "Harbour Exchange", "zh": "海港交换", "id": "Pertukaran Pelabuhan", "ja": "港の交流", "ko": "항구의 교류", "ru": "Портовой обмен", "ar": "تبادل الميناء" },
-      "summary": { "en": "A public-information stop that points outward to current Hainan Free Trade Port materials.", "zh": "一处指向当前海南自由贸易港公开资料的公共信息停留点。", "id": "Persinggahan informasi publik yang mengarah ke bahan terkini Pelabuhan Perdagangan Bebas Hainan.", "ja": "海南自由貿易港の最新資料へ目を向ける公開情報の立ち寄りです。", "ko": "하이난 자유무역항의 최신 자료를 향해 열리는 공공 정보의 정류장입니다.", "ru": "Публичная информационная остановка, ведущая к актуальным материалам порта свободной торговли Хайнаня.", "ar": "محطة معلومات عامة تشير إلى المواد الحالية لميناء التجارة الحرة في هاينان." },
-      "note": { "en": "An official portal is the source for current notices; this atlas does not determine policy, tax, customs, visa, or commercial outcomes.", "zh": "当前通知请以官方门户为准；本图谱不判断政策、税务、海关、签证或商业结果。", "id": "Portal resmi adalah sumber pemberitahuan terkini; atlas ini tidak menentukan kebijakan, pajak, bea cukai, visa, atau hasil komersial.", "ja": "最新の通知は公式ポータルを出典とします。このアトラスは政策、税、税関、ビザ、商業結果を判断しません。", "ko": "최신 공지는 공식 포털을 출처로 확인하세요. 이 아틀라스는 정책, 세금, 통관, 비자 또는 상업적 결과를 판단하지 않습니다.", "ru": "Актуальные уведомления публикуются на официальном портале; атлас не определяет политику, налоги, таможню, визы или коммерческий результат.", "ar": "البوابة الرسمية هي مصدر الإشعارات الحالية؛ لا يحدد هذا الأطلس السياسات أو الضرائب أو الجمارك أو التأشيرات أو النتائج التجارية." },
+      "title": { "en": "Harbour Exchange", "zh": "海港交换" },
+      "summary": { "en": "A public-information stop that points outward to current Hainan Free Trade Port materials.", "zh": "一处指向当前海南自由贸易港公开资料的公共信息停留点。" },
+      "note": { "en": "An official portal is the source for current notices; this atlas does not determine policy, tax, customs, visa, or commercial outcomes.", "zh": "当前通知请以官方门户为准；本图谱不判断政策、税务、海关、签证或商业结果。" },
       "asset": "/assets/user-media2/zimaogang-pictures/port-connection.jpg"
     },
     {
@@ -77,9 +77,9 @@
       "themes": ["city", "culture"],
       "hall": "free-trade-port",
       "sourceId": "hainan-government-international-portal",
-      "title": { "en": "Province Reading Desk", "zh": "海南省信息阅览台", "id": "Meja Baca Provinsi", "ja": "省の情報閲覧デスク", "ko": "성 정보 열람 데스크", "ru": "Стол чтения материалов провинции", "ar": "مكتب قراءة مواد المقاطعة" },
-      "summary": { "en": "A closing reading pause that points visitors to the Hainan provincial international portal for current public materials.", "zh": "以海南省国际门户为入口，查阅当前公开资料的收束性停留。", "id": "Penutup untuk membaca yang mengarahkan pengunjung ke portal internasional Provinsi Hainan untuk bahan publik terkini.", "ja": "海南省国際ポータルの最新公開資料へ案内する、締めくくりの閲覧のひとときです。", "ko": "하이난성 국제 포털의 최신 공공 자료로 안내하는 마무리 열람 공간입니다.", "ru": "Заключительная остановка для чтения, направляющая к международному порталу провинции Хайнань и его актуальным материалам.", "ar": "وقفة قراءة ختامية توجه الزائر إلى البوابة الدولية لمقاطعة هاينان للمواد العامة الحالية." },
-      "note": { "en": "This is an orientation entry point only; it does not provide bookings, schedules, or service availability.", "zh": "仅为信息导览入口，不提供预订、时刻或服务可用性判断。", "id": "Ini hanya titik masuk orientasi; tidak menyediakan pemesanan, jadwal, atau penilaian ketersediaan layanan.", "ja": "案内の入口に限られ、予約、時刻表、サービスの利用可能性は提供しません。", "ko": "안내용 입구일 뿐이며 예약, 일정 또는 서비스 이용 가능 여부를 제공하지 않습니다.", "ru": "Это только справочная точка входа; она не предоставляет бронирований, расписаний или сведений о доступности сервисов.", "ar": "هذا مدخل إرشادي فقط؛ لا يقدم حجوزات أو جداول أو حكماً على توافر الخدمة." },
+      "title": { "en": "Province Reading Desk", "zh": "海南省信息阅览台" },
+      "summary": { "en": "A closing reading pause that points visitors to the Hainan provincial international portal for current public materials.", "zh": "以海南省国际门户为入口，查阅当前公开资料的收束性停留。" },
+      "note": { "en": "This is an orientation entry point only; it does not provide bookings, schedules, or service availability.", "zh": "仅为信息导览入口，不提供预订、时刻或服务可用性判断。" },
       "asset": "/assets/user-media2/zimaogang-pictures/open-exchange.jpg"
     }
   ]

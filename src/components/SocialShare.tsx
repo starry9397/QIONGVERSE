@@ -1,27 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { FaFacebookF, FaTiktok, FaXTwitter, FaYoutube } from 'react-icons/fa6'
 import type { Language } from '../data'
-import { inline, localize, type RuntimeLocalized } from '../i18n'
+import { inline, translateProjectText } from '../i18n'
 import './social-share.css'
 
 type Platform = 'x' | 'facebook' | 'tiktok' | 'youtube'
 type PlatformStatus = { configured: boolean; action: 'share_intent' | 'share_dialog' | 'oauth_post' | 'oauth_video' | 'unavailable'; assetIds: string[] }
 type SocialStatus = { publicShareReady: boolean; platforms: Record<Platform, PlatformStatus> }
-type SocialCopy = {
-  label: string
-  unavailable: string
-  pending: string
-  serviceUnavailable: string
-  connect: string
-  confirmTitle: string
-  confirmBody: string
-  publish: string
-  cancel: string
-  publishing: string
-  published: string
-  failed: string
-  visitorPost: string
-}
 
 type Props = {
   language: Language
@@ -31,7 +16,7 @@ type Props = {
 const configuredSiteUrl = (import.meta.env.VITE_PUBLIC_SITE_URL || '').trim().replace(/\/+$/, '')
 const canonicalUrl = /^https:\/\//i.test(configuredSiteUrl) ? configuredSiteUrl : ''
 
-const localizedCopy: Record<Language, SocialCopy> = {
+const localizedCopy = {
   en: {
     label: 'Share the exhibition',
     unavailable: 'Sharing becomes available after the public HTTPS address is configured.',
@@ -45,7 +30,6 @@ const localizedCopy: Record<Language, SocialCopy> = {
     publishing: 'Publishing...',
     published: 'The platform accepted your post.',
     failed: 'The post was not published. Please reconnect your account and try again.',
-    visitorPost: 'VISITOR POST',
   },
   zh: {
     label: '分享琼境',
@@ -60,84 +44,8 @@ const localizedCopy: Record<Language, SocialCopy> = {
     publishing: '正在发布……',
     published: '平台已接收你的发布请求。',
     failed: '内容尚未发布。请重新连接账号后再试。',
-    visitorPost: '访客发布',
   },
-  id: {
-    label: 'Bagikan pameran',
-    unavailable: 'Berbagi tersedia setelah alamat HTTPS publik dikonfigurasi.',
-    pending: 'Memeriksa ketersediaan publikasi...',
-    serviceUnavailable: 'Layanan publikasi tidak tersedia. Berbagi tautan tetap tersedia setelah alamat publik dikonfigurasi.',
-    connect: 'Hubungkan akun Anda untuk melanjutkan',
-    confirmTitle: 'Konfirmasi kiriman proyek',
-    confirmBody: 'Tindakan ini hanya menggunakan teks proyek HAINAN∞QIONGVERSE yang tetap dan media proyek yang disetujui. Akun Anda hanya digunakan untuk satu publikasi ini.',
-    publish: 'Publikasikan sekarang',
-    cancel: 'Batal',
-    publishing: 'Mempublikasikan...',
-    published: 'Platform menerima kiriman Anda.',
-    failed: 'Kiriman belum dipublikasikan. Hubungkan kembali akun Anda lalu coba lagi.',
-    visitorPost: 'KIRIMAN PENGUNJUNG',
-  },
-  ja: {
-    label: '展示を共有',
-    unavailable: '公開 HTTPS アドレスを設定すると共有できます。',
-    pending: '公開可能か確認しています…',
-    serviceUnavailable: '公開サービスは利用できません。公開アドレスを設定すればリンク共有は利用できます。',
-    connect: '続行するにはアカウントを接続してください',
-    confirmTitle: 'プロジェクト投稿を確認',
-    confirmBody: 'この操作では、固定された HAINAN∞QIONGVERSE プロジェクト文案と承認済みのプロジェクトメディアのみを使用します。アカウントはこの一度の投稿にだけ使用されます。',
-    publish: '今すぐ公開',
-    cancel: 'キャンセル',
-    publishing: '公開中…',
-    published: 'プラットフォームが投稿を受け付けました。',
-    failed: '投稿できませんでした。アカウントを再接続してもう一度お試しください。',
-    visitorPost: '訪問者の投稿',
-  },
-  ko: {
-    label: '전시 공유',
-    unavailable: '공개 HTTPS 주소를 설정하면 공유할 수 있습니다.',
-    pending: '게시 가능 여부를 확인하는 중…',
-    serviceUnavailable: '게시 서비스를 사용할 수 없습니다. 공개 주소를 설정하면 링크 공유는 계속 사용할 수 있습니다.',
-    connect: '계속하려면 계정을 연결하세요',
-    confirmTitle: '프로젝트 게시물 확인',
-    confirmBody: '이 작업은 고정된 HAINAN∞QIONGVERSE 프로젝트 문구와 승인된 프로젝트 미디어만 사용합니다. 계정은 이 한 번의 게시 작업에만 사용됩니다.',
-    publish: '지금 게시',
-    cancel: '취소',
-    publishing: '게시 중…',
-    published: '플랫폼이 게시물을 접수했습니다.',
-    failed: '게시되지 않았습니다. 계정을 다시 연결한 뒤 시도하세요.',
-    visitorPost: '방문자 게시물',
-  },
-  ru: {
-    label: 'Поделиться выставкой',
-    unavailable: 'Общий доступ будет доступен после настройки публичного HTTPS-адреса.',
-    pending: 'Проверяем доступность публикации…',
-    serviceUnavailable: 'Сервис публикации недоступен. После настройки публичного адреса останется доступна передача ссылки.',
-    connect: 'Подключите аккаунт, чтобы продолжить',
-    confirmTitle: 'Подтвердите публикацию проекта',
-    confirmBody: 'Действие использует только фиксированный текст проекта HAINAN∞QIONGVERSE и одобренные материалы проекта. Аккаунт используется только для этой публикации.',
-    publish: 'Опубликовать сейчас',
-    cancel: 'Отмена',
-    publishing: 'Публикация…',
-    published: 'Платформа приняла вашу публикацию.',
-    failed: 'Публикация не выполнена. Подключите аккаунт заново и повторите попытку.',
-    visitorPost: 'ПУБЛИКАЦИЯ ПОСЕТИТЕЛЯ',
-  },
-  ar: {
-    label: 'مشاركة المعرض',
-    unavailable: 'تتوفر المشاركة بعد إعداد عنوان HTTPS عام.',
-    pending: 'جارٍ التحقق من توفر النشر…',
-    serviceUnavailable: 'خدمة النشر غير متاحة. تظل مشاركة الرابط متاحة بعد إعداد عنوان عام.',
-    connect: 'اربط حسابك للمتابعة',
-    confirmTitle: 'تأكيد منشور المشروع',
-    confirmBody: 'يستخدم هذا الإجراء نص مشروع HAINAN∞QIONGVERSE الثابت ووسائط المشروع المعتمدة فقط. يُستخدم حسابك لهذا النشر الواحد فقط.',
-    publish: 'انشر الآن',
-    cancel: 'إلغاء',
-    publishing: 'جارٍ النشر…',
-    published: 'قبلت المنصة منشورك.',
-    failed: 'لم يُنشر المنشور. أعد ربط حسابك وحاول مرة أخرى.',
-    visitorPost: 'منشور الزائر',
-  },
-}
+} as const
 
 const platformDetails: Record<Platform, { Icon: typeof FaXTwitter; name: string; assetId: string | null }> = {
   x: { Icon: FaXTwitter, name: 'X', assetId: null },
@@ -147,20 +55,14 @@ const platformDetails: Record<Platform, { Icon: typeof FaXTwitter; name: string;
 }
 
 function projectText(language: Language) {
-  const copy: RuntimeLocalized = {
-    en: 'HAINAN∞QIONGVERSE: a living gateway to Hainan Province, where tropical culture and AI creativity meet.',
-    zh: 'HAINAN∞QIONGVERSE 琼境：连接海南热带文化与 AI 创意的数字展馆。',
-    id: 'HAINAN∞QIONGVERSE: gerbang hidup ke Provinsi Hainan, tempat budaya tropis dan kreativitas AI bertemu.',
-    ja: 'HAINAN∞QIONGVERSE：熱帯文化と AI の創造性が出会う、海南省への生きたゲートウェイ。',
-    ko: 'HAINAN∞QIONGVERSE: 열대 문화와 AI 창의성이 만나는 하이난성으로 향하는 살아 있는 관문.',
-    ru: 'HAINAN∞QIONGVERSE: живые ворота в провинцию Хайнань, где встречаются тропическая культура и творчество ИИ.',
-    ar: 'HAINAN∞QIONGVERSE: بوابة حية إلى مقاطعة هاينان، حيث تلتقي الثقافة الاستوائية بإبداع الذكاء الاصطناعي.',
-  }
-  return localize(copy, language)
+  return inline(language, 'HAINAN∞QIONGVERSE: a living gateway to Hainan Province, where tropical culture and AI creativity meet.', 'HAINAN∞QIONGVERSE 琼境：连接海南热带文化与 AI 创意的数字展馆。')
 }
 
 function localizedShareCopy(language: Language) {
-  return localizedCopy[language]
+  const selected = localizedCopy[language as keyof typeof localizedCopy]
+  if (selected) return selected
+  const source = localizedCopy.en
+  return Object.fromEntries(Object.entries(source).map(([key, value]) => [key, translateProjectText(value, language)])) as typeof source
 }
 
 function shareIntent(platform: 'x' | 'facebook', language: Language) {
@@ -270,7 +172,7 @@ export default function SocialShare({ language, apiPath }: Props) {
     </div>
     {(statusError || !canonicalUrl || callbackError) && <span className="social-share-status" role="status">{callbackError ? copy.failed : statusError ? copy.serviceUnavailable : copy.unavailable}</span>}
     <dialog ref={dialogRef} className="social-publish-dialog" aria-labelledby="social-publish-title" onCancel={closeDialog}>
-      <div className="social-publish-dialog-head"><p className="mono-label">{copy.visitorPost} / {pendingPlatform?.toUpperCase()}</p><button type="button" className="close-button" onClick={closeDialog} aria-label={inline(language, 'Close publish confirmation', '关闭发布确认')}>×</button></div>
+      <div className="social-publish-dialog-head"><p className="mono-label">VISITOR POST / {pendingPlatform?.toUpperCase()}</p><button type="button" className="close-button" onClick={closeDialog} aria-label={inline(language, 'Close publish confirmation', '关闭发布确认')}>×</button></div>
       <h2 id="social-publish-title">{copy.confirmTitle}</h2>
       <p>{copy.confirmBody}</p>
       {pendingPlatform && <dl><div><dt>{inline(language, 'Platform', '平台')}</dt><dd>{platformDetails[pendingPlatform].name}</dd></div><div><dt>{inline(language, 'Content', '内容')}</dt><dd>{projectText(language)}</dd></div></dl>}
