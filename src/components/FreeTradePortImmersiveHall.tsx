@@ -17,6 +17,7 @@ import {
 } from "../free-trade-port-data";
 import BrandLockup from "./BrandLockup";
 import LanguageSelector from "./LanguageSelector";
+import ImmersiveViewToggle, { useImmersiveUiVisibility } from "./ImmersiveViewToggle";
 import ImmersiveExhibitIndex, { immersiveIndexStatus } from "./ImmersiveExhibitIndex";
 completeLocalizationTree(freeTradePortExhibits)
 assertLocalizationTree(freeTradePortExhibits, 'Free Trade Port hall exhibits')
@@ -222,6 +223,8 @@ export default function FreeTradePortImmersiveHall({
 }: Props) {
   const mount = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<HallView>("world");
+  const [immersiveUiHidden, setImmersiveUiHidden] = useState(false);
+  useImmersiveUiVisibility(view === "world" && immersiveUiHidden);
   const [sceneStatus, setSceneStatus] = useState<SceneStatus>("loading");
   const [active, setActive] = useState(freeTradePortExhibits[0]);
   const [detail, setDetail] = useState<FreeTradePortExhibit | null>(null);
@@ -381,7 +384,7 @@ export default function FreeTradePortImmersiveHall({
   };
   return (
     <div
-      className={`ftp-immersive-hall${avatarState === "ready" ? " luoyin-visible" : ""}`}
+      className={`ftp-immersive-hall${avatarState === "ready" ? " luoyin-visible" : ""}${view === "world" && immersiveUiHidden ? " immersive-ui-hidden" : ""}`}
       data-avatar-state={avatarState}
     >
       {view === "world" && (
@@ -430,8 +433,10 @@ export default function FreeTradePortImmersiveHall({
           <button type="button" onClick={onExit}>
             {tx(language, "Back to five halls", "返回五个展厅")}
           </button>
+          <ImmersiveViewToggle language={language} hidden={immersiveUiHidden} onToggle={() => setImmersiveUiHidden((hidden) => !hidden)} />
         </div>
       </header>}
+      {view === "world" && immersiveUiHidden && <ImmersiveViewToggle language={language} hidden floating onToggle={() => setImmersiveUiHidden(false)} />}
       {view === "world" ? (
         <main className="ftp-immersive-stage">
           <div

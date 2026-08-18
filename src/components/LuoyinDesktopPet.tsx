@@ -74,6 +74,13 @@ function alignedPanelPlacement(position: Position, panelWidth: number, panelHeig
   return { left, top: clampNumber(centeredTop, SAFE_MARGIN, viewportHeight - panelHeight - SAFE_MARGIN), side, above }
 }
 
+function chatViewportMaxHeight() {
+  // Keep a small breathing room on every edge. Do not force a 220px minimum:
+  // short mobile viewports need the transcript to shrink and scroll instead
+  // of pushing the panel beyond the visible screen.
+  return Math.max(160, Math.min(620, window.innerHeight - SAFE_MARGIN * 2))
+}
+
 function alignedCuePlacement(position: Position, cueWidth: number, cueHeight: number, gap = CHAT_GAP): FloatingPlacement {
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
@@ -97,7 +104,7 @@ function alignedCuePlacement(position: Position, cueWidth: number, cueHeight: nu
 
 export default function LuoyinDesktopPet({ language, visible, chatOpen, suspended, onOpenChat, onCloseChat, onClosePet, surfaceTone = 'light', tourCue, autoGuideCue, children }: Props) {
   const [position, setPosition] = useState<Position>(defaultPosition)
-  const [chatPlacement, setChatPlacement] = useState<FloatingPlacement>(() => alignedPanelPlacement(defaultPosition(), Math.min(CHAT_WIDTH, Math.max(220, window.innerWidth - SAFE_MARGIN * 2)), Math.max(220, Math.min(620, window.innerHeight - SAFE_MARGIN * 2))))
+  const [chatPlacement, setChatPlacement] = useState<FloatingPlacement>(() => alignedPanelPlacement(defaultPosition(), Math.min(CHAT_WIDTH, Math.max(220, window.innerWidth - SAFE_MARGIN * 2)), chatViewportMaxHeight()))
   const [cuePlacement, setCuePlacement] = useState<FloatingPlacement>(() => alignedCuePlacement(defaultPosition(), Math.min(CUE_WIDTH, Math.max(220, window.innerWidth - SAFE_MARGIN * 2)), CUE_HEIGHT))
   const [dragging, setDragging] = useState(false)
   const [imageFailed, setImageFailed] = useState(false)
@@ -127,7 +134,7 @@ export default function LuoyinDesktopPet({ language, visible, chatOpen, suspende
 
   useLayoutEffect(() => {
     const panelWidth = Math.min(CHAT_WIDTH, Math.max(220, window.innerWidth - SAFE_MARGIN * 2))
-    const maxHeight = Math.max(220, Math.min(620, window.innerHeight - SAFE_MARGIN * 2))
+    const maxHeight = chatViewportMaxHeight()
     const renderedPanel = chatAnchorRef.current?.firstElementChild as HTMLElement | null
     const renderedBounds = renderedPanel?.getBoundingClientRect()
     const measuredWidth = renderedBounds?.width || panelWidth
@@ -146,7 +153,7 @@ export default function LuoyinDesktopPet({ language, visible, chatOpen, suspende
     const observer = new ResizeObserver(() => {
       if (panel) {
         const bounds = panel.getBoundingClientRect()
-        const maxHeight = Math.max(220, Math.min(620, window.innerHeight - SAFE_MARGIN * 2))
+        const maxHeight = chatViewportMaxHeight()
         setChatPlacement({ ...alignedPanelPlacement(position, bounds.width, bounds.height), maxHeight })
       }
       if (cue) {

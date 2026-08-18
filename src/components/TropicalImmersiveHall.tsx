@@ -16,6 +16,7 @@ import {
 } from "../tropical-data";
 import BrandLockup from "./BrandLockup";
 import LanguageSelector from "./LanguageSelector";
+import ImmersiveViewToggle, { useImmersiveUiVisibility } from "./ImmersiveViewToggle";
 import ImmersiveExhibitIndex, { immersiveIndexStatus } from "./ImmersiveExhibitIndex";
 completeLocalizationTree(tropicalExhibits)
 assertLocalizationTree(tropicalExhibits, 'tropical hall exhibits')
@@ -180,6 +181,8 @@ export default function TropicalImmersiveHall({
 }: Props) {
   const mount = useRef<HTMLDivElement>(null);
   const [view, setView] = useState<"world" | "index">("world");
+  const [immersiveUiHidden, setImmersiveUiHidden] = useState(false);
+  useImmersiveUiVisibility(view === "world" && immersiveUiHidden);
   const [sceneStatus, setSceneStatus] = useState<SceneStatus>("loading");
   const [active, setActive] = useState(tropicalExhibits[0]);
   const [detail, setDetail] = useState<TropicalExhibit | null>(null);
@@ -344,7 +347,7 @@ export default function TropicalImmersiveHall({
     select(exhibit);
   };
   return (
-    <div className="tropical-hall" data-avatar-state={avatarState}>
+    <div className={`tropical-hall${view === "world" && immersiveUiHidden ? " immersive-ui-hidden" : ""}`} data-avatar-state={avatarState}>
       {view === "world" && sceneStatus === "ready" && (
         <div className="luoyin-avatar-floating">
           <button
@@ -389,8 +392,10 @@ export default function TropicalImmersiveHall({
           <button type="button" onClick={onExit}>
             {tx(language, "Back to five halls", "返回五个展厅")}
           </button>
+          <ImmersiveViewToggle language={language} hidden={immersiveUiHidden} onToggle={() => setImmersiveUiHidden((hidden) => !hidden)} />
         </div>
       </header>}
+      {view === "world" && immersiveUiHidden && <ImmersiveViewToggle language={language} hidden floating onToggle={() => setImmersiveUiHidden(false)} />}
       {view === "world" ? (
         <main className="tropical-stage">
           <div

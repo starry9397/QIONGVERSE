@@ -1939,30 +1939,81 @@ html[dir='rtl'] .site-footer img {
   left: 0;
   height: 74px;
   padding: 0 clamp(20px, 4vw, 64px);
-  color: #f7f0df;
-  background: #173d35;
+  color: #fff8e8;
+  background: rgba(7,34,34,.7);
   border: 0;
-  border-bottom: 1px solid #c6a05b;
+  border-bottom: 1px solid rgba(198,160,91,.55);
   border-radius: 0;
-  box-shadow: 0 2px 0 rgba(255,255,255,.08), 0 10px 22px rgba(24,43,35,.18);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  backdrop-filter: blur(12px) saturate(1.12);
+  -webkit-backdrop-filter: blur(12px) saturate(1.12);
 }
-.home-museum-shell > .site-header .brand-lockup img { filter: brightness(0) invert(1) sepia(.16) saturate(.78); }
+.home-museum-shell > .site-header .brand-lockup {
+  color: #fff8e8;
+  mix-blend-mode: normal;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,.56);
+}
+.home-museum-shell > .site-header .brand-lockup img {
+  filter: brightness(0) invert(1) sepia(.12) saturate(.72) drop-shadow(0 1px 4px rgba(0,0,0,.55));
+}
 .home-museum-shell > .site-header .nav-link,
 .home-museum-shell > .site-header .language-toggle,
-.home-museum-shell > .site-header .guide-trigger { color: rgba(247,240,223,.86); text-shadow: none; }
+.home-museum-shell > .site-header .guide-trigger {
+  color: #fff8e8;
+  mix-blend-mode: normal;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,.56);
+}
 .home-museum-shell > .site-header .nav-link:hover,
 .home-museum-shell > .site-header .nav-link.active,
-.home-museum-shell > .site-header .language-toggle .selected { color: #fffaf0; }
+.home-museum-shell > .site-header .language-toggle .selected {
+  color: #f0cf86;
+}
 .home-museum-shell > .site-header .nav-link.active::after { bottom: 14px; height: 2px; background: #bb623f; box-shadow: none; }
-.home-museum-shell > .site-header .guide-trigger { color: #e6ca8a; }
-.home-museum-shell > .site-header .menu-caret { color: #e6ca8a; }
-.home-museum-shell > .site-header .nav-menu { border-color: #c6a05b; background: #173d35; box-shadow: 0 16px 30px rgba(16,39,31,.28); }
+.home-museum-shell > .site-header .guide-trigger {
+  color: #f0cf86;
+  mix-blend-mode: normal;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,.56);
+}
+.home-museum-shell > .site-header .menu-caret {
+  color: #f0cf86;
+  mix-blend-mode: normal;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,.56);
+}
+.home-museum-shell > .site-header .mobile-archive-trigger,
+.home-museum-shell > .site-header .mobile-experience-trigger {
+  color: #fff8e8;
+  border-color: rgba(240,207,134,.72);
+  background: rgba(7,34,34,.46);
+  mix-blend-mode: normal;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 6px rgba(0,0,0,.56);
+}
+.home-museum-shell > .site-header .nav-menu {
+  border-color: #c6a05b;
+  background: rgba(23,61,53,.96);
+  box-shadow: 0 16px 30px rgba(16,39,31,.28);
+}
 .home-museum-shell > .site-header .nav-menu a { color: rgba(255,250,240,.84); }
 .home-museum-shell > .site-header .nav-menu a:hover,
 .home-museum-shell > .site-header .nav-menu a:focus-visible { color: #fff; background: rgba(198,160,91,.16); }
 .home-museum-shell > .site-header .nav-menu .nav-menu-main-hall { color: #fff4d5; background: rgba(187,98,63,.18); }
+
+@supports not (mix-blend-mode: difference) {
+  .home-museum-shell > .site-header .brand-lockup,
+  .home-museum-shell > .site-header .nav-link,
+  .home-museum-shell > .site-header .language-toggle,
+  .home-museum-shell > .site-header .guide-trigger,
+  .home-museum-shell > .site-header .menu-caret {
+    color: #173d35;
+    mix-blend-mode: normal;
+    text-shadow: 0 1px 8px rgba(255,250,240,.94), 0 -1px 3px rgba(255,250,240,.62);
+  }
+  .home-museum-shell > .site-header .brand-lockup img { filter: brightness(.35) saturate(.8) drop-shadow(0 1px 4px rgba(255,255,255,.72)); }
+}
 
 .home-museum-hero {
   position: relative;
@@ -2694,3 +2745,206 @@ html[dir='rtl'] .home-museum-bookmark-rail li.is-active .home-museum-bookmark-la
   box-shadow: 0 0 0 3px rgba(184, 148, 82, .32), 0 5px 14px rgba(62, 42, 28, .18);
 }
 .home-museum-shell .social-share-status { color: #4b3b31; }
+
+/* Immersive hall navigation: transparent chrome with a color system that
+   follows each hall's own scene palette. The scene remains fully visible
+   beneath the header while text gets a dark halo for image contrast. */
+.limiao-header,
+.aerospace-header,
+.huali-header,
+.village-header,
+.tropical-header,
+.ftp-immersive-header {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.limiao-header .brand-lockup,
+.aerospace-header .brand-lockup,
+.huali-header .brand-lockup,
+.village-header .brand-lockup,
+.tropical-header .brand-lockup,
+.ftp-immersive-header .brand-lockup {
+  color: var(--nav-text);
+  text-shadow: 0 1px 8px rgba(0,0,0,.72), 0 0 3px rgba(0,0,0,.44);
+}
+.limiao-header .brand-lockup img,
+.aerospace-header .brand-lockup img,
+.huali-header .brand-lockup img,
+.village-header .brand-lockup img,
+.tropical-header .brand-lockup img,
+.ftp-immersive-header .brand-lockup img {
+  filter: brightness(0) invert(1) drop-shadow(0 1px 4px rgba(0,0,0,.56));
+}
+.limiao-header p,
+.aerospace-header p,
+.huali-header p,
+.village-header p,
+.tropical-header p,
+.ftp-immersive-header p {
+  color: var(--nav-accent);
+  text-shadow: 0 1px 8px rgba(0,0,0,.76), 0 0 3px rgba(0,0,0,.42);
+}
+.limiao-header > div .language-selector select,
+.aerospace-header > div .language-selector select,
+.huali-header > div .language-selector select,
+.village-header > div .language-selector select,
+.tropical-header > div .language-selector select,
+.ftp-immersive-header > div .language-selector select,
+.limiao-header > div > button,
+.aerospace-header > div > button,
+.huali-header > div > button,
+.village-header > div > button,
+.tropical-header > div > button,
+.ftp-immersive-header > div > button {
+  color: var(--nav-text);
+  background: transparent;
+  border-color: color-mix(in srgb, var(--nav-accent) 72%, transparent);
+  text-shadow: 0 1px 8px rgba(0,0,0,.72), 0 0 3px rgba(0,0,0,.42);
+}
+.limiao-header > div > button:hover,
+.limiao-header > div > button:focus-visible,
+.aerospace-header > div > button:hover,
+.aerospace-header > div > button:focus-visible,
+.huali-header > div > button:hover,
+.huali-header > div > button:focus-visible,
+.village-header > div > button:hover,
+.village-header > div > button:focus-visible,
+.tropical-header > div > button:hover,
+.tropical-header > div > button:focus-visible,
+.ftp-immersive-header > div > button:hover,
+.ftp-immersive-header > div > button:focus-visible {
+  color: var(--nav-accent);
+  border-color: var(--nav-accent);
+  background: color-mix(in srgb, var(--nav-accent) 16%, transparent);
+  text-shadow: 0 1px 6px rgba(0,0,0,.72);
+}
+
+/* One-tap cinema mode for every immersive world. The restore control remains
+   above the scene so a clear screen never traps keyboard or pointer users. */
+.immersive-ui-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid color-mix(in srgb, var(--nav-accent, #e8c987) 72%, transparent);
+  color: var(--nav-text, #effff9);
+  background: rgba(4, 25, 27, .24);
+  font: 600 10px/1 var(--mono);
+  letter-spacing: .06em;
+  text-shadow: 0 1px 6px rgba(0,0,0,.72);
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.immersive-ui-toggle > span:first-child { color: var(--nav-accent, #e8c987); font-size: 14px; line-height: 1; }
+.immersive-ui-toggle:hover,
+.immersive-ui-toggle:focus-visible {
+  color: var(--nav-accent, #e8c987);
+  border-color: var(--nav-accent, #e8c987);
+  background: color-mix(in srgb, var(--nav-accent, #e8c987) 16%, rgba(4, 25, 27, .42));
+  outline: 2px solid color-mix(in srgb, var(--nav-accent, #e8c987) 55%, transparent);
+  outline-offset: 2px;
+}
+.immersive-ui-toggle--floating {
+  position: fixed;
+  z-index: 80;
+  top: max(14px, env(safe-area-inset-top));
+  right: 18px;
+  min-height: 40px;
+  padding-inline: 14px;
+  background: rgba(4, 25, 27, .78);
+  box-shadow: 0 10px 28px rgba(0,0,0,.28);
+}
+html[dir='rtl'] .immersive-ui-toggle--floating { right: auto; left: 18px; }
+
+.immersive-ui-hidden .limiao-header,
+.immersive-ui-hidden .aerospace-header,
+.immersive-ui-hidden .huali-header,
+.immersive-ui-hidden .village-header,
+.immersive-ui-hidden .tropical-header,
+.immersive-ui-hidden .ftp-immersive-header,
+.immersive-ui-hidden .luoyin-avatar-floating,
+.immersive-ui-hidden .limiao-overlay,
+.immersive-ui-hidden .aerospace-overlay,
+.immersive-ui-hidden .huali-overlay,
+.immersive-ui-hidden .village-overlay,
+.immersive-ui-hidden .tropical-overlay,
+.immersive-ui-hidden .ftp-immersive-overlay,
+.immersive-ui-hidden .limiao-actions,
+.immersive-ui-hidden .aerospace-actions,
+.immersive-ui-hidden .huali-actions,
+.immersive-ui-hidden .village-actions,
+.immersive-ui-hidden .tropical-actions,
+.immersive-ui-hidden .ftp-immersive-actions,
+.immersive-ui-hidden .limiao-exhibit-strip,
+.immersive-ui-hidden .aerospace-exhibit-strip,
+.immersive-ui-hidden .huali-exhibit-strip,
+.immersive-ui-hidden .village-exhibit-strip,
+.immersive-ui-hidden .tropical-exhibit-strip,
+.immersive-ui-hidden .ftp-exhibit-strip,
+.immersive-ui-hidden .limiao-controls,
+.immersive-ui-hidden .aerospace-controls,
+.immersive-ui-hidden .huali-controls,
+.immersive-ui-hidden .village-controls,
+.immersive-ui-hidden .tropical-controls,
+.immersive-ui-hidden .ftp-controls,
+.immersive-ui-hidden .limiao-sheet-backdrop,
+.immersive-ui-hidden .aerospace-sheet-backdrop,
+.immersive-ui-hidden .huali-sheet-backdrop,
+.immersive-ui-hidden .village-sheet-backdrop,
+.immersive-ui-hidden .tropical-sheet-backdrop,
+.immersive-ui-hidden .ftp-sheet-backdrop {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.immersive-ui-hidden .limiao-stage,
+.immersive-ui-hidden .aerospace-stage,
+.immersive-ui-hidden .huali-stage,
+.immersive-ui-hidden .village-stage,
+.immersive-ui-hidden .tropical-stage,
+.immersive-ui-hidden .ftp-immersive-stage { padding-top: 0; }
+.immersive-ui-hidden .limiao-scene,
+.immersive-ui-hidden .aerospace-scene,
+.immersive-ui-hidden .huali-scene,
+.immersive-ui-hidden .village-scene,
+.immersive-ui-hidden .tropical-scene,
+.immersive-ui-hidden .ftp-immersive-scene { min-height: 100svh; }
+
+/* Immersive viewing removes the hall chrome, but keeps Luoyin available as the
+   always-on desktop guide. Automatic exhibit cues remain actionable so the
+   guide can explain the space without restoring the full interface. */
+html.immersive-ui-clean .luoyin-desktop-pet {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+html.immersive-ui-clean .luoyin-pet-surface {
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .36));
+}
+html.immersive-ui-clean .luoyin-chat-anchor {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+html.immersive-ui-clean .luoyin-tour-cue {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+html.immersive-ui-clean .luoyin-auto-guide-cue {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (max-width: 760px) {
+  .immersive-ui-toggle { min-height: 34px; padding: 0 8px; font-size: 9px; }
+  .immersive-ui-toggle--floating { top: max(10px, env(safe-area-inset-top)); right: 12px; min-height: 38px; }
+  html[dir='rtl'] .immersive-ui-toggle--floating { right: auto; left: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .immersive-ui-toggle { transition: none; }
+}

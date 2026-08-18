@@ -145,7 +145,9 @@ export function createImmersiveCameraGuard(
   // attached its guide listener. A short delayed snapshot covers both cases:
   // it runs after the hall camera has entered its authored position and lets
   // the desktop pet introduce the nearby exhibit without requiring the 3D
-  // avatar to be enabled first.
+  // avatar to be enabled first. The regular low-frequency snapshot below is
+  // intentional: Spark can settle or move the camera without crossing the
+  // distance threshold, so a position-only event must not be the only trigger.
   let initialGuideSent = false
   let initialGuideUsesFallback = true
   let initialGuideTimer = window.setTimeout(() => {
@@ -175,7 +177,7 @@ export function createImmersiveCameraGuard(
       }, 0)
     }
     const now = performance.now()
-    if (now - lastTourEventAt > 1400 && camera.position.distanceToSquared(lastTourPosition) > .035) {
+    if (now - lastTourEventAt > 1400) {
       lastTourEventAt = now
       lastTourPosition.copy(camera.position)
       emitWorldMove()

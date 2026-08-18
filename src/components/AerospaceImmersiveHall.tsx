@@ -8,6 +8,7 @@ import { createImmersiveCameraGuard } from '../immersive-controls'
 import { avatarWorldConfigs, createLuoyinAvatarController, type LuoyinAvatarController } from '../luoyin-avatar'
 import BrandLockup from './BrandLockup'
 import LanguageSelector from './LanguageSelector'
+import ImmersiveViewToggle, { useImmersiveUiVisibility } from './ImmersiveViewToggle'
 import ImmersiveExhibitIndex, { immersiveIndexStatus } from './ImmersiveExhibitIndex'
 completeLocalizationTree(aerospaceExhibits)
 assertLocalizationTree(aerospaceExhibits, 'aerospace hall exhibits')
@@ -61,6 +62,8 @@ function DetailSheet({ exhibit, language, onClose, onAsk }: { exhibit: Aerospace
 export default function AerospaceImmersiveHall({ language, onChangeLanguage, onExit, onOpenGuide }: Props) {
   const mount = useRef<HTMLDivElement>(null)
   const [view, setView] = useState<HallView>('world')
+  const [immersiveUiHidden, setImmersiveUiHidden] = useState(false)
+  useImmersiveUiVisibility(view === 'world' && immersiveUiHidden)
   const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading')
   const [active, setActive] = useState(aerospaceExhibits[0])
   const [detail, setDetail] = useState<AerospaceExhibit | null>(null)
@@ -107,9 +110,10 @@ export default function AerospaceImmersiveHall({ language, onChangeLanguage, onE
     else void avatar.enable()
   }
 
-  return <div className="aerospace-hall" data-avatar-state={avatarState}>
+  return <div className={`aerospace-hall${view === 'world' && immersiveUiHidden ? ' immersive-ui-hidden' : ''}`} data-avatar-state={avatarState}>
     {view === 'world' && <div className="luoyin-avatar-floating"><button className="luoyin-avatar-button" type="button" disabled={sceneStatus !== 'ready' || avatarState === 'loading'} onClick={toggleAvatar}>{avatarState === 'ready' ? tx(language, 'Hide Luoyin', '隐藏螺音') : avatarState === 'loading' ? tx(language, 'Loading Luoyin', '正在加载螺音') : tx(language, 'Show Luoyin', '显示螺音')}</button><span className="luoyin-avatar-status" aria-live="polite">{avatarState === 'failed' ? tx(language, '3D character unavailable. Free camera remains available.', '3D 角色暂不可用，仍可使用自由相机浏览。') : avatarState === 'ready' ? tx(language, 'Luoyin ready · WASD / arrows to walk · drag to orbit · wheel to zoom', '螺音已准备 · WASD / 方向键行走 · 拖动环绕 · 滚轮缩放') : ''}</span></div>}
-    {view === 'world' && <header className="aerospace-header"><BrandLockup onNavigate={(event) => { event.preventDefault(); onExit() }} /><p>{hallTx(language, 'WENCHANG / IMMERSIVE HALL')}</p><div><LanguageSelector language={language} onChange={onChangeLanguage} /><button className="hall-guide-button" type="button" onClick={() => onOpenGuide(active)}>{tx(language, 'Ask Luoyin', '询问螺音')}</button><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个展厅')}</button></div></header>}
+    {view === 'world' && <header className="aerospace-header"><BrandLockup onNavigate={(event) => { event.preventDefault(); onExit() }} /><p>{hallTx(language, 'WENCHANG / IMMERSIVE HALL')}</p><div><LanguageSelector language={language} onChange={onChangeLanguage} /><button className="hall-guide-button" type="button" onClick={() => onOpenGuide(active)}>{tx(language, 'Ask Luoyin', '询问螺音')}</button><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个展厅')}</button><ImmersiveViewToggle language={language} hidden={immersiveUiHidden} onToggle={() => setImmersiveUiHidden((hidden) => !hidden)} /></div></header>}
+    {view === 'world' && immersiveUiHidden && <ImmersiveViewToggle language={language} hidden floating onToggle={() => setImmersiveUiHidden(false)} />}
     {view === 'world' ? <main className="aerospace-stage"><div className="aerospace-scene" ref={mount} onClick={(event) => triggerPulse(event)} role="application" tabIndex={0} aria-label={tx(language, 'Interactive Wenchang aerospace visual world', '可交互的文昌航天视觉世界')} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); triggerPulse() } }}>
       {sceneStatus !== 'ready' && <div className={sceneStatus === 'fallback' ? 'aerospace-scene-fallback is-static' : 'aerospace-scene-fallback'}><img src={aerospaceReferenceImage} alt={tx(language, 'Wenchang aerospace hall reference view', '文昌航天展厅静态参考视图')} /><p>{sceneStatus === 'loading' ? tx(language, 'Opening the launch horizon…', '正在打开发射地平线…') : tx(language, 'This device is using the static hall view. The exhibit index and Luoyin remain available.', '当前设备正在使用静态展厅视图；展项索引与螺音仍可正常使用。')}</p></div>}
       <OrbitPulse reduced={reduced} pulse={pulse} />

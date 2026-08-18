@@ -92,7 +92,10 @@ export const luoyinWorldCues: WorldGuideCue[] = (sharedCues as readonly SharedCu
 }))
 
 const cueByZone = (zoneId: string) => luoyinWorldCues.filter((item) => item.zoneId === zoneId)
-const distanceSquared = (a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2
+// Exhibit cues are authored on the hall's floor plane. A free camera carries
+// a significant height above that plane, so including z would make an exhibit
+// unreachable even when the viewer is directly over its x/y location.
+const distanceSquared = (a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2
 
 function guideProbePosition(detail: LuoyinWorldMoveDetail) {
   if (detail.source === 'avatar') return detail.position

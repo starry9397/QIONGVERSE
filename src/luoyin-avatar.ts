@@ -433,6 +433,10 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
         addListeners()
         setState('ready')
         updateCamera()
+        // The desktop pet also guides while the in-world avatar is visible.
+        // Emit the authored entry pose immediately so the first nearby cue is
+        // not dependent on a later keyboard or pointer movement event.
+        emitWorldGuideMove('avatar')
       } catch {
         avatar?.removeFromParent()
         avatar = null
