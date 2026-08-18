@@ -99,7 +99,10 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
   let resolvedBounds: { minX: number; maxX: number; minY: number; maxY: number; floorZ: number } | null = null
   let capturedEntry = false
   let pointerId: number | null = null
+  let movementPointerId: number | null = null
   let lastPointer = { x: 0, y: 0 }
+  let movementOrigin = { x: 0, y: 0 }
+  let touchMovement = { x: 0, y: 0 }
   let pinchDistance: number | null = null
   const pointers = new Map<number, { x: number; y: number }>()
   const keys = new Set<string>()
@@ -315,8 +318,16 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
   const onPointerDown = (event: PointerEvent) => {
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
     if (pointers.size === 1) {
-      pointerId = event.pointerId
-      lastPointer = { x: event.clientX, y: event.clientY }
+      const rect = options.renderer.domElement.getBoundingClientRect()
+      const isTouchMovement = event.pointerType === 'touch' && event.clientX - rect.left < rect.width * .46
+      if (isTouchMovement) {
+        movementPointerId = event.pointerId
+        movementOrigin = { x: event.clientX, y: event.clientY }
+        touchMovement = { x: 0, y: 0 }
+      } else {
+        pointerId = event.pointerId
+        lastPointer = { x: event.clientX, y: event.clientY }
+      }
       options.renderer.domElement.setPointerCapture(event.pointerId)
     }
     if (pointers.size === 2) {
@@ -336,6 +347,15 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
       updateCamera()
       return
     }
+    if (movementPointerId === event.pointerId) {
+      const rect = options.renderer.domElement.getBoundingClientRect()
+      const radius = Math.max(44, Math.min(rect.width, rect.height) * .2)
+      touchMovement = {
+        x: clamp((event.clientX - movementOrigin.x) / radius, -1, 1),
+        y: clamp((event.clientY - movementOrigin.y) / radius, -1, 1),
+      }
+      return
+    }
     if (pointerId !== event.pointerId) return
     yaw -= (event.clientX - lastPointer.x) * .008
     pitch = clamp(pitch + (event.clientY - lastPointer.y) * .004, -.12, .62)
@@ -344,6 +364,10 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
   }
   const onPointerUp = (event: PointerEvent) => {
     pointers.delete(event.pointerId)
+    if (movementPointerId === event.pointerId) {
+      movementPointerId = null
+      touchMovement = { x: 0, y: 0 }
+    }
     if (pointerId === event.pointerId) pointerId = null
     if (pointers.size < 2) pinchDistance = null
   }
@@ -372,7 +396,7 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
     canvas.removeEventListener('wheel', onWheel)
     removeEventListener('keydown', onKeyDown)
     removeEventListener('keyup', onKeyUp)
-    keys.clear(); pointers.clear(); pointerId = null; pinchDistance = null
+    keys.clear(); pointers.clear(); pointerId = null; movementPointerId = null; touchMovement = { x: 0, y: 0 }; pinchDistance = null
   }
 
   return {
@@ -434,7 +458,11 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
       avatar.rotation.y = 0
       const forward = Number(keys.has('w') || keys.has('arrowup')) - Number(keys.has('s') || keys.has('arrowdown'))
       const strafe = Number(keys.has('d') || keys.has('arrowright')) - Number(keys.has('a') || keys.has('arrowleft'))
-      const length = Math.hypot(forward, strafe)
+      const touchForward = pointers.size < 2 ? -touchMovement.y : 0
+      const touchStrafe = pointers.size < 2 ? touchMovement.x : 0
+      const combinedForward = forward + touchForward
+      const combinedStrafe = strafe + touchStrafe
+      const length = Math.hypot(combinedForward, combinedStrafe)
       const targetSpeed = length ? (keys.has('shift') ? 2.4 : 1.25) : 0
       speed += (targetSpeed - speed) * Math.min(1, deltaTime * 8)
       if (keys.has(' ') && verticalOffset <= .001 && jumpVelocity <= 0) {
@@ -447,8 +475,8 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
       if (length) {
         const fx = Math.sin(yaw); const fy = Math.cos(yaw)
         const rx = Math.cos(yaw); const ry = -Math.sin(yaw)
-        const moveX = (fx * forward + rx * strafe) / length
-        const moveY = (fy * forward + ry * strafe) / length
+        const moveX = (fx * combinedForward + rx * combinedStrafe) / length
+        const moveY = (fy * combinedForward + ry * combinedStrafe) / length
         const dx = moveX * speed * deltaTime
         const dy = moveY * speed * deltaTime
         applyPosition({ x: position.x + dx, y: position.y + dy })
