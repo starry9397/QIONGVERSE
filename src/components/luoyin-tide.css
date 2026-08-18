@@ -28,3 +28,8 @@ button { font: inherit; }
 .ss-model-error { margin: 10px 0 0; color: #527879; font-size: 11px; line-height: 1.5; }
 .ss-pose-options { grid-template-columns: repeat(6, minmax(0, 74px)); grid-auto-rows: 74px; max-width: 489px; }
 @media (max-width: 560px) { .ss-pose-options { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: none; } }
+
+/* The model stage owns touch gestures so the page does not scroll or steal a
+   second finger while the user rotates and zooms the digital human. */
+.ss-model-stage { overscroll-behavior: contain; user-select: none; }
+.ss-model-stage canvas { touch-action: none; }
