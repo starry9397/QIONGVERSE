@@ -1,5 +1,6 @@
 /** Resolve existing project media locally or through the read-only production CDN. */
 export function publicMedia(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path
   let normalized = path.startsWith('/') ? path : `/${path}`
   const buildBase = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '')
   // prepare-pages rewrites root literals to the project Pages prefix. Remove
@@ -13,6 +14,7 @@ export function publicMedia(path: string): string {
 
 /** Resolve a small route-scoped asset against the current app base path. */
 export function localMedia(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path
   let normalized = path.startsWith('/') ? path : `/${path}`
   const buildBase = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '')
   if (buildBase && buildBase !== '/' && normalized.startsWith(`${buildBase}/`)) {

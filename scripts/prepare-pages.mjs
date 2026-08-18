@@ -34,7 +34,9 @@ for (const entry of allFiles) {
   await rm(entry.file)
 }
 
-const largeMediaRewrites = removedLargeAssets.flatMap(({ file }) => {
+// The Vite Pages plugin rewrites source literals before chunk hashes are
+// generated. Avoid touching those absolute CDN URLs a second time here.
+const largeMediaRewrites = largeMediaBase ? [] : removedLargeAssets.flatMap(({ file }) => {
   const route = `/${file}`
   const encodedRoute = `/${encodeURI(file)}`
   const target = largeMediaBase ? `${largeMediaBase}/${file}` : null
