@@ -2,7 +2,7 @@ import process from 'node:process'
 
 const input = process.argv[2]
 if (!input) {
-  console.error('Usage: npm run verify:deployment -- https://your-domain.example')
+  console.error('Usage: npm run verify:deployment -- https://frontend.example [https://api.example]')
   process.exit(2)
 }
 
@@ -24,6 +24,28 @@ if (/your-domain|your-public-domain|\.example$|PUBLIC_DOMAIN|localhost|127\.0\.0
   process.exit(2)
 }
 
+const apiInput = process.argv[3]
+let apiOrigin = origin
+if (apiInput) {
+  try {
+    apiOrigin = new URL(apiInput)
+  } catch {
+    console.error('Invalid API deployment URL')
+    process.exit(2)
+  }
+  if (apiOrigin.protocol !== 'https:') {
+    console.error('API deployment verification requires an HTTPS URL')
+    process.exit(2)
+  }
+  if (/your-domain|your-public-domain|\.example$|PUBLIC_DOMAIN|localhost|127\.0\.0\.1/i.test(apiOrigin.hostname)) {
+    console.error('Refusing to verify a placeholder or loopback API domain')
+    process.exit(2)
+  }
+  apiOrigin.pathname = '/'
+  apiOrigin.search = ''
+  apiOrigin.hash = ''
+}
+
 origin.pathname = '/'
 origin.search = ''
 origin.hash = ''
@@ -39,6 +61,15 @@ async function request(path, options = {}) {
     return await fetch(new URL(path, origin), { redirect: 'manual', ...options })
   } catch (error) {
     check(path, false, error instanceof Error ? error.message : String(error))
+    return null
+  }
+}
+
+async function requestApi(path, options = {}) {
+  try {
+    return await fetch(new URL(path, apiOrigin), { redirect: 'manual', ...options })
+  } catch (error) {
+    check(`api ${path}`, false, error instanceof Error ? error.message : String(error))
     return null
   }
 }
@@ -70,7 +101,7 @@ if (page) {
 }
 
 for (const path of ['/api/luoyin/status', '/api/social/status']) {
-  const response = await request(path)
+  const response = await requestApi(path)
   if (!response) continue
   const body = await response.text()
   check(`${path} status`, response.status === 200, String(response.status))
@@ -83,4 +114,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('\nDeployment checks passed. Platform share previews still require final X/Facebook fetch validation.')
+console.log(`\nDeployment checks passed for frontend ${origin.origin}${apiOrigin !== origin ? ` and API ${apiOrigin.origin}` : ''}. Platform share previews still require final X/Facebook fetch validation.`)

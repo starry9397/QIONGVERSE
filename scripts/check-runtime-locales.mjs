@@ -10,6 +10,17 @@ const staticSevenLanguageFiles = [
 const hydratedKnowledgeFiles = [
   ['knowledge/travel-atlas.json', 'src/components/TravelAtlas.tsx'],
 ]
+const strictLocaleModules = [
+  'src/components/TravelAtlas.tsx',
+  'src/components/TropicalImmersiveHall.tsx',
+  'src/components/LiMiaoImmersiveHall.tsx',
+  'src/components/AerospaceImmersiveHall.tsx',
+  'src/components/HualiImmersiveHall.tsx',
+  'src/components/VillageImmersiveHall.tsx',
+  'src/components/FreeTradePortImmersiveHall.tsx',
+  'src/components/LuoyinTidePage.tsx',
+  'src/components/ShellSongModel.tsx',
+]
 const runtimeModules = [
   'src/App.tsx',
   'src/components/TravelAtlas.tsx',
@@ -20,6 +31,14 @@ const runtimeModules = [
   'src/components/HualiImmersiveHall.tsx',
   'src/components/VillageImmersiveHall.tsx',
   'src/components/FreeTradePortImmersiveHall.tsx',
+  'src/components/LuoyinTidePage.tsx',
+  'src/components/ShellSongModel.tsx',
+  'src/tropical-data.ts',
+  'src/limiao-data.ts',
+  'src/aerospace-data.ts',
+  'src/huali-data.ts',
+  'src/village-data.ts',
+  'src/luoyin-tour.ts',
 ]
 
 const failures = []
@@ -48,13 +67,21 @@ for (const file of staticSevenLanguageFiles) {
 
 for (const [knowledgeFile, consumer] of hydratedKnowledgeFiles) {
   try {
-    JSON.parse(readFileSync(resolve(root, knowledgeFile), 'utf8'))
+    const knowledge = JSON.parse(readFileSync(resolve(root, knowledgeFile), 'utf8'))
+    checkTree(knowledge, knowledgeFile)
     const source = readFileSync(resolve(root, consumer), 'utf8')
     if (!source.includes('completeLocalizationTree(') || !source.includes('assertLocalizationTree(')) {
       failures.push(`${consumer}: ${knowledgeFile} must be completed and asserted before rendering`)
     }
   } catch (error) {
     failures.push(`${knowledgeFile}: ${error instanceof Error ? error.message : 'cannot parse JSON'}`)
+  }
+}
+
+for (const file of strictLocaleModules) {
+  const source = readFileSync(resolve(root, file), 'utf8')
+  if (/language\s*!==?\s*['"](?:en|zh)['"]|language\s*===\s*['"](?:en|zh)['"]/.test(source)) {
+    failures.push(`${file}: direct English/Chinese locale branching is forbidden; use a complete localized record`)
   }
 }
 

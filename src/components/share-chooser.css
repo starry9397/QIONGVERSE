@@ -1,0 +1,16 @@
+.share-chooser { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; }
+.share-chooser-backdrop { position: absolute; inset: 0; border: 0; background: rgba(3, 18, 20, .68); cursor: default; }
+.share-chooser-panel { position: relative; width: min(560px, 100%); padding: 28px; color: var(--ink, #102b2c); background: var(--paper, #fff7e7); border: 1px solid rgba(232, 201, 135, .82); box-shadow: 0 28px 90px rgba(0, 0, 0, .4); }
+.share-chooser-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.share-chooser-kicker { margin: 0 0 10px; color: var(--coral, #d66f4a); font: 600 10px/1 var(--mono, monospace); letter-spacing: .14em; }
+.share-chooser-panel h2 { margin: 0; font: 600 clamp(24px, 4vw, 36px)/1.05 var(--display, Georgia, serif); }
+.share-chooser-close { width: 34px; height: 34px; border: 1px solid rgba(16, 43, 44, .35); color: var(--ink, #102b2c); background: transparent; font-size: 22px; cursor: pointer; }
+.share-chooser-description { margin: 18px 0 22px; color: rgba(16, 43, 44, .72); font-size: 13px; line-height: 1.6; }
+.share-chooser-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.share-chooser-options button { min-height: 54px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid rgba(16, 43, 44, .24); color: var(--ink, #102b2c); background: rgba(255, 255, 255, .38); cursor: pointer; text-align: left; transition: background .2s ease, border-color .2s ease, transform .2s ease; }
+.share-chooser-options button:hover, .share-chooser-options button:focus-visible { border-color: var(--coral, #d66f4a); background: rgba(214, 111, 74, .13); outline: none; transform: translateY(-1px); }
+.share-chooser-options button span { width: 28px; height: 28px; display: grid; place-items: center; flex: 0 0 auto; color: var(--coral, #d66f4a); border: 1px solid currentColor; font: 600 14px/1 var(--mono, monospace); }
+.share-chooser-options button strong { font: 600 12px/1.3 var(--mono, monospace); }
+.share-chooser-status { margin: 18px 0 0; color: var(--coral, #d66f4a); font: 11px/1.5 var(--mono, monospace); }
+@media (max-width: 520px) { .share-chooser { padding: 14px; align-items: end; } .share-chooser-panel { padding: 22px 18px; } .share-chooser-options { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .share-chooser-options button { transition: none; } .share-chooser-options button:hover, .share-chooser-options button:focus-visible { transform: none; } }

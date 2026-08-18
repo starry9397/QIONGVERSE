@@ -60,6 +60,8 @@ export function createImmersiveCameraGuard(
   let pitch = 0
   let activePointer: number | null = null
   let lastPointer = { x: 0, y: 0 }
+  let lastTourPosition = camera.position.clone()
+  let lastTourEventAt = 0
   const canvas = pointer?.canvas
 
   const syncOrientation = () => {
@@ -127,6 +129,33 @@ export function createImmersiveCameraGuard(
     return bounds
   }
 
+  const emitWorldMove = () => {
+    const forward = camera.getWorldDirection(camera.position.clone())
+    window.dispatchEvent(new CustomEvent('luoyin-world-move', {
+      detail: {
+        source: 'free-camera',
+        position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+        cameraPosition: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+        forward: { x: forward.x, y: forward.y, z: forward.z },
+      },
+    }))
+  }
+
+  // The first free-camera frame can run before the parent React effect has
+  // attached its guide listener. A short delayed snapshot covers both cases:
+  // it runs after the hall camera has entered its authored position and lets
+  // the desktop pet introduce the nearby exhibit without requiring the 3D
+  // avatar to be enabled first.
+  let initialGuideSent = false
+  let initialGuideUsesFallback = true
+  let initialGuideTimer = window.setTimeout(() => {
+    initialGuideUsesFallback = false
+    initialGuideSent = true
+    lastTourPosition.copy(camera.position)
+    lastTourEventAt = performance.now()
+    emitWorldMove()
+  }, 1200)
+
   const clamp = () => {
     camera.up.set(0, 0, 1)
     if (pointer?.enable === false) {
@@ -135,10 +164,27 @@ export function createImmersiveCameraGuard(
     const activeBounds = getBounds()
     if (activeBounds) camera.position.clamp(activeBounds.min, activeBounds.max)
     else camera.position.clamp(fallbackMin, fallbackMax)
+    if (activeBounds && !initialGuideSent && initialGuideUsesFallback) {
+      window.clearTimeout(initialGuideTimer)
+      initialGuideUsesFallback = false
+      initialGuideTimer = window.setTimeout(() => {
+        initialGuideSent = true
+        lastTourPosition.copy(camera.position)
+        lastTourEventAt = performance.now()
+        emitWorldMove()
+      }, 0)
+    }
+    const now = performance.now()
+    if (now - lastTourEventAt > 1400 && camera.position.distanceToSquared(lastTourPosition) > .035) {
+      lastTourEventAt = now
+      lastTourPosition.copy(camera.position)
+      emitWorldMove()
+    }
 
   }
 
   const dispose = () => {
+    window.clearTimeout(initialGuideTimer)
     canvas?.removeEventListener('pointerdown', onPointerDown)
     canvas?.removeEventListener('pointermove', onPointerMove)
     canvas?.removeEventListener('pointerup', onPointerUp)

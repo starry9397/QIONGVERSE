@@ -15,5 +15,15 @@ services:
         value: https://qiongverse.pages.dev,https://starry9397.github.io,https://qiongverse-webify-qiongverse-webify-d5drsw1e9a5fd4.webapps.tcloudbase.com
       - key: SOCIAL_PUBLIC_BASE_URL
         value: https://qiongverse-webify-qiongverse-webify-d5drsw1e9a5fd4.webapps.tcloudbase.com
+      - key: SOCIAL_CALLBACK_BASE_URL
+        value: https://qiongverse-api.onrender.com
       - key: GLM_API_KEY
         sync: false
+      - key: LUOYIN_TTS_API_URL
+        sync: false
+      - key: LUOYIN_TTS_API_KEY
+        sync: false
+      - key: LUOYIN_TTS_VOICE_ID
+        sync: false
+      - key: LUOYIN_TTS_VOICE_STYLE
+        value: sweet-playful-storybook

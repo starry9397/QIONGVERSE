@@ -75,6 +75,18 @@ tcb app deploy --framework vite -e <cloudbase-environment-id>
 
 Use the console when the account, environment, Git provider, or custom domain still needs confirmation. Do not put the environment ID or any secret into the frontend source; the ID is only a deployment target.
 
+If the repository contains source media or model archives large enough to exceed CloudBase's app-source upload limit, publish the already-checked `dist/` artifact instead of uploading the whole repository:
+
+```powershell
+$env:VITE_PUBLIC_SITE_URL = "https://<actual-webify-domain>"
+$env:VITE_LUOYIN_API_BASE_URL = "https://qiongverse-api.onrender.com"
+npm run build:webify
+npm run verify:webify
+tcb hosting deploy ./dist / -e <cloudbase-environment-id> --concurrency 5 --retry-count 3
+```
+
+This prebuilt upload updates static files but does not create a Webify version record. Keep the canonical/OG origin equal to the stable Webify URL and rerun the split-origin deployment check after CDN propagation.
+
 ## Local preflight and acceptance
 
 Run from the repository root before every Webify deployment:
@@ -99,7 +111,13 @@ Inspect `dist` for secrets and confirm the build contains no unresolved `%PUBLIC
 - a failed API, image, video, GLB, or SPZ request keeps the existing understandable fallback;
 - no page has horizontal overflow at 320px, 375px, 768px, 1115px, or 1440px.
 
-Use `npm run verify:deployment -- https://<actual-api-or-same-origin-domain>` only after the public HTTPS origin resolves. A Webify static origin cannot pass API checks until the Render CORS allowlist has been updated.
+For same-origin hosting use `npm run verify:deployment -- https://<same-origin-domain>`. For this split-origin topology, pass both origins so the static-site checks target Webify while the API checks target Render:
+
+```powershell
+npm run verify:deployment -- https://<actual-webify-domain> https://qiongverse-api.onrender.com
+```
+
+The command verifies the exact Render API status responses and secret redaction. A Webify static origin cannot serve `/api/*` itself; its browser requests succeed only after the Render CORS allowlist contains the exact Webify HTTPS origin.
 
 ## Rollback
 

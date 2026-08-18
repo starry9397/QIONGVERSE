@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import type * as ThreeTypes from 'three'
 import type { Language } from '../data'
-import { assertLocalizationTree, completeLocalizationTree, inline } from '../i18n'
+import { assertLocalizationTree, completeLocalizationTree } from '../i18n'
+import { hallTx } from '../immersive-copy'
 import { limiaoExhibits, type LimiaoExhibit, sourceStatusLabel } from '../limiao-data'
 import { createImmersiveCameraGuard } from '../immersive-controls'
 import { avatarWorldConfigs, createLuoyinAvatarController, type LuoyinAvatarController } from '../luoyin-avatar'
 import BrandLockup from './BrandLockup'
 import LanguageSelector from './LanguageSelector'
+import ImmersiveExhibitIndex, { immersiveIndexStatus } from './ImmersiveExhibitIndex'
 completeLocalizationTree(limiaoExhibits)
 assertLocalizationTree(limiaoExhibits, 'Li and Miao hall exhibits')
 
@@ -15,7 +17,7 @@ type SceneStatus = 'loading' | 'ready' | 'fallback'
 type ModelTransform = { scale: number; rotation: number }
 type HallView = 'world' | 'index'
 
-const tx = (language: Language, en: string, zh: string) => inline(language, en, zh)
+const tx = (language: Language, en: string, _zh?: string) => hallTx(language, en)
 
 function TidePulse({ reduced, paused, pulse }: { reduced: boolean; paused: boolean; pulse: { x: number; y: number; key: number } }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -82,18 +84,19 @@ function ModelPreview({ exhibit, language, transform, onTransform }: { exhibit: 
     })()
     return () => { disposed = true; cleanup() }
   }, [exhibit.modelAsset])
-  return <div className="limiao-model-preview" ref={host} onWheel={(event) => { event.preventDefault(); onTransform({ ...transformRef.current, scale: Math.min(1.7, Math.max(.65, transformRef.current.scale - event.deltaY * .001)) }) }} onPointerDown={(event) => { dragRef.current = { x: event.clientX, rotation: transformRef.current.rotation }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={(event) => { if (!dragRef.current) return; onTransform({ ...transformRef.current, rotation: dragRef.current.rotation + (event.clientX - dragRef.current.x) * .012 }) }} onPointerUp={() => { dragRef.current = null }} onPointerCancel={() => { dragRef.current = null }}>{failed && <img src={exhibit.poster} alt={exhibit.title[language]} onError={(event) => { event.currentTarget.src = exhibit.fallback || '' }} />}<span className="limiao-model-hint">{language === 'en' ? 'Drag to rotate · wheel to zoom' : '拖拽旋转 · 滚轮缩放'}</span></div>
+  return <div className="limiao-model-preview" ref={host} onWheel={(event) => { event.preventDefault(); onTransform({ ...transformRef.current, scale: Math.min(1.7, Math.max(.65, transformRef.current.scale - event.deltaY * .001)) }) }} onPointerDown={(event) => { dragRef.current = { x: event.clientX, rotation: transformRef.current.rotation }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={(event) => { if (!dragRef.current) return; onTransform({ ...transformRef.current, rotation: dragRef.current.rotation + (event.clientX - dragRef.current.x) * .012 }) }} onPointerUp={() => { dragRef.current = null }} onPointerCancel={() => { dragRef.current = null }}>{failed && <img src={exhibit.poster} alt={exhibit.title[language]} onError={(event) => { event.currentTarget.src = exhibit.fallback || '' }} />}<span className="limiao-model-hint">{hallTx(language, 'Drag to rotate · wheel or pinch to zoom')}</span></div>
 }
 
 function DetailSheet({ exhibit, language, onClose, onAsk, transform, onTransform, gestureActive: _gestureActive }: { exhibit: LimiaoExhibit; language: Language; onClose: () => void; onAsk: () => void; transform: ModelTransform; onTransform: (next: ModelTransform) => void; gestureActive?: boolean }) {
   const [videoFailed, setVideoFailed] = useState(false)
   useEffect(() => { const listener = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }; addEventListener('keydown', listener); return () => removeEventListener('keydown', listener) }, [onClose])
+  useEffect(() => { setVideoFailed(false) }, [exhibit.id])
   return <div className="limiao-sheet-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }} role="presentation"><section className="limiao-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="limiao-detail-title">
     <div className="limiao-sheet-head"><div><p className="mono-label">{sourceStatusLabel(exhibit.sourceStatus, language)}</p><h2 id="limiao-detail-title">{exhibit.title[language]}</h2></div><button className="close-button" type="button" onClick={onClose} aria-label={tx(language, 'Close exhibit', '关闭展项')}>×</button></div>
     <div className="limiao-detail-media">
       {exhibit.kind === 'image' && <img src={exhibit.asset} alt={exhibit.title[language]} onError={(event) => { event.currentTarget.src = exhibit.fallback || '' }} />}
       {exhibit.kind === 'model' && <ModelPreview exhibit={exhibit} language={language} transform={transform} onTransform={onTransform} />}
-      {exhibit.kind === 'model' && <div className="limiao-video-study">{videoFailed ? <img src={exhibit.fallback} alt={exhibit.title[language]} /> : <video controls playsInline preload="metadata" poster={exhibit.poster} onError={() => setVideoFailed(true)}><source src={exhibit.asset} type="video/mp4" /></video>}</div>}
+      {exhibit.kind === 'model' && !videoFailed && <div className="limiao-video-study"><video controls playsInline preload="metadata" poster={exhibit.poster} onError={() => setVideoFailed(true)}><source src={exhibit.asset} type="video/mp4" /></video></div>}
     </div>
     <p className="limiao-detail-en">{exhibit.title.en}</p><p>{exhibit.introduction[language]}</p><p className="limiao-detail-note">{exhibit.note[language]}</p>
     {exhibit.sourceUrl && <a className="limiao-source-link" href={exhibit.sourceUrl} target="_blank" rel="noreferrer">{tx(language, 'Open reviewed UNESCO source', '打开已核验 UNESCO 来源')} ↗</a>}
@@ -155,26 +158,34 @@ export default function LiMiaoImmersiveHall({ language, onChangeLanguage, onExit
   const toggleAvatar = () => { const avatar = avatarRef.current; if (!avatar) return; if (avatar.getState() === 'ready') avatar.disable(); else void avatar.enable() }
 
   const gesture = 'idle' as 'idle' | 'ready' | 'paused'
-  const gestureText: Record<'idle' | 'ready' | 'paused', string> = { idle: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用'), ready: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用'), paused: tx(language, 'Mouse and touch controls remain available', '鼠标与触控仍可使用') }
-  const videoRef = useRef<HTMLVideoElement>(null)
   return <div className="limiao-hall" data-avatar-state={avatarState}>
     {view === 'world' && <div className="luoyin-avatar-floating"><button className="luoyin-avatar-button" type="button" disabled={sceneStatus !== 'ready' || avatarState === 'loading'} onClick={toggleAvatar}>{avatarState === 'ready' ? tx(language, 'Hide Luoyin', '隐藏螺音') : avatarState === 'loading' ? tx(language, 'Loading Luoyin', '正在加载螺音') : tx(language, 'Show Luoyin', '显示螺音')}</button><span className="luoyin-avatar-status" aria-live="polite">{avatarState === 'failed' ? tx(language, '3D character unavailable. Free camera remains available.', '3D 角色暂不可用，仍可使用自由相机浏览。') : avatarState === 'ready' ? tx(language, 'Luoyin ready · WASD / arrows to walk · drag to orbit · wheel to zoom', '螺音已准备 · WASD / 方向键行走 · 拖动环绕 · 滚轮缩放') : ''}</span></div>}
-    <header className="limiao-header"><BrandLockup onNavigate={(event) => { event.preventDefault(); onExit() }} /><p>{view === 'world' ? 'LI & MIAO / IMMERSIVE HALL' : 'LI & MIAO / EXHIBIT INDEX'}</p><div><LanguageSelector language={language} onChange={onChangeLanguage} /><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个分展厅')}</button></div></header>
+    {view === 'world' && <header className="limiao-header"><BrandLockup onNavigate={(event) => { event.preventDefault(); onExit() }} /><p>{hallTx(language, 'LI & MIAO / IMMERSIVE HALL')}</p><div><LanguageSelector language={language} onChange={onChangeLanguage} /><button className="hall-guide-button" type="button" onClick={() => onOpenGuide(active)}>{tx(language, 'Ask Luoyin', '询问螺音')}</button><button type="button" onClick={onExit}>{tx(language, 'Back to five halls', '返回五个分展厅')}</button></div></header>}
     {view === 'world' ? <main className="limiao-stage">
       <div className="limiao-scene" ref={mount} onClick={(event) => { triggerPulse(event) }} aria-label={tx(language, 'Interactive Li and Miao visual world', '可交互的黎苗视觉世界')} role="application" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); triggerPulse() } }}>
         {sceneStatus !== 'ready' && <div className={sceneStatus === 'fallback' ? 'limiao-scene-fallback is-static' : 'limiao-scene-fallback'}><img src="/assets/3d/limiao/黎苗展厅参考图.png" alt={tx(language, 'Li and Miao immersive hall reference view', '黎苗沉浸展厅静态参考视图')} /><p>{sceneStatus === 'loading' ? tx(language, 'Opening the visual world…', '正在打开视觉世界…') : tx(language, 'This device is using the static hall view. Exhibit index and Luoyin remain available.', '当前设备正在使用静态展厅视图；展项索引与螺音仍可正常使用。')}</p></div>}
         <TidePulse reduced={reduced} paused={gesture === 'paused'} pulse={pulse} />
         <div className="limiao-world-anchors" aria-label={tx(language, 'Exhibits in the world', '大世界展项')}>
-          {limiaoExhibits.map((exhibit, index) => <button key={exhibit.id} type="button" className={active.id === exhibit.id ? ('limiao-world-anchor anchor-' + (index + 1) + ' active') : ('limiao-world-anchor anchor-' + (index + 1))} onClick={(event) => { event.stopPropagation(); triggerPulse(event); select(exhibit) }} aria-label={tx(language, 'Open ' + exhibit.title.en, '打开' + exhibit.title.zh)}>
+          {limiaoExhibits.map((exhibit, index) => <button key={exhibit.id} type="button" className={active.id === exhibit.id ? ('limiao-world-anchor anchor-' + (index + 1) + ' active') : ('limiao-world-anchor anchor-' + (index + 1))} onClick={(event) => { event.stopPropagation(); triggerPulse(event); select(exhibit) }} aria-label={`${hallTx(language, 'Open ')}${exhibit.title[language]}`}>
             <img className="anchor-thumb" loading="lazy" src={exhibit.poster || exhibit.asset} alt="" aria-hidden="true" onError={(event) => { if (exhibit.fallback) event.currentTarget.src = exhibit.fallback }} /><span className="anchor-glyph">{exhibit.kind === 'model' ? '◌' : exhibit.kind === 'video' ? '▶' : '◇'}</span><span className="anchor-copy"><b>{exhibit.title[language]}</b><small>{exhibit.kind === 'model' ? tx(language, '3D + video', '3D + 视频') : exhibit.kind === 'video' ? tx(language, 'Moving study', '动态研究') : tx(language, 'Image reading', '图像阅读')}</small></span>
           </button>)}
         </div>
       </div>
-      <aside className="limiao-overlay"><p className="mono-label">HAINAN PROVINCE / CULTURAL EXPLORATION</p><h1>{tx(language, 'Li & Miao Immersive Hall', '黎苗沉浸展厅')}</h1><p>{tx(language, 'A visual reading room. Li textile orientation is linked to UNESCO; Miao references are project-provided curatorial context.', '一间视觉阅读室。黎族纺织技艺概览链接 UNESCO；苗族相关内容为项目提供的策展语境。')}</p><span className="limiao-status" aria-live="polite">{sceneStatus === 'ready' ? tx(language, '3D world ready', '3D 世界已准备') : sceneStatus === 'loading' ? tx(language, 'Opening 3D world', '正在打开 3D 世界') : tx(language, 'Static hall view ready', '静态展厅视图已准备')}</span></aside>
-      <div className="limiao-actions"><button type="button" onClick={() => setView('index')}>{tx(language, 'Open exhibit index', '打开展项索引')}</button><button type="button" onClick={() => onOpenGuide(active)}>{tx(language, 'Ask Luoyin', '询问螺音')}</button><p aria-live="polite">{gestureText[gesture]}</p><video className="limiao-gesture-video" ref={videoRef} muted playsInline aria-hidden="true" /></div>
+      <aside className="limiao-overlay"><p className="mono-label">{hallTx(language, 'HAINAN PROVINCE / CULTURAL EXPLORATION')}</p><h1>{tx(language, 'Li & Miao Immersive Hall', '黎苗沉浸展厅')}</h1><p>{tx(language, 'A visual reading room. Li textile orientation is linked to UNESCO; Miao references are project-provided curatorial context.', '一间视觉阅读室。黎族纺织技艺概览链接 UNESCO；苗族相关内容为项目提供的策展语境。')}</p><span className="limiao-status" aria-live="polite">{sceneStatus === 'ready' ? tx(language, '3D world ready', '3D 世界已准备') : sceneStatus === 'loading' ? tx(language, 'Opening 3D world', '正在打开 3D 世界') : tx(language, 'Static hall view ready', '静态展厅视图已准备')}</span></aside>
+      <div className="limiao-actions"><button type="button" onClick={() => setView('index')}>{tx(language, 'Open exhibit index', '打开展项索引')}</button></div>
       <nav className="limiao-exhibit-strip" aria-label={tx(language, 'Visible exhibit navigation', '可见展项导航')}>{limiaoExhibits.map((exhibit) => <button type="button" key={exhibit.id} className={active.id === exhibit.id ? 'active' : ''} onClick={() => { triggerPulse(); select(exhibit) }}><span>{exhibit.kind === 'model' ? '◌' : '◇'}</span><b>{exhibit.title[language]}</b><small>{sourceStatusLabel(exhibit.sourceStatus, language)}</small></button>)}</nav>
       <p className="limiao-controls">{tx(language, 'Drag to rotate · wheel / pinch to zoom · WASD or arrow keys to move · click the world for a tide pulse', '拖拽旋转 · 滚轮/双指缩放 · WASD 或方向键移动 · 点击大世界触发潮汐脉冲')}</p>
-    </main> : <main className="limiao-index-page"><div className="limiao-index-intro"><p className="mono-label">HAINAN PROVINCE / LI & MIAO HERITAGE</p><h1>{tx(language, 'Exhibit Index', '展项索引')}</h1><p>{tx(language, 'Choose a visual record, moving study or AIGC concept object. The immersive world remains one step away.', '选择图像记录、动态研究或 AIGC 策展概念展品。沉浸大世界始终只需一步返回。')}</p><button type="button" className="limiao-world-return" onClick={() => setView('world')}>{tx(language, 'Back to immersive world', '返回沉浸大世界')} ↗</button></div><div className="limiao-index-list">{limiaoExhibits.map((exhibit) => <article key={exhibit.id} className="limiao-index-entry"><div className="limiao-index-media"><img loading="lazy" src={exhibit.poster || exhibit.asset} alt={exhibit.title[language]} onError={(event) => { if (exhibit.fallback) event.currentTarget.src = exhibit.fallback }} /><span>{exhibit.kind === 'model' ? tx(language, '3D + video', '3D + 视频') : exhibit.kind === 'video' ? tx(language, 'Moving study', '动态研究') : tx(language, 'Image reading', '图像阅读')}</span></div><div className="limiao-index-copy"><p className="mono-label">{sourceStatusLabel(exhibit.sourceStatus, language)}</p><h2>{exhibit.title[language]}</h2><p>{exhibit.introduction[language]}</p><button type="button" onClick={() => select(exhibit)}>{tx(language, 'Open exhibit', '打开展项')} ↗</button></div></article>)}</div></main>}
+    </main> : <ImmersiveExhibitIndex
+      language={language}
+      onChangeLanguage={onChangeLanguage}
+      onExit={onExit}
+      onBack={() => setView('world')}
+      eyebrow={{ en: 'HAINAN PROVINCE / LI & MIAO HERITAGE', zh: '海南省 / 黎苗非遗', id: 'PROVINSI HAINAN / WARISAN LI & MIAO', ja: '海南省 / 黎族・苗族の遺産', ko: '하이난성 / 리·먀오 유산', ru: 'ПРОВИНЦИЯ ХАЙНАНЬ / НАСЛЕДИЕ ЛИ И МЯО', ar: 'مقاطعة هاينان / تراث لي ومياو' }}
+      title={{ en: 'Woven Memory Archive', zh: '织造记忆档案', id: 'Arsip Memori Tenun', ja: '織りの記憶アーカイブ', ko: '직조 기억 아카이브', ru: 'Архив тканой памяти', ar: 'أرشيف الذاكرة المنسوجة' }}
+      subtitle={{ en: 'Patterns, shelter and hand-to-material gestures held in a quiet visual room.', zh: '在安静的视觉展厅里，阅读纹样、庇护与手工和材料相遇的动作。', id: 'Pola, ruang lindung, dan gerak tangan dengan material dalam ruang visual yang tenang.', ja: '静かな視覚室で、文様と住まい、手と素材の動きを読み解きます。', ko: '고요한 시각 공간에서 무늬와 쉼터, 손과 재료가 만나는 움직임을 읽습니다.', ru: 'Узоры, укрытие и жесты руки, встречающейся с материалом, в тихом визуальном зале.', ar: 'أنماط ومأوى وإيماءات اليد مع المادة داخل غرفة بصرية هادئة.' }}
+      background="/assets/index-backgrounds/li-miao-heritage.jpg"
+      items={limiaoExhibits.map((exhibit, index) => ({ id: exhibit.id, title: exhibit.title, introduction: exhibit.introduction, status: exhibit.sourceStatus === 'verified_source' ? immersiveIndexStatus.verified : exhibit.sourceStatus === 'aigc_concept' ? immersiveIndexStatus.concept : immersiveIndexStatus.project, media: exhibit.poster || exhibit.asset, fallback: exhibit.fallback, accent: exhibit.kind === 'model' ? 'gold' : exhibit.kind === 'video' ? 'rust' : (['slate', 'blue', 'olive'][index % 3] as 'slate' | 'blue' | 'olive'), onOpen: () => select(exhibit) }))}
+    />}
     {detail && <DetailSheet exhibit={detail} language={language} transform={modelTransform} onTransform={updateModelTransform} gestureActive={gesture === 'ready' || gesture === 'paused'} onClose={() => setDetail(null)} onAsk={() => { setDetail(null); onOpenGuide(detail) }} />}
   </div>
 }

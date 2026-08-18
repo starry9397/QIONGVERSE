@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import type * as ThreeTypes from "three";
 import type { Language } from "../data";
-import { assertLocalizationTree, completeLocalizationTree, inline } from "../i18n";
+import { assertLocalizationTree, completeLocalizationTree } from "../i18n";
+import { hallTx } from "../immersive-copy";
 import { createImmersiveCameraGuard } from "../immersive-controls";
 import {
   avatarWorldConfigs,
@@ -15,6 +16,7 @@ import {
 } from "../tropical-data";
 import BrandLockup from "./BrandLockup";
 import LanguageSelector from "./LanguageSelector";
+import ImmersiveExhibitIndex, { immersiveIndexStatus } from "./ImmersiveExhibitIndex";
 completeLocalizationTree(tropicalExhibits)
 assertLocalizationTree(tropicalExhibits, 'tropical hall exhibits')
 
@@ -25,7 +27,7 @@ type Props = {
   onOpenGuide: (exhibit: TropicalExhibit) => void;
 };
 type SceneStatus = "loading" | "ready" | "fallback";
-const tx = (language: Language, en: string, zh: string) => inline(language, en, zh);
+const tx = (language: Language, en: string, _zh?: string) => hallTx(language, en);
 
 function TidePulse({
   reduced,
@@ -138,7 +140,7 @@ function DetailSheet({
         <div className="tropical-sheet-head">
           <div>
             <p className="mono-label">
-              PROJECT-SUPPLIED CURATORIAL ASSET / 项目提供策展素材
+              {hallTx(language, "Project-supplied curatorial asset")}
             </p>
             <h2 id="tropical-detail-title">{exhibit.title[language]}</h2>
           </div>
@@ -374,20 +376,21 @@ export default function TropicalImmersiveHall({
           </span>
         </div>
       )}
-      <header className="tropical-header">
+      {view === "world" && <header className="tropical-header">
         <BrandLockup onNavigate={(event) => { event.preventDefault(); onExit(); }} />
         <p>
-          {view === "world"
-            ? "TROPICAL ISLAND / IMMERSIVE HALL"
-            : "TROPICAL ISLAND / EXHIBIT INDEX"}
+          {hallTx(language, view === "world" ? "TROPICAL ISLAND / IMMERSIVE HALL" : "TROPICAL ISLAND / EXHIBIT INDEX")}
         </p>
         <div>
           <LanguageSelector language={language} onChange={onChangeLanguage} />
+          <button className="hall-guide-button" type="button" onClick={() => onOpenGuide(active)}>
+            {tx(language, "Ask Luoyin", "询问螺音")}
+          </button>
           <button type="button" onClick={onExit}>
             {tx(language, "Back to five halls", "返回五个展厅")}
           </button>
         </div>
-      </header>
+      </header>}
       {view === "world" ? (
         <main className="tropical-stage">
           <div
@@ -442,7 +445,7 @@ export default function TropicalImmersiveHall({
             <TidePulse reduced={reduced} pulse={pulse} />
           </div>
           <aside className="tropical-overlay">
-            <p className="mono-label">HAINAN PROVINCE / PROJECT-CURATED VIEW</p>
+            <p className="mono-label">{hallTx(language, "Project-supplied curatorial asset")}</p>
             <h1>{tx(language, "Tropical Island Hall", "热带海岛厅")}</h1>
             <p>
               {tx(
@@ -467,9 +470,6 @@ export default function TropicalImmersiveHall({
             <button type="button" onClick={() => setView("index")}>
               {tx(language, "Open exhibit index", "打开展项索引")}
             </button>
-            <button type="button" onClick={() => onOpenGuide(active)}>
-              {tx(language, "Ask Luoyin", "询问螺音")}
-            </button>
           </div>
           {avatarState !== "ready" && (
             <nav
@@ -489,7 +489,7 @@ export default function TropicalImmersiveHall({
                 >
                   <span>◌</span>
                   <b>{exhibit.title[language]}</b>
-                  <small>PROJECT-SUPPLIED ASSET</small>
+                  <small>{hallTx(language, "Project-supplied asset")}</small>
                 </button>
               ))}
             </nav>
@@ -503,55 +503,17 @@ export default function TropicalImmersiveHall({
           </p>
         </main>
       ) : (
-        <main className="tropical-index-page">
-          <div className="tropical-index-intro">
-            <div>
-              <p className="mono-label">HAINAN PROVINCE / TROPICAL ISLAND</p>
-              <h1>{tx(language, "Exhibit Index", "展项索引")}</h1>
-            </div>
-            <img src={tropicalReferenceImage} alt="" />
-            <div>
-              <p>
-                {tx(
-                  language,
-                  "Choose a project-curated island study. The immersive world remains one step away.",
-                  "选择一个项目策展的海岛观察图像；沉浸式大世界始终只需一步返回。",
-                )}
-              </p>
-              <button
-                className="tropical-world-return"
-                type="button"
-                onClick={() => setView("world")}
-              >
-                {tx(language, "Back to immersive world", "返回沉浸式大世界")} ↗
-              </button>
-            </div>
-          </div>
-          <div className="tropical-index-list">
-            {tropicalExhibits.map((exhibit) => (
-              <article className="tropical-index-entry" key={exhibit.id}>
-                <img
-                  loading="lazy"
-                  src={exhibit.asset}
-                  alt={exhibit.title[language]}
-                  onError={(event) => {
-                    event.currentTarget.src = exhibit.fallback;
-                  }}
-                />
-                <div>
-                  <p className="mono-label">
-                    PROJECT-SUPPLIED CURATORIAL ASSET / 项目提供策展素材
-                  </p>
-                  <h2>{exhibit.title[language]}</h2>
-                  <p>{exhibit.introduction[language]}</p>
-                  <button type="button" onClick={() => select(exhibit)}>
-                    {tx(language, "Open exhibit", "打开展项")} ↗
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        </main>
+        <ImmersiveExhibitIndex
+          language={language}
+          onChangeLanguage={onChangeLanguage}
+          onExit={onExit}
+          onBack={() => setView("world")}
+          eyebrow={{ en: "TROPICAL ISLAND / EXHIBIT INDEX", zh: "热带海岛 / 展项索引", id: "PULAU TROPIS / INDEKS PAMERAN", ja: "熱帯海島 / 展示索引", ko: "열대 섬 / 전시 색인", ru: "ТРОПИЧЕСКИЙ ОСТРОВ / КАТАЛОГ", ar: "الجزيرة الاستوائية / فهرس المعروضات" }}
+          title={{ en: "Tropical Island Archive", zh: "热带海岛档案", id: "Arsip Pulau Tropis", ja: "熱帯海島アーカイブ", ko: "열대 섬 아카이브", ru: "Архив тропического острова", ar: "أرشيف الجزيرة الاستوائية" }}
+          subtitle={{ en: "A slow reading of water, shade, movement and shared shorelines.", zh: "从水岸、遮荫、移动与共享海岸线开始，慢慢阅读一座岛。", id: "Pembacaan pelan tentang air, teduh, gerak, dan garis pantai bersama.", ja: "水辺、木陰、動き、共有される海岸線をゆっくり読むアーカイブです。", ko: "물가와 그늘, 움직임, 함께 나누는 해안선을 천천히 읽는 기록입니다.", ru: "Медленное чтение воды, тени, движения и общих береговых линий.", ar: "قراءة هادئة للماء والظل والحركة وشواطئ نتشاركها." }}
+          background="/assets/index-backgrounds/tropical-island.png"
+          items={tropicalExhibits.map((exhibit, index) => ({ id: exhibit.id, title: exhibit.title, introduction: exhibit.introduction, status: immersiveIndexStatus.project, media: exhibit.asset, fallback: exhibit.fallback, accent: ['blue', 'slate', 'rust', 'olive'][index % 4] as 'blue' | 'slate' | 'rust' | 'olive', onOpen: () => select(exhibit) }))}
+        />
       )}
       {detail && (
         <DetailSheet

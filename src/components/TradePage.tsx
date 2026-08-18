@@ -1,173 +1,141 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { Language } from '../data'
-import { assertLocalizationTree, completeLocalizationTree, inline } from '../i18n'
+import { assertLocalizationTree, completeLocalizationTree, localize, type RuntimeLocalized } from '../i18n'
 import LanguageSelector from './LanguageSelector'
-import { DemoCartLine, DemoProduct, DemoReceipt, DemoService, demoProducts, demoServices, formatDemoPrice, tx } from '../commerce-data'
+import { DemoCartLine, DemoProduct, demoProducts, demoServices, formatDemoPrice, tx } from '../commerce-data'
 import BrandLockup from './BrandLockup'
+import ShareChooser from './ShareChooser'
+import { publicShareUrl } from '../share-utils'
 import './trade-page.css'
 
 completeLocalizationTree(demoProducts)
+assertLocalizationTree(demoProducts, 'B2C demo products')
 completeLocalizationTree(demoServices)
-assertLocalizationTree(demoProducts, 'demo products')
-assertLocalizationTree(demoServices, 'demo services')
+assertLocalizationTree(demoServices, 'B2C project service concepts')
 
 type Props = { language: Language; onChangeLanguage: (language: Language) => void; onExit: () => void; onOpenGuide: () => void }
 type Route = { view: 'home' | 'product' | 'cart' | 'checkout' | 'receipt' | 'order' | 'operator'; itemId?: string }
 
+const copy = {
+  skip: { en: 'Skip to main content', zh: '跳至主要内容', id: 'Lewati ke konten utama', ja: 'メインコンテンツへスキップ', ko: '주요 콘텐츠로 건너뛰기', ru: 'Перейти к основному содержимому', ar: 'تخطَّ إلى المحتوى الرئيسي' },
+  navigation: { en: 'Consumer collection navigation', zh: '消费者集合导航', id: 'Navigasi koleksi konsumen', ja: 'コンシューマーコレクションのナビゲーション', ko: '소비자 컬렉션 탐색', ru: 'Навигация по коллекции для покупателей', ar: 'تنقّل مجموعة المستهلك' },
+  collection: { en: 'Collection', zh: '文化集合', id: 'Koleksi', ja: 'コレクション', ko: '컬렉션', ru: 'Коллекция', ar: 'المجموعة' },
+  ip: { en: 'Luoyin IP', zh: '螺音 IP', id: 'IP Luoyin', ja: '螺音 IP', ko: '뤄인 IP', ru: 'IP Луоинь', ar: 'ملكية لويين' },
+  bag: { en: 'Session bag', zh: '会话购物袋', id: 'Tas sesi', ja: 'セッションバッグ', ko: '세션 가방', ru: 'Сумка сессии', ar: 'حقيبة الجلسة' },
+  ask: { en: 'Ask Luoyin', zh: '询问螺音', id: 'Tanya Luoyin', ja: '螺音に聞く', ko: '뤄인에게 묻기', ru: 'Спросить Луоинь', ar: 'اسأل لويين' },
+  home: { en: 'Return home', zh: '返回主页', id: 'Kembali ke beranda', ja: 'ホームに戻る', ko: '홈으로 돌아가기', ru: 'На главную', ar: 'العودة إلى الرئيسية' },
+  kicker: { en: 'CONSUMER COLLECTION / HAINAN', zh: '消费者文化集合 / 海南', id: 'KOLEKSI KONSUMEN / HAINAN', ja: 'コンシューマーコレクション / 海南', ko: '소비자 컬렉션 / 하이난', ru: 'КОЛЛЕКЦИЯ ДЛЯ ПОКУПАТЕЛЕЙ / ХАЙНАНЬ', ar: 'مجموعة المستهلك / هاينان' },
+  title: { en: 'Carry a Hainan story with you.', zh: '把海南故事带在身边。', id: 'Bawa cerita Hainan bersama Anda.', ja: '海南の物語を持ち帰る。', ko: '하이난의 이야기를 곁에 두세요.', ru: 'Возьмите историю Хайнаня с собой.', ar: 'احمل قصة هاينان معك.' },
+  intro: { en: 'A session-only cultural collection of project concepts inspired by Hainan coastlines, craft memory, village rhythms and the Luoyin story world.', zh: '一个仅限当前会话的文化集合，呈现受海南海岸、工艺记忆、乡村节奏与螺音故事世界启发的项目概念。', id: 'Koleksi budaya khusus sesi berisi konsep proyek yang terinspirasi pesisir Hainan, ingatan kerajinan, ritme desa, dan dunia cerita Luoyin.', ja: '海南の海岸、工芸の記憶、村のリズム、螺音の物語世界に着想を得た、セッション限定の文化コレクションです。', ko: '하이난 해안, 공예의 기억, 마을의 리듬, 뤄인 이야기 세계에서 영감을 받은 세션 전용 문화 컬렉션입니다.', ru: 'Коллекция культурных концепций только для этой сессии: побережье Хайнаня, память ремесла, ритмы деревень и мир Луоинь.', ar: 'مجموعة ثقافية خاصة بالجلسة تضم مفاهيم مستوحاة من سواحل هاينان وذاكرة الحرف وإيقاع القرى وعالم قصة لويين.' },
+  boundary: { en: 'Project concepts only. Prices, availability, payment, shipping and fulfilment are not confirmed here.', zh: '仅为项目概念。价格、可售状态、支付、发货与履约不会在此确认。', id: 'Hanya konsep proyek. Harga, ketersediaan, pembayaran, pengiriman, dan pemenuhan tidak dikonfirmasi di sini.', ja: 'プロジェクト概念のみです。価格、提供状況、決済、発送、履行はここで確認されません。', ko: '프로젝트 콘셉트만 제공합니다. 가격, 이용 가능 여부, 결제, 배송 및 이행은 여기서 확정되지 않습니다.', ru: 'Только проектные концепции. Цена, наличие, оплата, доставка и исполнение здесь не подтверждаются.', ar: 'هذه مفاهيم للمشروع فقط. لا يتم تأكيد السعر أو التوفر أو الدفع أو الشحن أو التنفيذ هنا.' },
+  explore: { en: 'Explore the collection', zh: '浏览文化集合', id: 'Jelajahi koleksi', ja: 'コレクションを見る', ko: '컬렉션 둘러보기', ru: 'Изучить коллекцию', ar: 'استكشف المجموعة' },
+  culture: { en: 'Island culture concepts', zh: '海岛文化概念', id: 'Konsep budaya pulau', ja: '島の文化コンセプト', ko: '섬 문화 콘셉트', ru: 'Концепции островной культуры', ar: 'مفاهيم ثقافة الجزيرة' },
+  ipCollection: { en: 'Luoyin story objects', zh: '螺音故事物件', id: 'Objek cerita Luoyin', ja: '螺音ストーリー・オブジェ', ko: '뤄인 스토리 오브제', ru: 'Объекты истории Луоинь', ar: 'أشياء قصة لويين' },
+  services: { en: 'Project service concepts', zh: '项目服务概念', id: 'Konsep layanan proyek', ja: 'プロジェクトサービスのコンセプト', ko: '프로젝트 서비스 콘셉트', ru: 'Концепции проектных услуг', ar: 'مفاهيم خدمات المشروع' },
+  servicesKicker: { en: 'PATH 04 / BUSINESS SERVICES', zh: '路径 04 / 商业服务', id: 'JALUR 04 / LAYANAN BISNIS', ja: 'PATH 04 / ビジネスサービス', ko: 'PATH 04 / 비즈니스 서비스', ru: 'ПУТЬ 04 / БИЗНЕС-УСЛУГИ', ar: 'المسار 04 / خدمات الأعمال' },
+  servicesTitle: { en: 'Build the next cultural destination.', zh: '构建下一个文化目的地。', id: 'Bangun destinasi budaya berikutnya.', ja: '次の文化的デスティネーションをつくる。', ko: '다음 문화 목적지를 만드세요.', ru: 'Создайте следующее культурное направление.', ar: 'ابنِ الوجهة الثقافية القادمة.' },
+  servicesIntro: { en: 'A final project-services page for museums, tourism venues, merchants and cultural teams. These cards describe a concept brief, not a contract or a live service order.', zh: '商品页最后一页的项目服务概念，面向博物馆、文旅场馆、商家与文化团队。这里描述的是项目简报，不是合同或实时服务订单。', id: 'Halaman terakhir konsep layanan proyek untuk museum, destinasi wisata, pedagang, dan tim budaya. Kartu ini menjelaskan brief konsep, bukan kontrak atau pesanan layanan aktif.', ja: '美術館、観光施設、商店、文化チーム向けのプロジェクトサービスコンセプト最終ページです。契約や実際のサービス注文ではなく、コンセプトブリーフを示します。', ko: '박물관, 관광 공간, 상점, 문화 팀을 위한 프로젝트 서비스 콘셉트 마지막 페이지입니다. 계약이나 실제 서비스 주문이 아니라 콘셉트 브리프를 소개합니다.', ru: 'Финальная страница концепций проектных услуг для музеев, туристических площадок, продавцов и культурных команд. Это описание брифа, а не договор или действующий заказ.', ar: 'الصفحة الأخيرة لمفاهيم خدمات المشروع للمتاحف والوجهات السياحية والتجار والفرق الثقافية. تعرض هذه البطاقات موجزاً مفاهيمياً لا عقداً أو طلب خدمة فعلياً.' },
+  serviceLabel: { en: 'PROJECT SERVICE CONCEPT', zh: '项目服务概念', id: 'KONSEP LAYANAN PROYEK', ja: 'プロジェクトサービス・コンセプト', ko: '프로젝트 서비스 콘셉트', ru: 'КОНЦЕПЦИЯ ПРОЕКТНОЙ УСЛУГИ', ar: 'مفهوم خدمة المشروع' },
+  serviceAsk: { en: 'Ask Luoyin about this direction', zh: '询问螺音这一方向', id: 'Tanya Luoyin tentang arah ini', ja: 'この方向を螺音に聞く', ko: '이 방향을 뤄인에게 묻기', ru: 'Спросить Луоинь об этом направлении', ar: 'اسأل لويين عن هذا المسار' },
+  details: { en: 'View concept', zh: '查看概念', id: 'Lihat konsep', ja: 'コンセプトを見る', ko: '콘셉트 보기', ru: 'Посмотреть концепцию', ar: 'عرض المفهوم' },
+  add: { en: 'Add to session bag', zh: '加入会话购物袋', id: 'Tambahkan ke tas sesi', ja: 'セッションバッグに追加', ko: '세션 가방에 담기', ru: 'Добавить в сумку сессии', ar: 'أضف إلى حقيبة الجلسة' },
+  added: { en: 'Added to your session bag.', zh: '已加入你的会话购物袋。', id: 'Ditambahkan ke tas sesi Anda.', ja: 'セッションバッグに追加しました。', ko: '세션 가방에 담았습니다.', ru: 'Добавлено в вашу сумку сессии.', ar: 'تمت الإضافة إلى حقيبة جلستك.' },
+  share: { en: 'Share concept', zh: '分享概念', id: 'Bagikan konsep', ja: 'コンセプトを共有', ko: '콘셉트 공유', ru: 'Поделиться концепцией', ar: 'مشاركة المفهوم' },
+  shareCopied: { en: 'Concept link copied.', zh: '概念链接已复制。', id: 'Tautan konsep disalin.', ja: 'コンセプトのリンクをコピーしました。', ko: '콘셉트 링크를 복사했습니다.', ru: 'Ссылка на концепцию скопирована.', ar: 'نُسخ رابط المفهوم.' },
+  shareUnavailable: { en: 'Sharing is unavailable in this browser.', zh: '当前浏览器暂无法分享。', id: 'Berbagi tidak tersedia di peramban ini.', ja: 'このブラウザーでは共有できません。', ko: '이 브라우저에서는 공유할 수 없습니다.', ru: 'В этом браузере общий доступ недоступен.', ar: 'المشاركة غير متاحة في هذا المتصفح.' },
+  projectLabel: { en: 'PROJECT CONCEPT', zh: '项目概念', id: 'KONSEP PROYEK', ja: 'プロジェクト・コンセプト', ko: '프로젝트 콘셉트', ru: 'ПРОЕКТНАЯ КОНЦЕПЦИЯ', ar: 'مفهوم المشروع' },
+  visualNote: { en: 'Project visual only. It is not a merchant listing or proof of availability.', zh: '仅为项目视觉素材，不是商家上架信息或可售凭证。', id: 'Hanya visual proyek. Bukan daftar pedagang atau bukti ketersediaan.', ja: 'プロジェクトのビジュアルのみで、販売者の掲載や提供状況の証明ではありません。', ko: '프로젝트 비주얼일 뿐 판매자 등록 또는 이용 가능성의 증거가 아닙니다.', ru: 'Только проектный визуал, а не карточка продавца или подтверждение наличия.', ar: 'هذه صورة للمشروع فقط وليست قائمة تاجر أو دليلاً على التوفر.' },
+  indicative: { en: 'Indicative concept value', zh: '概念参考值', id: 'Nilai konsep indikatif', ja: 'コンセプト参考値', ko: '콘셉트 참고값', ru: 'Ориентировочная ценность концепции', ar: 'قيمة المفهوم الإرشادية' },
+  bagTitle: { en: 'Your session bag', zh: '你的会话购物袋', id: 'Tas sesi Anda', ja: 'あなたのセッションバッグ', ko: '나의 세션 가방', ru: 'Ваша сумка сессии', ar: 'حقيبة جلستك' },
+  bagEmpty: { en: 'Your session bag is empty.', zh: '你的会话购物袋是空的。', id: 'Tas sesi Anda kosong.', ja: 'セッションバッグは空です。', ko: '세션 가방이 비어 있습니다.', ru: 'Сумка сессии пуста.', ar: 'حقيبة الجلسة فارغة.' },
+  bagEmptyHint: { en: 'Choose a cultural concept to begin a purchase-interest request.', zh: '选择一个文化概念，开始提交购买意向。', id: 'Pilih konsep budaya untuk memulai permintaan minat pembelian.', ja: '文化コンセプトを選んで購入関心のリクエストを始めます。', ko: '문화 콘셉트를 선택해 구매 관심 요청을 시작하세요.', ru: 'Выберите культурную концепцию, чтобы начать запрос о покупке.', ar: 'اختر مفهوماً ثقافياً لبدء طلب اهتمام بالشراء.' },
+  remove: { en: 'Remove', zh: '移除', id: 'Hapus', ja: '削除', ko: '삭제', ru: 'Удалить', ar: 'إزالة' },
+  decrease: { en: 'Remove one', zh: '减少一件', id: 'Kurangi satu', ja: '1点減らす', ko: '1개 줄이기', ru: 'Убрать одну', ar: 'إزالة وحدة' },
+  increase: { en: 'Add one', zh: '增加一件', id: 'Tambah satu', ja: '1点追加', ko: '1개 추가', ru: 'Добавить одну', ar: 'إضافة وحدة' },
+  bagTotal: { en: 'Indicative collection value', zh: '集合概念参考值', id: 'Nilai indikatif koleksi', ja: 'コレクション参考値', ko: '컬렉션 참고값', ru: 'Ориентировочная ценность коллекции', ar: 'قيمة المجموعة الإرشادية' },
+  interest: { en: 'Request purchase interest', zh: '提交购买意向', id: 'Kirim minat pembelian', ja: '購入関心を送る', ko: '구매 관심 제출', ru: 'Отправить интерес к покупке', ar: 'إرسال اهتمام بالشراء' },
+  interestTitle: { en: 'Tell us what you would like to take home.', zh: '告诉我们你想把什么带回家。', id: 'Ceritakan apa yang ingin Anda bawa pulang.', ja: '持ち帰りたいものを教えてください。', ko: '어떤 것을 집으로 가져가고 싶은지 알려주세요.', ru: 'Расскажите, что вы хотели бы забрать с собой.', ar: 'أخبرنا بما ترغب في أخذه معك.' },
+  interestHint: { en: 'This session records interest only. It does not create a payment, order, stock hold or shipping request.', zh: '本次会话只记录购买意向，不会创建支付、订单、库存锁定或发货请求。', id: 'Sesi ini hanya mencatat minat. Tidak membuat pembayaran, pesanan, penahanan stok, atau permintaan pengiriman.', ja: 'このセッションは関心のみを記録し、決済、注文、在庫確保、発送依頼は作成しません。', ko: '이번 세션은 관심만 기록하며 결제, 주문, 재고 보류 또는 배송 요청을 만들지 않습니다.', ru: 'Сессия только фиксирует интерес. Платёж, заказ, резерв товара или заявку на доставку она не создаёт.', ar: 'تسجل الجلسة الاهتمام فقط ولا تنشئ دفعاً أو طلباً أو حجز مخزون أو طلب شحن.' },
+  email: { en: 'Email for follow-up', zh: '用于跟进的邮箱', id: 'Email untuk tindak lanjut', ja: 'フォローアップ用メール', ko: '후속 연락 이메일', ru: 'Email для связи', ar: 'البريد الإلكتروني للمتابعة' },
+  message: { en: 'Message (optional)', zh: '留言（可选）', id: 'Pesan (opsional)', ja: 'メッセージ（任意）', ko: '메시지 (선택)', ru: 'Сообщение (необязательно)', ar: 'رسالة (اختياري)' },
+  messagePlaceholder: { en: 'Which story or material interests you?', zh: '你对哪段故事或材质感兴趣？', id: 'Cerita atau material mana yang menarik bagi Anda?', ja: 'どの物語や素材に興味がありますか？', ko: '어떤 이야기나 소재가 궁금한가요?', ru: 'Какая история или материал вас заинтересовали?', ar: 'ما القصة أو الخامة التي تهمك؟' },
+  consent: { en: 'I agree that this session-only interest may be used for the requested follow-up. It is not an order or contract.', zh: '我同意本次会话购买意向用于所请求的跟进；它不是订单或合同。', id: 'Saya setuju minat khusus sesi ini digunakan untuk tindak lanjut yang diminta. Ini bukan pesanan atau kontrak.', ja: 'このセッション限定の関心を依頼した対応に使うことに同意します。注文や契約ではありません。', ko: '이 세션 전용 관심 정보를 요청한 후속 대응에 사용하는 데 동의합니다. 주문이나 계약이 아닙니다.', ru: 'Я согласен использовать интерес этой сессии для запрошенной связи. Это не заказ и не договор.', ar: 'أوافق على استخدام اهتمام هذه الجلسة للمتابعة المطلوبة. إنه ليس طلباً أو عقداً.' },
+  send: { en: 'Record session interest', zh: '记录会话意向', id: 'Catat minat sesi', ja: 'セッション関心を記録', ko: '세션 관심 기록', ru: 'Записать интерес сессии', ar: 'تسجيل اهتمام الجلسة' },
+  sending: { en: 'Recording…', zh: '记录中……', id: 'Mencatat…', ja: '記録中…', ko: '기록 중…', ru: 'Запись…', ar: 'جارٍ التسجيل…' },
+  unavailable: { en: 'The interest was not submitted. Your bag is still here; please try again.', zh: '购买意向未提交。购物袋内容仍在，请重试。', id: 'Minat belum dikirim. Isi tas tetap ada; coba lagi.', ja: '関心を送信できませんでした。バッグの内容は残っています。再試行してください。', ko: '관심이 제출되지 않았습니다. 가방 내용은 남아 있으니 다시 시도하세요.', ru: 'Интерес не отправлен. Содержимое сумки сохранено; повторите попытку.', ar: 'لم يتم إرسال الاهتمام. لا تزال محتويات الحقيبة موجودة؛ حاول مرة أخرى.' },
+  success: { en: 'Session interest recorded', zh: '会话购买意向已记录', id: 'Minat sesi dicatat', ja: 'セッションの関心を記録しました', ko: '세션 관심이 기록되었습니다', ru: 'Интерес сессии записан', ar: 'تم تسجيل اهتمام الجلسة' },
+  reference: { en: 'Session reference', zh: '会话参考号', id: 'Referensi sesi', ja: 'セッション番号', ko: '세션 참조 번호', ru: 'Номер сессии', ar: 'مرجع الجلسة' },
+  successHint: { en: 'Availability, price and fulfilment must be confirmed through a human or official sales channel. Nothing was charged, no order was created, and no follow-up or response time is promised.', zh: '可售状态、价格与履约须通过人工或官方销售渠道确认。本次未收费，也未创建订单，不承诺一定跟进或具体响应时间。', id: 'Ketersediaan, harga, dan pemenuhan harus dikonfirmasi melalui manusia atau kanal resmi. Tidak ada biaya, pesanan, janji tindak lanjut, atau waktu respons.', ja: '提供状況、価格、履行は担当者または公式販売チャネルで確認してください。課金や注文はなく、対応や返答時間も約束されません。', ko: '이용 가능 여부, 가격 및 이행은 담당자 또는 공식 판매 채널에서 확인해야 합니다. 요금이나 주문은 없으며 후속 연락과 응답 시간도 보장되지 않습니다.', ru: 'Наличие, цена и исполнение подтверждаются сотрудником или официальным каналом. Деньги не списаны, заказ не создан, а связь и срок ответа не гарантируются.', ar: 'يجب تأكيد التوفر والسعر والتنفيذ عبر موظف أو قناة رسمية. لم يتم تحصيل أي مبلغ ولم يُنشأ طلب، ولا تُضمن المتابعة أو مدة الرد.' },
+  continue: { en: 'Continue exploring', zh: '猜你喜欢', id: 'Lanjut menjelajah', ja: '探索を続ける', ko: '계속 둘러보기', ru: 'Продолжить изучение', ar: 'متابعة الاستكشاف' },
+  previous: { en: 'Back to collection', zh: '返回文化集合', id: 'Kembali ke koleksi', ja: 'コレクションに戻る', ko: '컬렉션으로 돌아가기', ru: 'Вернуться к коллекции', ar: 'العودة إلى المجموعة' },
+  operator: { en: 'Operator access is separate from this consumer session.', zh: '运营权限与本次消费者会话相互独立。', id: 'Akses operator terpisah dari sesi konsumen ini.', ja: '運営者アクセスはこの消費者セッションとは別です。', ko: '운영자 접근은 이 소비자 세션과 분리되어 있습니다.', ru: 'Доступ оператора отделён от этой сессии покупателя.', ar: 'وصول المشغّل منفصل عن جلسة المستهلك هذه.' },
+} satisfies Record<string, RuntimeLocalized>
+
+const dynamicCopy = {
+  bagCount: { en: 'Open session bag with {count} items', zh: '打开含{count}件物品的会话购物袋', id: 'Buka tas sesi dengan {count} item', ja: '{count}点のセッションバッグを開く', ko: '{count}개가 담긴 세션 가방 열기', ru: 'Открыть сумку сессии: {count} предметов', ar: 'فتح حقيبة الجلسة التي تضم {count} عناصر' },
+  added: copy.added,
+  decrease: { en: 'Remove one {item}', zh: '减少一件{item}', id: 'Kurangi satu {item}', ja: '{item}を1点減らす', ko: '{item} 1개 줄이기', ru: 'Убрать одну единицу «{item}»', ar: 'إزالة وحدة من {item}' },
+  increase: { en: 'Add one {item}', zh: '增加一件{item}', id: 'Tambah satu {item}', ja: '{item}を1点追加', ko: '{item} 1개 추가', ru: 'Добавить одну единицу «{item}»', ar: 'إضافة единицу {item}' },
+} satisfies Record<string, RuntimeLocalized>
+
+assertLocalizationTree(copy, 'B2C market copy')
+assertLocalizationTree(dynamicCopy, 'B2C market dynamic copy')
+
+const apiPath = (path: string) => `${(import.meta.env.VITE_LUOYIN_API_BASE_URL || '').trim().replace(/\/+$/, '')}${path}`
 const routeFromHash = (hash: string): Route => {
   const path = hash.replace(/^#/, '').split('?')[0]
-  if (path === 'market/operator' || path === 'market-operator') return { view: 'operator' }
-  if (path === 'market/order') return { view: 'order' }
   if (path === 'market/cart') return { view: 'cart' }
   if (path === 'market/checkout') return { view: 'checkout' }
   if (path === 'market/receipt') return { view: 'receipt' }
+  if (path === 'market/order') return { view: 'order' }
+  if (path === 'market/operator' || path === 'market-operator') return { view: 'operator' }
   const product = path.match(/^market\/product\/([^/]+)$/)
   return product ? { view: 'product', itemId: decodeURIComponent(product[1]) } : { view: 'home' }
 }
-
 const marketPath = (path = '') => { window.location.hash = `market${path}` }
-const receiptReference = (kind: 'ORDER' | 'PROJECT') => `${kind}-DEMO-${Date.now().toString(36).toUpperCase().slice(-6)}`
+const renderDynamic = (language: Language, value: RuntimeLocalized, item?: string | number) => localize(value, language).replaceAll('{count}', String(item ?? 0)).replaceAll('{item}', String(item ?? ''))
 
 export default function TradePage({ language, onChangeLanguage, onExit, onOpenGuide }: Props) {
   const [route, setRoute] = useState<Route>(() => routeFromHash(window.location.hash))
   const [cart, setCart] = useState<DemoCartLine[]>([])
-  const [receipt, setReceipt] = useState<DemoReceipt | null>(null)
-  const [service, setService] = useState<DemoService | null>(null)
   const [recommendations, setRecommendations] = useState(() => demoProducts.filter((entry) => entry.collection === 'culture').slice(0, 4).map((entry) => entry.id))
   const [toast, setToast] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('card')
+  const [shareChooserOpen, setShareChooserOpen] = useState(false)
+  const [shareTitle, setShareTitle] = useState('')
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  const [consent, setConsent] = useState(false)
+  const [interestState, setInterestState] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
+  const [interestReference, setInterestReference] = useState('')
   const [headerTone, setHeaderTone] = useState<'split' | 'light' | 'dark'>('split')
-  const t = (en: string, zh: string) => inline(language, en, zh)
-
-  useEffect(() => {
-    const sync = () => { setRoute(routeFromHash(window.location.hash)); window.scrollTo({ top: 0, behavior: 'auto' }) }
-    window.addEventListener('hashchange', sync)
-    return () => window.removeEventListener('hashchange', sync)
-  }, [])
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const heading = document.querySelector<HTMLElement>('#market-main h1')
-      if (!heading) return
-      heading.tabIndex = -1
-      heading.focus({ preventScroll: true })
-    })
-    return () => window.cancelAnimationFrame(frame)
-  }, [route.view, route.itemId])
-
-  useEffect(() => {
-    if (!toast) return
-    const timer = window.setTimeout(() => setToast(''), 3600)
-    return () => window.clearTimeout(timer)
-  }, [toast])
-
-  useEffect(() => {
-    if (route.view !== 'home') {
-      setHeaderTone('dark')
-      return
-    }
-
-    const updateHeaderTone = () => {
-      const sampleY = 38
-      const activeSection = Array.from(document.querySelectorAll<HTMLElement>('#market-main > section'))
-        .find((section) => {
-          const rect = section.getBoundingClientRect()
-          return rect.top <= sampleY && rect.bottom > sampleY
-        })
-
-      if (!activeSection || activeSection.classList.contains('market-hero')) {
-        setHeaderTone('split')
-      } else if (activeSection.classList.contains('demo-services') || activeSection.classList.contains('demo-ip')) {
-        setHeaderTone('light')
-      } else {
-        setHeaderTone('dark')
-      }
-    }
-
-    updateHeaderTone()
-    window.addEventListener('scroll', updateHeaderTone, { passive: true })
-    window.addEventListener('resize', updateHeaderTone)
-    return () => {
-      window.removeEventListener('scroll', updateHeaderTone)
-      window.removeEventListener('resize', updateHeaderTone)
-    }
-  }, [route.view])
-
+  const t = (key: keyof typeof copy) => localize(copy[key], language)
   const product = useMemo(() => demoProducts.find((entry) => entry.id === route.itemId), [route.itemId])
-  const cartItems = useMemo(() => cart.flatMap((line) => {
-    const entry = demoProducts.find((candidate) => candidate.id === line.productId)
-    return entry ? [{ ...line, product: entry }] : []
-  }), [cart])
+  const cartItems = useMemo(() => cart.flatMap((line) => { const entry = demoProducts.find((candidate) => candidate.id === line.productId); return entry ? [{ ...line, product: entry }] : [] }), [cart])
   const cartCount = cart.reduce((sum, line) => sum + line.quantity, 0)
   const cartTotal = cartItems.reduce((sum, line) => sum + line.quantity * line.product.price, 0)
-  const recommendationItems = recommendations.map((id) => demoProducts.find((entry) => entry.id === id)).filter((entry): entry is DemoProduct => Boolean(entry))
+  const recommendationItems = recommendations.map((id) => demoProducts.find((entry) => entry.id === id)).filter((entry): entry is DemoProduct => Boolean(entry && entry.id !== 'luoyin-animation-license'))
 
-  const openHomeSection = (id: string) => {
-    if (route.view !== 'home') marketPath()
-    window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), 0)
-  }
-  const addToCart = (entry: DemoProduct) => {
-    if (!entry.stock) { setToast(t('This demo item is currently unavailable.', '该演示商品当前不可用。')); return }
-    setCart((lines) => {
-      const existing = lines.find((line) => line.productId === entry.id)
-      if (!existing) return [...lines, { productId: entry.id, quantity: 1 }]
-      if (existing.quantity >= entry.stock) return lines
-      return lines.map((line) => line.productId === entry.id ? { ...line, quantity: line.quantity + 1 } : line)
-    })
-    setToast(t(`${tx(language, entry.title)} added to the demo cart.`, `已将${tx(language, entry.title)}加入演示购物车。`))
-  }
-  const updateQuantity = (id: string, quantity: number) => {
-    const entry = demoProducts.find((candidate) => candidate.id === id)
-    if (!entry || quantity <= 0) { setCart((lines) => lines.filter((line) => line.productId !== id)); return }
-    setCart((lines) => lines.map((line) => line.productId === id ? { ...line, quantity: Math.min(quantity, entry.stock) } : line))
-  }
-  const refreshRecommendations = () => {
-    const cartIds = new Set(cart.map((line) => line.productId))
-    const pool = demoProducts.filter((entry) => !cartIds.has(entry.id))
-    const choices = (pool.length ? pool : demoProducts).slice().sort(() => Math.random() - .5).slice(0, 4).map((entry) => entry.id)
-    setRecommendations(choices)
-    setToast(t('Your demo recommendations were refreshed.', '演示猜你喜欢已刷新。'))
-  }
-  const share = async (title: string) => {
-    const url = window.location.href
-    try {
-      if (navigator.share) await navigator.share({ title, text: t('Explore this QIONGVERSE demo-market item.', '查看这个琼境演示商城商品。'), url })
-      else if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(url); setToast(t('Demo link copied.', '演示链接已复制。')) }
-      else setToast(t('Sharing is unavailable in this browser.', '当前浏览器无法使用分享功能。'))
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return
-      setToast(t('The link was not shared. Try again in a supported browser.', '链接未能分享，请在支持的浏览器中重试。'))
-    }
-  }
-  const completeCheckout = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!cartItems.length) { marketPath('/cart'); return }
-    setReceipt({ reference: receiptReference('ORDER'), kind: 'order', createdAt: new Date().toISOString(), productIds: cart.map((line) => line.productId) })
-    setCart([])
-    marketPath('/receipt')
-  }
-  const createServiceReceipt = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!service) return
-    const data = new FormData(event.currentTarget)
-    setReceipt({ reference: receiptReference('PROJECT'), kind: 'service', createdAt: new Date().toISOString(), serviceId: service.id, projectDirection: String(data.get('direction') || '').trim() })
-    marketPath('/receipt')
-  }
+  useEffect(() => { const sync = () => { setRoute(routeFromHash(window.location.hash)); window.scrollTo({ top: 0, behavior: 'auto' }) }; window.addEventListener('hashchange', sync); return () => window.removeEventListener('hashchange', sync) }, [])
+  useEffect(() => { const frame = window.requestAnimationFrame(() => { const heading = document.querySelector<HTMLElement>('#market-main h1'); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }) } }); return () => window.cancelAnimationFrame(frame) }, [route.view, route.itemId])
+  useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 3400); return () => window.clearTimeout(timer) }, [toast])
+  useEffect(() => { const updateTone = () => setHeaderTone(route.view === 'home' && window.scrollY < 500 ? 'split' : 'dark'); updateTone(); window.addEventListener('scroll', updateTone, { passive: true }); return () => window.removeEventListener('scroll', updateTone) }, [route.view])
 
-  const header = <header className={`market-header market-header--${headerTone}`}><BrandLockup href="#top" /><nav aria-label={t('Demo market navigation', '演示商城导航')}><button type="button" onClick={() => openHomeSection('market-services')}>{t('Services', '服务')}</button><button type="button" onClick={() => openHomeSection('market-culture')}>{t('Culture shop', '文化商店')}</button><button type="button" onClick={() => openHomeSection('market-ip')}>{t('Luoyin IP', '螺音 IP')}</button></nav><div className="market-header-actions"><button type="button" onClick={() => marketPath('/cart')} aria-label={t(`Open demo cart with ${cartCount} items`, `打开含${cartCount}件商品的演示购物车`)}>{t('Cart', '购物车')} <b>{cartCount}</b></button><LanguageSelector language={language} onChange={onChangeLanguage} /><button type="button" onClick={onOpenGuide}>{t('Ask Luoyin', '询问螺音')}</button><a className="market-return" href="#top" onClick={onExit} aria-label={t('Return to the QIONGVERSE home page', '返回琼境主页')}>{t('Return home', '返回主页')} <span aria-hidden="true">&#8599;</span></a></div></header>
-  const demoNotice = <p className="market-demo-notice" role="note">{t('DEMO TRANSACTION: no money is collected, and no personal, payment or order data is stored.', '演示交易：不会收取资金，也不会存储个人、支付或订单数据。')}</p>
-  const productCard = (entry: DemoProduct) => <article className="demo-product-card" key={entry.id}><div className="demo-product-image"><img src={entry.image} alt={tx(language, entry.imageAlt)} /><span>{t('PROJECT DEMO', '项目演示')}</span></div><div className="demo-product-copy"><p className="market-kicker">{tx(language, entry.category)}</p><h3>{tx(language, entry.title)}</h3><p>{tx(language, entry.summary)}</p><div className="demo-product-meta"><strong>{formatDemoPrice(language, entry.price)}</strong><span>{t(`${entry.stock} demo units`, `${entry.stock}件演示库存`)}</span></div><div className="demo-product-actions"><button className="market-card-action" type="button" onClick={() => marketPath(`/product/${encodeURIComponent(entry.id)}`)}>{t('View', '查看')}</button><button className="market-icon-action" type="button" onClick={() => addToCart(entry)} aria-label={t(`Add ${tx(language, entry.title)} to demo cart`, `将${tx(language, entry.title)}加入演示购物车`)}>+</button><button className="market-icon-action" type="button" onClick={() => void share(tx(language, entry.title))} aria-label={t(`Share ${tx(language, entry.title)}`, `分享${tx(language, entry.title)}`)}>...</button></div></div></article>
+  const openSection = (id: string) => { if (route.view !== 'home') marketPath(); window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0) }
+  const addToBag = (entry: DemoProduct) => { setCart((lines) => { const existing = lines.find((line) => line.productId === entry.id); if (!existing) return [...lines, { productId: entry.id, quantity: 1 }]; if (existing.quantity >= 5) return lines; return lines.map((line) => line.productId === entry.id ? { ...line, quantity: line.quantity + 1 } : line) }); setToast(renderDynamic(language, dynamicCopy.added, tx(language, entry.title))) }
+  const updateQuantity = (id: string, quantity: number) => { if (quantity <= 0) setCart((lines) => lines.filter((line) => line.productId !== id)); else setCart((lines) => lines.map((line) => line.productId === id ? { ...line, quantity: Math.min(quantity, 5) } : line)) }
+  const share = (title: string) => { setShareTitle(title); setShareChooserOpen(true) }
+  const refreshRecommendations = () => { const pool = demoProducts.filter((entry) => entry.id !== 'luoyin-animation-license' && !cart.some((line) => line.productId === entry.id)); setRecommendations((pool.length ? pool : demoProducts.filter((entry) => entry.id !== 'luoyin-animation-license')).slice().sort(() => Math.random() - .5).slice(0, 4).map((entry) => entry.id)) }
+  const submitInterest = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setInterestState('sending'); try { const response = await fetch(apiPath('/api/market/interest'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ items: cart.map((line) => ({ productId: line.productId, quantity: line.quantity })), email: email.trim(), message: message.trim(), consent, language }) }); const payload = await response.json().catch(() => ({})); if (!response.ok || payload.accepted !== true) throw new Error(payload.error || 'interest_unavailable'); setInterestReference(payload.reference || ''); setInterestState('success'); setCart([]); marketPath('/receipt') } catch { setInterestState('error') } }
 
-  if (route.view === 'operator') return <div className="market-page"><a className="market-skip" href="#market-main">{t('Skip to main content', '跳至主要内容')}</a>{header}<main id="market-main" className="market-simple"><p className="market-kicker">OPERATOR / REAL COMMERCE RESERVED</p><h1>{t('Operator access remains separate from this demo.', '运营权限与本演示商城保持独立。')}</h1><p>{t('This local demo never provides operator privileges or changes the real commerce system.', '本地演示不会提供运营权限，也不会更改真实商业系统。')}</p>{demoNotice}</main></div>
-  if (route.view === 'order') return <div className="market-page"><a className="market-skip" href="#market-main">{t('Skip to main content', '跳至主要内容')}</a>{header}<main id="market-main" className="market-simple"><p className="market-kicker">ORDER ACCESS / DEMO BOUNDARY</p><h1>{t('Demo orders exist only in this open session.', '演示订单仅在当前打开的会话中存在。')}</h1><p>{t('There is no email, order code, saved order record or real fulfilment in this demo mode.', '演示模式不发送邮件、不生成订单验证码、不保存订单记录，也不产生真实履约。')}</p>{demoNotice}<button className="market-action" type="button" onClick={() => marketPath()}>{t('Return to market', '返回商城')}</button></main></div>
-  if (route.view === 'product' && product) return <div className="market-page"><a className="market-skip" href="#market-main">{t('Skip to main content', '跳至主要内容')}</a>{header}<main id="market-main" className="market-detail"><button className="market-back" type="button" onClick={() => marketPath()}>{t('Back to market', '返回商城')}</button><section className="demo-detail"><div><p className="market-kicker">{tx(language, product.category)} / PROJECT DEMO</p><h1>{tx(language, product.title)}</h1><p>{tx(language, product.summary)}</p><p className="demo-detail-price">{formatDemoPrice(language, product.price)} <span>{t(`${product.stock} demo units available`, `${product.stock}件演示库存可用`)}</span></p>{demoNotice}<div className="demo-detail-actions"><button className="market-action" type="button" onClick={() => addToCart(product)}>{t('Add to demo cart', '加入演示购物车')}</button><button className="market-text-button" type="button" onClick={() => void share(tx(language, product.title))}>{t('Share item', '分享商品')}</button></div></div><figure><img src={product.image} alt={tx(language, product.imageAlt)} /><figcaption>{t('Project demo visual. It is not a merchant product photo or proof of availability.', '项目演示图。它不是商家商品照片，也不是可售凭证。')}</figcaption></figure></section>{product.story && <section className="demo-story"><figure><img src={product.story.src} alt={tx(language, product.story.alt)} /></figure><div><p className="market-kicker">STORY CONTEXT</p><h2>{t('A project study behind the product story.', '商品故事背后的项目研究。')}</h2><p>{t('This 3D study provides cultural and spatial context only. It does not describe a manufactured or shippable item.', '此 3D 研究仅提供文化与空间语境，不描述真实生产或可发货商品。')}</p></div></section>}</main></div>
-  if (route.view === 'cart') return <div className="market-page"><a className="market-skip" href="#market-main">{t('Skip to main content', '跳至主要内容')}</a>{header}<main id="market-main" className="market-cart"><p className="market-kicker">CART / SESSION ONLY</p><h1>{t('Your demo cart', '你的演示购物车')}</h1>{demoNotice}{cartItems.length ? <><div className="demo-cart-lines">{cartItems.map((line) => <article key={line.productId}><img src={line.product.image} alt={tx(language, line.product.imageAlt)} /><div><h2>{tx(language, line.product.title)}</h2><p>{formatDemoPrice(language, line.product.price)}</p><div className="demo-quantity"><button type="button" onClick={() => updateQuantity(line.productId, line.quantity - 1)} aria-label={t(`Remove one ${tx(language, line.product.title)}`, `减少一件${tx(language, line.product.title)}`)}>-</button><span aria-label={t('Quantity', '数量')}>{line.quantity}</span><button type="button" onClick={() => updateQuantity(line.productId, line.quantity + 1)} disabled={line.quantity >= line.product.stock} aria-label={t(`Add one ${tx(language, line.product.title)}`, `增加一件${tx(language, line.product.title)}`)}>+</button><button className="market-text-button" type="button" onClick={() => updateQuantity(line.productId, 0)}>{t('Remove', '移除')}</button></div></div><strong>{formatDemoPrice(language, line.product.price * line.quantity)}</strong></article>)}</div><div className="demo-cart-summary"><p>{t('Demo subtotal', '演示小计')} <strong>{formatDemoPrice(language, cartTotal)}</strong></p><button className="market-action" type="button" onClick={() => marketPath('/checkout')}>{t('Continue to demo payment', '继续演示付款')}</button></div></> : <section className="market-empty"><h2>{t('Your demo cart is empty.', '你的演示购物车为空。')}</h2><p>{t('Explore a cultural concept or Luoyin IP item to test the transaction flow.', '浏览文化概念商品或螺音 IP 周边，体验完整交易流程。')}</p><button className="market-action" type="button" onClick={() => marketPath()}>{t('Explore the market', '浏览商城')}</button></section>}</main></div>
-  if (route.view === 'checkout') return <div className="market-page"><a className="market-skip" href="#market-main">{t('Skip to main content', '跳至主要内容')}</a>{header}<main id="market-main" className="market-checkout"><p className="market-kicker">CHECKOUT / DEMO ONLY</p><h1>{t('Simulate payment', '模拟付款')}</h1>{demoNotice}{cartItems.length ? <form onSubmit={completeCheckout}><section className="demo-checkout-summary"><h2>{t('Order summary', '订单摘要')}</h2>{cartItems.map((line) => <p key={line.productId}><span>{tx(language, line.product.title)} x {line.quantity}</span><strong>{formatDemoPrice(language, line.product.price * line.quantity)}</strong></p>)}<p className="demo-checkout-total"><span>{t('Demo total', '演示总计')}</span><strong>{formatDemoPrice(language, cartTotal)}</strong></p></section><fieldset><legend>{t('Demo delivery details', '演示配送信息')}</legend><label>{t('Name', '姓名')}<input name="name" autoComplete="name" required /></label><label>{t('Email', '邮箱')}<input name="email" type="email" autoComplete="email" required /></label><label>{t('Destination', '目的地')}<input name="destination" autoComplete="country-name" required /></label><p>{t('These fields validate the interface only and are discarded when the page changes.', '这些字段仅用于验证界面，并会在页面变更时丢弃。')}</p></fieldset><fieldset><legend>{t('Demo payment method', '演示支付方式')}</legend><label className="demo-radio"><input type="radio" name="payment" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} /> {t('Card payment simulation', '银行卡支付模拟')}</label><label className="demo-radio"><input type="radio" name="payment" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} /> {t('Wallet payment simulation', '钱包支付模拟')}</label></fieldset><button className="market-action" type="submit">{t('Complete demo payment', '完成演示付款')}</button><button className="market-text-button" type="button" onClick={() => marketPath('/cart')}>{t('Return to cart', '返回购物车')}</button></form> : <section className="market-empty"><h2>{t('There is nothing to simulate yet.', '还没有可模拟付款的商品。')}</h2><button className="market-action" type="button" onClick={() => marketPath()}>{t('Return to market', '返回商城')}</button></section>}</main></div>
-  if (route.view === 'receipt') {
-    const receiptService = receipt?.serviceId ? demoServices.find((entry) => entry.id === receipt.serviceId) : undefined
-    const receiptProducts = receipt?.productIds ? receipt.productIds.map((id) => demoProducts.find((entry) => entry.id === id)).filter((entry): entry is DemoProduct => Boolean(entry)) : []
-    return <div className="market-page"><a className="market-skip" href="#market-main">{t('Skip to main content', '跳至主要内容')}</a>{header}<main id="market-main" className="market-receipt">{receipt ? <><p className="market-kicker">{receipt.kind === 'order' ? 'DEMO ORDER RECEIPT' : 'DEMO PROJECT RECEIPT'}</p><h1>{receipt.kind === 'order' ? t('Demo payment complete.', '演示付款已完成。') : t('Project demo created.', '项目演示已创建。')}</h1><p className="demo-reference">{t('Reference', '参考编号')}: <code>{receipt.reference}</code></p>{demoNotice}{receipt.kind === 'order' ? <section><h2>{t('Demo order items', '演示订单商品')}</h2>{receiptProducts.map((entry) => <p key={entry.id}>{tx(language, entry.title)}</p>)}<p>{t('No payment settled, order saved, email sent or shipment created.', '未结算资金、未保存订单、未发送邮件，也未创建发货任务。')}</p></section> : <section><h2>{tx(language, receiptService?.title || { en: 'Selected service', zh: '已选服务' })}</h2><p>{receipt.projectDirection || t('No project direction was provided.', '未提供项目方向。')}</p><p>{t('This is not a quote, agreement, appointment or promise of human follow-up.', '这不是报价、协议、预约或真人跟进承诺。')}</p></section>}<div className="demo-detail-actions"><button className="market-action" type="button" onClick={() => marketPath()}>{t('Continue exploring', '继续浏览')}</button><button className="market-text-button" type="button" onClick={() => void share(receipt.reference)}>{t('Share demo receipt', '分享演示回执')}</button></div></> : <section className="market-empty"><p className="market-kicker">RECEIPT EXPIRED</p><h1>{t('This demo receipt is no longer available.', '此演示回执已失效。')}</h1><p>{t('Demo receipts exist only while this page remains open and are never stored.', '演示回执仅在当前页面打开期间存在，绝不会被存储。')}</p><button className="market-action" type="button" onClick={() => marketPath()}>{t('Return to market', '返回商城')}</button></section>}</main></div>
-  }
+  const header = <header className={`market-header market-header--${headerTone}`}><ShareChooser language={language} open={shareChooserOpen} title={shareTitle || t('title')} text={t('intro')} url={publicShareUrl(window.location.href)} onClose={() => setShareChooserOpen(false)} /><BrandLockup href="#top" /><nav aria-label={t('navigation')}><button type="button" onClick={() => openSection('market-culture')}>{t('collection')}</button><button type="button" onClick={() => openSection('market-ip')}>{t('ip')}</button><button type="button" onClick={() => openSection('market-services')}>{t('services')}</button></nav><div className="market-header-actions"><button type="button" onClick={() => marketPath('/cart')} aria-label={renderDynamic(language, dynamicCopy.bagCount, cartCount)}>{t('bag')} <b>{cartCount}</b></button><LanguageSelector language={language} onChange={onChangeLanguage} /><button type="button" onClick={onOpenGuide}>{t('ask')}</button><button type="button" className="market-return" onClick={onExit}>{t('home')} <span aria-hidden="true">↗</span></button></div></header>
+  const notice = <p className="market-demo-notice" role="note">{t('boundary')}</p>
+  const productCard = (entry: DemoProduct) => <article className="demo-product-card" key={entry.id}><div className="demo-product-image"><img src={entry.image} alt={tx(language, entry.imageAlt)} /><span>{t('projectLabel')}</span></div><div className="demo-product-copy"><p className="market-kicker">{tx(language, entry.category)}</p><h3>{tx(language, entry.title)}</h3><p>{tx(language, entry.summary)}</p><div className="demo-product-meta"><strong>{formatDemoPrice(language, entry.price)}</strong><span>{t('indicative')}</span></div><div className="demo-product-actions"><button className="market-card-action" type="button" onClick={() => marketPath(`/product/${encodeURIComponent(entry.id)}`)}>{t('details')}</button><button className="market-icon-action" type="button" onClick={() => addToBag(entry)} aria-label={`${t('add')}: ${tx(language, entry.title)}`}>+</button><button className="market-icon-action" type="button" onClick={() => void share(tx(language, entry.title))} aria-label={`${t('share')}: ${tx(language, entry.title)}`}>↗</button></div></div></article>
+  const serviceCard = (entry: (typeof demoServices)[number], index: number) => <article className="demo-service-card" key={entry.id}><p className="market-kicker">{t('serviceLabel')} / 0{index + 1}</p><h3>{tx(language, entry.title)}</h3><p>{tx(language, entry.summary)}</p><ul>{entry.deliverables.map((item) => <li key={tx(language, item)}>{tx(language, item)}</li>)}</ul><button className="market-card-action" type="button" onClick={onOpenGuide}>{t('serviceAsk')}</button></article>
 
-  return <div className="market-page"><a className="market-skip" href="#market-main">{t('Skip to main content', '跳至主要内容')}</a>{header}<main id="market-main"><section className="market-hero demo-market-hero"><div className="market-hero-copy"><p className="market-kicker">QIONGVERSE DEMO MARKET / HAINAN</p><h1>{t('Three ways to turn a cultural story into a commercial journey.', '用三条路径，让文化故事成为商业旅程。')}</h1><p>{t('Explore a virtual-service brief, a Hainan-inspired culture shop and the Luoyin IP collection in one local, no-money transaction demo.', '在同一场本地无资金交易演示中，浏览虚拟服务项目、海南灵感文化商店与螺音 IP 系列。')}</p>{demoNotice}<div><button className="market-action" type="button" onClick={() => openHomeSection('market-services')}>{t('Start with services', '从服务开始')}</button><button className="market-text-button" type="button" onClick={() => openHomeSection('market-culture')}>{t('Explore shop', '浏览商店')}</button></div></div><figure><img src="/assets/zones/tropical/zone-tropical-wide.webp" alt={t('Project-supplied Hainan coastal exhibition context', '项目提供的海南海岸展览语境图')} /><figcaption>{t('Project context image only. The commercial interactions on this page are a local demo.', '仅为项目语境图。本页商业交互均为本地演示。')}</figcaption></figure></section><section id="market-services" className="demo-services" aria-labelledby="services-title"><div className="market-section-heading"><div><p className="market-kicker">PATH 01 / BUSINESS SERVICES</p><h2 id="services-title">{t('Build the next cultural destination.', '构建下一个文化目的地。')}</h2></div><p>{t('For museums, tourism venues, merchants and enterprises. Select a service to simulate a project brief, not a contract.', '面向博物馆、文旅场馆、商家与企业。选择服务以模拟项目需求，不代表合同。')}</p></div><div className="demo-service-grid">{demoServices.map((entry) => <article className="demo-service-card" key={entry.id}><p className="market-kicker">PROJECT DEMO</p><h3>{tx(language, entry.title)}</h3><p>{tx(language, entry.summary)}</p><ul>{entry.deliverables.map((item) => <li key={item.en}>{tx(language, item)}</li>)}</ul><button className="market-card-action" type="button" onClick={() => setService(entry)}>{t('Configure demo brief', '配置演示需求')}</button></article>)}</div></section><section id="market-culture" className="demo-shop" aria-labelledby="culture-title"><div className="market-section-heading"><div><p className="market-kicker">PATH 02 / CULTURE SHOP</p><h2 id="culture-title">{t('Objects for carrying a Hainan-inspired story.', '携带海南灵感故事的物件。')}</h2></div><p>{t('All prices, stock and checkout outcomes are project-demo data. Images are supplied placeholders, not merchant listing proof.', '所有价格、库存和结账结果均为项目演示数据。图像为提供的占位素材，而非商家上架凭证。')}</p></div><div className="demo-product-grid">{demoProducts.filter((entry) => entry.collection === 'culture').map(productCard)}</div></section><section id="market-ip" className="demo-ip" aria-labelledby="ip-title"><div className="market-section-heading"><div><p className="market-kicker">PATH 03 / LUOYIN IP</p><h2 id="ip-title">{t('Take the guide beyond the exhibition.', '让螺音走出展厅。')}</h2></div><p>{t('Project IP merchandise concepts for the QIONGVERSE story world. Availability is simulated only.', '为琼境故事世界设计的项目 IP 周边概念，仅模拟可售状态。')}</p></div><div className="demo-product-grid demo-ip-grid">{demoProducts.filter((entry) => entry.collection === 'ip').map(productCard)}</div></section><section className="demo-recommendations" aria-labelledby="recommendations-title"><div className="market-section-heading"><div><p className="market-kicker">REFRESH / YOU MAY ALSO LIKE</p><h2 id="recommendations-title">{t('Try another route through the collection.', '再走一条探索路线。')}</h2></div><button className="market-icon-button" type="button" onClick={refreshRecommendations} aria-label={t('Refresh demo recommendations', '刷新演示猜你喜欢')}>Refresh</button></div><div className="demo-product-grid demo-recommendation-grid">{recommendationItems.map(productCard)}</div></section></main><footer className="market-footer"><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /><p>{t('A local competition demo for commercial storytelling. It does not process real commerce.', '用于商业叙事的本地竞赛演示，不处理真实交易。')}</p><button type="button" onClick={() => marketPath('/cart')}>{t('Open demo cart', '打开演示购物车')}</button></footer>{service && <div className="demo-service-modal" role="dialog" aria-modal="true" aria-labelledby="service-dialog-title"><form className="demo-service-sheet" onSubmit={createServiceReceipt}><div className="demo-service-modal-head"><div><p className="market-kicker">LOCAL PROJECT DEMO</p><h2 id="service-dialog-title">{tx(language, service.title)}</h2></div><button type="button" className="market-icon-action" onClick={() => setService(null)} aria-label={t('Close service configuration', '关闭服务配置')}>x</button></div><p>{t('This form creates a local project-demo receipt only. It sends nothing and does not request human follow-up.', '此表单仅生成本地项目演示回执，不会发送信息，也不会请求真人跟进。')}</p><label>{t('Project direction', '项目方向')}<textarea name="direction" maxLength={360} required placeholder={t('Describe the visitor experience you want to demonstrate.', '描述希望演示的访客体验。')} /></label><button className="market-action" type="submit">{t('Create project demo', '生成项目演示')}</button></form></div>}{toast && <p className="market-toast" role="status" aria-live="polite">{toast}</p>}</div>
+  if (route.view === 'product' && product) return <div className="market-page" lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'}>{header}<main id="market-main" className="market-detail"><button className="market-back" type="button" onClick={() => marketPath()}>{t('previous')}</button><section className="demo-detail"><div><p className="market-kicker">{tx(language, product.category)} / {t('projectLabel')}</p><h1>{tx(language, product.title)}</h1><p>{tx(language, product.summary)}</p><p className="demo-detail-price">{formatDemoPrice(language, product.price)} <span>{t('indicative')}</span></p>{notice}<div className="demo-detail-actions"><button className="market-action" type="button" onClick={() => addToBag(product)}>{t('add')}</button><button className="market-text-button" type="button" onClick={() => void share(tx(language, product.title))}>{t('share')}</button></div></div><figure><img src={product.image} alt={tx(language, product.imageAlt)} /><figcaption>{t('visualNote')}</figcaption></figure></section>{product.story && <section className="demo-story"><figure><img src={product.story.src} alt={tx(language, product.story.alt)} /></figure><div><p className="market-kicker">{t('projectLabel')}</p><h2>{t('culture')}</h2><p>{t('intro')}</p></div></section>}</main></div>
+  if (route.view === 'cart' || route.view === 'checkout') return <div className="market-page" lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'}>{header}<main id="market-main" className="market-cart"><p className="market-kicker">{t('bag')}</p><h1>{t('bagTitle')}</h1>{notice}{cartItems.length ? <><div className="demo-cart-lines">{cartItems.map((line) => <article key={line.productId}><img src={line.product.image} alt={tx(language, line.product.imageAlt)} /><div><h2>{tx(language, line.product.title)}</h2><p>{formatDemoPrice(language, line.product.price)} / {t('indicative')}</p><div className="demo-quantity"><button type="button" onClick={() => updateQuantity(line.productId, line.quantity - 1)} aria-label={renderDynamic(language, dynamicCopy.decrease, tx(language, line.product.title))}>-</button><span>{line.quantity}</span><button type="button" onClick={() => updateQuantity(line.productId, line.quantity + 1)} aria-label={renderDynamic(language, dynamicCopy.increase, tx(language, line.product.title))}>+</button><button className="market-text-button" type="button" onClick={() => updateQuantity(line.productId, 0)}>{t('remove')}</button></div></div><strong>{formatDemoPrice(language, line.product.price * line.quantity)}</strong></article>)}</div><div className="demo-cart-summary"><p>{t('bagTotal')} <strong>{formatDemoPrice(language, cartTotal)}</strong></p><button className="market-action" type="button" onClick={() => marketPath('/checkout')}>{t('interest')}</button></div>{route.view === 'checkout' && <form className="b2c-interest-form" onSubmit={submitInterest}><h2>{t('interestTitle')}</h2><p>{t('interestHint')}</p><label>{t('email')}<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required maxLength={254} autoComplete="email" /></label><label>{t('message')}<textarea value={message} onChange={(event) => setMessage(event.target.value)} maxLength={600} rows={4} placeholder={t('messagePlaceholder')} /></label><label className="demo-radio"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} required /> <span>{t('consent')}</span></label>{interestState === 'error' && <p className="lead-error" role="alert">{t('unavailable')}</p>}<button className="market-action" type="submit" disabled={interestState === 'sending' || !consent}>{interestState === 'sending' ? t('sending') : t('send')}</button></form>}</> : <section className="market-empty"><h2>{t('bagEmpty')}</h2><p>{t('bagEmptyHint')}</p><button className="market-action" type="button" onClick={() => marketPath()}>{t('explore')}</button></section>}</main></div>
+  if (route.view === 'receipt') return <div className="market-page" lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'}>{header}<main id="market-main" className="market-receipt"><p className="market-kicker">{t('success')}</p>{interestReference ? <><h1>{t('success')}</h1><p className="demo-reference">{t('reference')}: <code>{interestReference}</code></p><p>{t('successHint')}</p><div className="demo-detail-actions"><button className="market-action" type="button" onClick={() => marketPath()}>{t('continue')}</button><button className="market-text-button" type="button" onClick={onOpenGuide}>{t('ask')}</button></div></> : <><h1>{t('bagEmpty')}</h1><p>{t('unavailable')}</p><button className="market-action" type="button" onClick={() => marketPath('/cart')}>{t('bag')}</button></>}</main></div>
+  if (route.view === 'order' || route.view === 'operator') return <div className="market-page" lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'}>{header}<main id="market-main" className="market-simple"><p className="market-kicker">{t('projectLabel')}</p><h1>{t('operator')}</h1><p>{t('boundary')}</p><button className="market-action" type="button" onClick={() => marketPath()}>{t('continue')}</button></main></div>
+
+  return <div className="market-page" lang={language} dir={language === 'ar' ? 'rtl' : 'ltr'}>{header}<main id="market-main"><section className="market-hero demo-market-hero"><div className="market-hero-copy"><p className="market-kicker">{t('kicker')}</p><h1>{t('title')}</h1><p>{t('intro')}</p>{notice}<button className="market-action" type="button" onClick={() => openSection('market-culture')}>{t('explore')} <span aria-hidden="true">↘</span></button></div><figure><img src="/assets/zones/tropical/zone-tropical-wide.webp" alt={t('intro')} /><figcaption>{t('visualNote')}</figcaption></figure></section><section id="market-culture" className="demo-shop" aria-labelledby="culture-title"><div className="market-section-heading"><div><p className="market-kicker">01 / {t('culture')}</p><h2 id="culture-title">{t('culture')}</h2></div><p>{t('boundary')}</p></div><div className="demo-product-grid">{demoProducts.filter((entry) => entry.collection === 'culture').map(productCard)}</div></section><section id="market-ip" className="demo-ip" aria-labelledby="ip-title"><div className="market-section-heading"><div><p className="market-kicker">02 / {t('ipCollection')}</p><h2 id="ip-title">{t('ipCollection')}</h2></div><p>{t('intro')}</p></div><div className="demo-product-grid demo-ip-grid">{demoProducts.filter((entry) => entry.collection === 'ip').map(productCard)}</div></section><section className="demo-recommendations" aria-labelledby="recommendations-title"><div className="market-section-heading"><div><p className="market-kicker">03 / {t('collection')}</p><h2 id="recommendations-title">{t('explore')}</h2></div><button className="market-icon-button" type="button" onClick={refreshRecommendations}>{t('continue')}</button></div><div className="demo-product-grid demo-recommendation-grid">{recommendationItems.map(productCard)}</div></section><section id="market-services" className="demo-services" aria-labelledby="services-title"><div className="market-section-heading"><div><p className="market-kicker">{t('servicesKicker')}</p><h2 id="services-title">{t('servicesTitle')}</h2></div><p>{t('servicesIntro')}</p></div><div className="demo-service-grid">{demoServices.map(serviceCard)}</div></section></main><footer className="market-footer"><img src="/assets/brand/qiongverse-wordmark-en.svg" alt="HAINAN QIONGVERSE" /><p>{t('boundary')}</p><button type="button" onClick={() => marketPath('/cart')}>{t('bag')}</button></footer>{toast && <p className="market-toast" role="status" aria-live="polite">{toast}</p>}</div>
 }

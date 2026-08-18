@@ -5,6 +5,8 @@ import atlasRaw from '../../knowledge/travel-atlas.json'
 import BrandLockup from './BrandLockup'
 import LanguageSelector from './LanguageSelector'
 import Lanyard from './Lanyard'
+import ShareChooser from './ShareChooser'
+import { copyText, downloadBlob, publicShareUrl } from '../share-utils'
 import './travel-atlas.css'
 
 type Theme = 'coast' | 'culture' | 'village' | 'nature' | 'city'
@@ -217,6 +219,8 @@ export default function TravelAtlas({ language, onChangeLanguage, onExit, apiPat
   const [plannerMode, setPlannerMode] = useState<PlannerMode>('local_fallback')
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('ready')
   const [notice, setNotice] = useState('')
+  const [shareChooserOpen, setShareChooserOpen] = useState(false)
+  const [shareFile, setShareFile] = useState<{ blob: Blob; filename: string } | null>(null)
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
   const [videoFailed, setVideoFailed] = useState(false)
   const [muted, setMuted] = useState(true)
@@ -277,15 +281,30 @@ export default function TravelAtlas({ language, onChangeLanguage, onExit, apiPat
   }
   const moveStop = (index: number, offset: number) => setItinerary((current) => { const target = index + offset; if (target < 0 || target >= current.length) return current; const next = [...current]; [next[index], next[target]] = [next[target], next[index]]; return next })
   const removeStop = (index: number) => setItinerary((current) => current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current)
-  const downloadSignal = async (portrait: boolean, share = false) => {
+  const routeLink = () => {
+    const url = new URL(window.location.href)
+    url.hash = 'travel-atlas'
+    url.searchParams.set('routeDays', String(days))
+    url.searchParams.set('routeThemes', themes.join(','))
+    url.searchParams.set('routePace', pace)
+    return publicShareUrl(url.toString())
+  }
+  const prepareSignalShare = async () => {
     try {
-      const blob = await makeSignalBlob(days, themes, pace, language, portrait, routeStops)
-      const file = new File([blob], `hainan-unfolded-${portrait ? 'story' : 'post'}.png`, { type: 'image/png' })
-      if (share && navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) { await navigator.share({ title: ui(language, 'heroTitle'), files: [file] }); setNotice(ui(language, 'shareReady')); return }
-      const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = file.name; link.click(); URL.revokeObjectURL(url); setNotice(ui(language, 'downloadReady'))
+      const blob = await makeSignalBlob(days, themes, pace, language, true, routeStops)
+      setShareFile({ blob, filename: 'hainan-unfolded-story.png' })
+      setShareChooserOpen(true)
     } catch { setNotice(ui(language, 'cardFailed')) }
   }
-  const copyLink = async () => { try { await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#travel-atlas`); setNotice(ui(language, 'linkCopied')) } catch { setNotice(ui(language, 'copyUnavailable')) } }
+  const downloadSignal = async (portrait: boolean, share = false) => {
+    try {
+      if (share) { await prepareSignalShare(); return }
+      const blob = await makeSignalBlob(days, themes, pace, language, portrait, routeStops)
+      downloadBlob(blob, `hainan-unfolded-${portrait ? 'story' : 'post'}.png`)
+      setNotice(ui(language, 'downloadReady'))
+    } catch { setNotice(ui(language, 'cardFailed')) }
+  }
+  const copyLink = async () => { setNotice(await copyText(routeLink()) ? ui(language, 'linkCopied') : ui(language, 'copyUnavailable')) }
   const navItem = (target: string, label: string) => <a href={'#' + target} onClick={(event) => { event.preventDefault(); scrollTo(target) }}>{label}</a>
   const audioLabel = audioUnavailable || videoFailed ? ui(language, 'filmAudioUnavailable') : muted ? ui(language, 'filmAudioOn') : ui(language, 'filmAudioOff')
   const playbackLabel = videoPaused ? ui(language, 'filmPlay') : ui(language, 'filmPause')
@@ -298,6 +317,7 @@ export default function TravelAtlas({ language, onChangeLanguage, onExit, apiPat
   }, [])
 
   return <main className="travel-atlas island-atlas" id="travel-atlas" data-experience-main tabIndex={-1}>
+    <ShareChooser language={language} open={shareChooserOpen} title={ui(language, 'heroTitle')} text={ui(language, 'carryTitle')} url={routeLink()} file={shareFile} onClose={() => setShareChooserOpen(false)} />
     <a className="travel-skip-link" href="#journey-compass">{ui(language, 'skipCompass')}</a>
     <header className="island-header"><BrandLockup href="#top" /><nav aria-label={ui(language, 'navLabel')}>{navItem('island-index', ui(language, 'navIndex'))}{navItem('journey-compass', ui(language, 'navRoutes'))}{navItem('source-ledger', ui(language, 'navSources'))}</nav><div className="island-actions"><LanguageSelector language={language} onChange={onChangeLanguage} /><button type="button" onClick={onExit}>{ui(language, 'home')} <span aria-hidden="true">↗</span></button></div></header>
     <section className={'island-hero' + (videoFailed ? ' video-failed' : '')} id="island-hero" aria-label={ui(language, 'heroAria')}>

@@ -2,6 +2,10 @@ import type { Camera, Object3D, WebGLRenderer } from 'three'
 
 export type AvatarWorldConfig = {
   spawn: { x: number; y: number; z: number }
+  entry?: {
+    position: { x: number; y: number; z: number }
+    target: { x: number; y: number; z: number }
+  }
   bounds: { minX: number; maxX: number; minY: number; maxY: number; floorZ: number }
   radius: number
   modelHeight: number
@@ -80,15 +84,18 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
   let avatarLights: Object3D[] = []
   let THREE: typeof import('three') | null = null
   let position = { ...options.config.spawn }
-  // Match the verified hall entry view: the camera starts behind the avatar
-  // on -X and looks into the world along +X. This keeps the first third-person
-  // frame inside the authored scene instead of orbiting out through the back.
+  // Match the verified hall entry view. Most halls place the camera behind the
+  // avatar on -X and look into the world along +X; a hall can override this
+  // entry pose when its authored scene reads better from the reverse direction.
   let yaw = Math.PI / 2
   let pitch = 0.28
   let distance = options.config.cameraDistance
   let speed = 0
   let jumpVelocity = 0
   let verticalOffset = 0
+  let lastGuideEventAt = 0
+  let lastGuidePosition = { ...position }
+  let lastGuideForward = { x: 0, y: 1, z: 0 }
   let resolvedBounds: { minX: number; maxX: number; minY: number; maxY: number; floorZ: number } | null = null
   let capturedEntry = false
   let pointerId: number | null = null
@@ -132,6 +139,18 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
     position.y = clamp(next.y, bounds.minY, bounds.maxY)
     position.z = bounds.floorZ
     if (avatar) avatar.position.set(position.x, position.y, position.z + options.config.platformLift + verticalOffset)
+  }
+  const emitWorldGuideMove = (source: 'avatar' | 'free-camera') => {
+    if (!THREE) return
+    const guideForward = options.camera.getWorldDirection(new THREE.Vector3())
+    window.dispatchEvent(new CustomEvent('luoyin-world-move', {
+      detail: {
+        source,
+        position: { x: position.x, y: position.y, z: position.z },
+        cameraPosition: { x: options.camera.position.x, y: options.camera.position.y, z: options.camera.position.z },
+        forward: { x: guideForward.x, y: guideForward.y, z: guideForward.z },
+      },
+    }))
   }
   const normalizeAvatar = () => {
     if (!avatarModel || !THREE) return
@@ -198,12 +217,15 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
     capturedEntry = true
   }
   const resetToVerifiedEntry = () => {
-    // Every hall component is authored around the same Spark entry pose.
-    // Reasserting it before the first avatar enable prevents Spark's free
-    // camera inertia from becoming an accidental spawn point.
-    options.camera.position.set(0, 0, 0)
+    // Reassert the authored entry before the first avatar enable so Spark's
+    // free-camera inertia cannot become an accidental spawn point.
+    const entry = options.config.entry ?? {
+      position: { x: 0, y: 0, z: 0 },
+      target: { x: 1, y: 0, z: 0 },
+    }
+    options.camera.position.set(entry.position.x, entry.position.y, entry.position.z)
     options.camera.up.set(0, 0, 1)
-    options.camera.lookAt(1, 0, 0)
+    options.camera.lookAt(entry.target.x, entry.target.y, entry.target.z)
     options.camera.updateMatrixWorld(true)
   }
   const createContactShadow = () => {
@@ -402,6 +424,9 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
       if (avatar) avatar.visible = false
       if (contactShadow) contactShadow.visible = false
       setState('hidden')
+      // Re-evaluate the current scene immediately: the desktop pet remains the
+      // guide even when the in-world 3D character is hidden.
+      emitWorldGuideMove('free-camera')
     },
     update(deltaTime: number) {
       if (state !== 'ready' || !avatar || !THREE) return
@@ -450,6 +475,16 @@ export function createLuoyinAvatarController(options: AvatarOptions) {
         material.opacity = .68 * (1 - airborne * .78)
       }
       updateCamera()
+      const now = performance.now()
+        const guideForward = options.camera.getWorldDirection(new THREE.Vector3())
+      const moved = Math.hypot(position.x - lastGuidePosition.x, position.y - lastGuidePosition.y) > .045
+      const turned = Math.hypot(guideForward.x - lastGuideForward.x, guideForward.y - lastGuideForward.y) > .08
+      if (now - lastGuideEventAt > 520 && (moved || turned)) {
+        lastGuideEventAt = now
+        lastGuidePosition = { x: position.x, y: position.y, z: position.z }
+        lastGuideForward = { x: guideForward.x, y: guideForward.y, z: guideForward.z }
+        emitWorldGuideMove('avatar')
+      }
     },
     dispose() {
       removeListeners()
@@ -481,7 +516,7 @@ export const avatarWorldConfigs: Record<'tropical' | 'limiao' | 'aerospace' | 'h
   tropical: { spawn: { x: 2.45, y: 0, z: 0 }, bounds: { minX: -8.8, maxX: 12.5, minY: -5.2, maxY: 6.5, floorZ: -.78 }, radius: .16, modelHeight: .82, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.55, cameraHeight: 1.48, cameraTargetHeight: .46, contactShadowRadius: .31, platformLift: 0 },
   limiao: { spawn: { x: 2.55, y: 0, z: 0 }, bounds: { minX: -5.9, maxX: 21.9, minY: -4.6, maxY: 6.6, floorZ: -.84 }, radius: .16, modelHeight: .82, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.55, cameraHeight: 1.52, cameraTargetHeight: .46, contactShadowRadius: .31, platformLift: 0 },
   aerospace: { spawn: { x: 2.65, y: 0, z: 0 }, bounds: { minX: -3.5, maxX: 8.2, minY: -2.8, maxY: 4.2, floorZ: -.84 }, radius: .16, modelHeight: .8, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.65, cameraHeight: 1.54, cameraTargetHeight: .45, contactShadowRadius: .3, platformLift: 0 },
-  huali: { spawn: { x: 2.55, y: 0, z: 0 }, bounds: { minX: -15.4, maxX: 23, minY: -2.7, maxY: 3.8, floorZ: -.64 }, radius: .16, modelHeight: .82, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.55, cameraHeight: 1.32, cameraTargetHeight: .46, contactShadowRadius: .32, platformLift: 0 },
+  huali: { spawn: { x: -2.55, y: 0, z: 0 }, entry: { position: { x: 0, y: 0, z: 0 }, target: { x: -1, y: 0, z: 0 } }, bounds: { minX: -15.4, maxX: 23, minY: -2.7, maxY: 3.8, floorZ: -.64 }, radius: .16, modelHeight: .82, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.55, cameraHeight: 1.32, cameraTargetHeight: .46, contactShadowRadius: .32, platformLift: 0 },
   village: { spawn: { x: 2.85, y: 0, z: 0 }, bounds: { minX: -43.6, maxX: 48.8, minY: -52.4, maxY: 54.1, floorZ: -1.12 }, radius: .16, modelHeight: .84, modelFacingOffset: LUOYIN_FORWARD_CORRECTION, cameraDistance: 2.85, cameraHeight: 1.84, cameraTargetHeight: .48, contactShadowRadius: .33, platformLift: 0 },
   // Calibrated from the visible central promenade in zimaogang.spz. The
   // conservative rectangle keeps the avatar and its orbit inside the world
