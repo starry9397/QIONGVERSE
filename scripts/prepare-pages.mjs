@@ -1,5 +1,5 @@
 import { readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
-import { join, extname } from 'node:path'
+import { extname, join, relative } from 'node:path'
 
 const root = process.cwd()
 const dist = join(root, 'dist')
@@ -9,8 +9,42 @@ const base = (process.env.VITE_BASE_PATH || '/').trim() === '/'
 
 const textExtensions = new Set(['.html', '.css', '.js', '.mjs', '.json', '.svg', '.txt', '.webmanifest'])
 const rootAssetPattern = /(["'`(= :]|url\()\/(assets|shellsong|luoyin|draco)(?=\/|["'`)])/g
-const pagesFileLimit = 24 * 1024 * 1024
+// Keep the Pages artifact small enough for reliable deployment. Large models
+// and videos remain available from the repository's read-only Raw CDN.
+const pagesFileLimit = 8 * 1024 * 1024
+const largeMediaBase = (process.env.VITE_LARGE_MEDIA_BASE_URL || '').trim().replace(/\/+$/, '')
 const removedLargeAssets = []
+const allFiles = []
+
+async function collect(directory) {
+  for (const name of await readdir(directory)) {
+    const file = join(directory, name)
+    const info = await stat(file)
+    if (info.isDirectory()) await collect(file)
+    else allFiles.push({ file, info })
+  }
+}
+
+await collect(dist)
+
+for (const entry of allFiles) {
+  if (entry.info.size <= pagesFileLimit) continue
+  const assetPath = relative(dist, entry.file).replaceAll('\\', '/')
+  removedLargeAssets.push({ file: assetPath, size: entry.info.size })
+  await rm(entry.file)
+}
+
+const largeMediaRewrites = removedLargeAssets.flatMap(({ file }) => {
+  const route = `/${file}`
+  const encodedRoute = `/${encodeURI(file)}`
+  const target = largeMediaBase ? `${largeMediaBase}/${file}` : null
+  if (!target) return []
+  return encodedRoute === route
+    ? [[route, target]]
+    : [[route, target], [encodedRoute, `${largeMediaBase}/${encodedRoute.slice(1)}`]]
+})
+
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 async function visit(directory) {
   for (const name of await readdir(directory)) {
@@ -20,17 +54,16 @@ async function visit(directory) {
       await visit(file)
       continue
     }
-    // Cloudflare Pages rejects any individual asset at 25 MiB or larger.
-    // Keep the source media in Git, but omit optional immersive media from
-    // the static deployment; the UI already exposes poster/static fallbacks.
-    if (info.size > pagesFileLimit) {
-      removedLargeAssets.push({ file: file.slice(dist.length + 1), size: info.size })
-      await rm(file)
-      continue
-    }
     if (!textExtensions.has(extname(name).toLowerCase())) continue
     const source = await readFile(file, 'utf8')
-    const rewritten = source.replace(rootAssetPattern, `$1${base}$2`)
+    let rewritten = source.replace(rootAssetPattern, `$1${base}$2`)
+    for (const [from, to] of largeMediaRewrites) {
+      // Match the Pages-prefixed and root forms in one pass so the inserted
+      // CDN URL is never processed a second time.
+      const pagesPrefixed = `${base.replace(/\/+$/, '')}${from}`
+      const pattern = new RegExp(`${escapeRegExp(pagesPrefixed)}|${escapeRegExp(from)}`, 'g')
+      rewritten = rewritten.replace(pattern, to)
+    }
     if (rewritten !== source) await writeFile(file, rewritten)
   }
 }
@@ -38,7 +71,8 @@ async function visit(directory) {
 await visit(dist)
 if (removedLargeAssets.length > 0) {
   for (const asset of removedLargeAssets) {
-    console.log(`Omitted ${asset.file} (${(asset.size / 1024 / 1024).toFixed(1)} MiB) from Pages output; static fallback remains available.`)
+    const source = largeMediaBase ? `; CDN reference ${largeMediaBase}/${asset.file}` : ''
+    console.log(`Omitted ${asset.file} (${(asset.size / 1024 / 1024).toFixed(1)} MiB) from Pages output${source}.`)
   }
 }
 console.log(`Prepared static deployment assets with base ${base}`)
