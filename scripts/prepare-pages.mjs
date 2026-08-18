@@ -9,9 +9,12 @@ const base = (process.env.VITE_BASE_PATH || '/').trim() === '/'
 
 const textExtensions = new Set(['.html', '.css', '.js', '.mjs', '.json', '.svg', '.txt', '.webmanifest'])
 const rootAssetPattern = /(["'`(= :]|url\()\/(assets|shellsong|luoyin|draco)(?=\/|["'`)])/g
-// Keep the Pages artifact small enough for reliable deployment. Large models
-// and videos remain available from the repository's read-only Raw CDN.
+// The default keeps the Pages artifact small by moving very large media to a
+// CDN. Production Pages can inline the complete media set because checkout
+// runs with Git LFS enabled and the artifact remains within the deployment
+// size budget.
 const pagesFileLimit = 8 * 1024 * 1024
+const keepLargeMedia = !/^(0|false|no)$/i.test(String(process.env.VITE_PAGES_KEEP_LARGE_MEDIA || 'true').trim())
 const largeMediaBase = (process.env.VITE_LARGE_MEDIA_BASE_URL || 'https://raw.githubusercontent.com/starry9397/QIONGVERSE/main/public').trim().replace(/\/+$/, '')
 const removedLargeAssets = []
 const allFiles = []
@@ -28,7 +31,7 @@ async function collect(directory) {
 await collect(dist)
 
 for (const entry of allFiles) {
-  if (entry.info.size <= pagesFileLimit) continue
+  if (keepLargeMedia || entry.info.size <= pagesFileLimit) continue
   const assetPath = relative(dist, entry.file).replaceAll('\\', '/')
   removedLargeAssets.push({ file: assetPath, size: entry.info.size })
   await rm(entry.file)
@@ -78,4 +81,4 @@ if (removedLargeAssets.length > 0) {
     console.log(`Omitted ${asset.file} (${(asset.size / 1024 / 1024).toFixed(1)} MiB) from Pages output${source}.`)
   }
 }
-console.log(`Prepared static deployment assets with base ${base}`)
+console.log(`Prepared static deployment assets with base ${base}; large media ${keepLargeMedia ? 'kept in Pages artifact' : 'rewritten to CDN'}`)

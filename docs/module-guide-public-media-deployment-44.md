@@ -14,18 +14,19 @@ source desk, social sharing, and static fallbacks remain unchanged.
 
 ## Asset and source boundary
 
-- Only files already tracked under `public/shellsong/models`,
-  `public/shellsong/video`, and `public/assets/travel` are addressed. The two
-  `*-pages.mp4` files are non-destructive, 1280x720 H.264/AAC derivatives of
-  the existing source videos, kept below the Pages per-file limit for reliable
-  range playback; the original videos remain unchanged.
-- Production-only large GLB URLs may use the repository's read-only
-  `raw.githubusercontent.com` origin. The smaller MP4 derivatives are served
-  directly by GitHub Pages with the correct `video/mp4` type. No upload, user
-  media, remote scraping, analytics, or third-party tracking is introduced.
-- The Pages checkout enables Git LFS so the two derivative MP4 blobs are
-  materialized before Vite copies `public/` into the artifact; the browser
-  never receives an LFS pointer file.
+- All existing files under `public/` are included in the production Pages
+  artifact. The Vite bundle still removes only the unused high-resolution
+  ShellSong source models; the checked-in web delivery models, worlds, videos,
+  images and gesture assets remain available without changing their contents.
+- Production Pages keeps the complete built media set in the Pages artifact.
+  The checkout enables Git LFS before Vite copies `public/`, so large GLB,
+  SPZ, MP4 and WASM files are uploaded as real bytes by the Pages origin.
+  No Raw CDN or LFS pointer fallback is used for the production artifact. No
+  upload, user media, remote scraping, analytics, or third-party tracking is
+  introduced.
+- The Pages checkout enables Git LFS so every tracked media blob is materialized
+  before Vite copies `public/` into the artifact; the browser never receives an
+  LFS pointer file.
 - No API key, OAuth token, browser secret, camera stream, location, dialogue,
   or user profile data is included in the media URL configuration.
 - The media remains project-supplied/AIGC-labeled where the existing page marks
@@ -34,13 +35,14 @@ source desk, social sharing, and static fallbacks remain unchanged.
 ## Accessibility and failure behavior
 
 The existing controls, keyboard operation, reduced-motion handling, captions /
-alt text, and error messages remain authoritative. A failed Raw request must
+alt text, and error messages remain authoritative. A failed media request must
 still show the current poster/static reference and an understandable localized
 failure state. Media loading is lazy and route-scoped as before.
 
 ## Verification gate
 
-Run `npm run build`, `npm run prepare:pages`, `npm run check:i18n`,
+Run `npm run build`, `npm run prepare:pages` (large media is kept by default;
+`VITE_PAGES_KEEP_LARGE_MEDIA=true` is an explicit equivalent), `npm run check:i18n`,
 `npm run test:server`, `node --check server.mjs`, and `git diff --check`.
 Inspect exact public HTTP responses for the ShellSong MP4, all seven ShellSong
 GLBs, and the Travel MP4. Push only after the GitHub Pages workflow succeeds
