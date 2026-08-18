@@ -12,7 +12,7 @@ const rootAssetPattern = /(["'`(= :]|url\()\/(assets|shellsong|luoyin|draco)(?=\
 // Keep the Pages artifact small enough for reliable deployment. Large models
 // and videos remain available from the repository's read-only Raw CDN.
 const pagesFileLimit = 8 * 1024 * 1024
-const largeMediaBase = (process.env.VITE_LARGE_MEDIA_BASE_URL || '').trim().replace(/\/+$/, '')
+const largeMediaBase = (process.env.VITE_LARGE_MEDIA_BASE_URL || 'https://raw.githubusercontent.com/starry9397/QIONGVERSE/main/public').trim().replace(/\/+$/, '')
 const removedLargeAssets = []
 const allFiles = []
 
@@ -34,9 +34,10 @@ for (const entry of allFiles) {
   await rm(entry.file)
 }
 
-// The Vite Pages plugin rewrites source literals before chunk hashes are
-// generated. Avoid touching those absolute CDN URLs a second time here.
-const largeMediaRewrites = largeMediaBase ? [] : removedLargeAssets.flatMap(({ file }) => {
+// Rewrite only assets that were removed from the Pages artifact. Smaller
+// images stay on GitHub Pages, including Git LFS-backed files whose Raw URL
+// would otherwise return a pointer document instead of image bytes.
+const largeMediaRewrites = removedLargeAssets.flatMap(({ file }) => {
   const route = `/${file}`
   const encodedRoute = `/${encodeURI(file)}`
   const target = largeMediaBase ? `${largeMediaBase}/${file}` : null
