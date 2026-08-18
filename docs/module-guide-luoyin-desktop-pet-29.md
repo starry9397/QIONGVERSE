@@ -22,6 +22,7 @@ Replace the root Luoyin drawer with a persistent 2D desktop pet and compact floa
 - The pointer is captured from press through release so a confirmed long press keeps receiving movement after leaving the artwork; default scrolling is still prevented only after drag activation.
 - Clamp movement to viewport safe margins. Dragging never opens chat; ordinary touch scrolling is not blocked before drag activation.
 - The pet close button hides the pet and panel for the current React session. Existing Ask Luoyin controls restore it and open chat. Position and conversation are never stored in browser storage.
+- Closing an automatic page-tour cue with `x` records that cue as dismissed for the current React session, so visibility changes and scrolling do not immediately show the same cue again. Other chapters can still introduce their own cue, and manual chat remains available.
 - Each fresh page load starts the pet in the left-bottom safe area. A position chosen by dragging remains only during the current React session.
 - Enter and Space open chat, Escape closes it and returns focus to the pet, controls have bilingual accessible names, image failure retains a labelled text trigger, and reduced motion removes pet animation.
 

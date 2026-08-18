@@ -277,7 +277,6 @@ function App() {
   const [mediaOpen, setMediaOpen] = useState(false)
   const [mediaFailed, setMediaFailed] = useState(false)
   const [previousZone, setPreviousZone] = useState<number | null>(null)
-  const [carouselPointerPaused, setCarouselPointerPaused] = useState(false)
   const [carouselFocusPaused, setCarouselFocusPaused] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [activeNav, setActiveNav] = useState(1)
@@ -293,6 +292,9 @@ function App() {
   const guideTranscriptRef = useRef<HTMLDivElement>(null)
   const guideInputRef = useRef<HTMLInputElement>(null)
   const tourCueRef = useRef<LuoyinTourContext | null>(null)
+  // Keep tour-cue dismissals in the current React session so scrolling cannot
+  // immediately re-open the same cue through the visibility observer.
+  const dismissedTourCueKeysRef = useRef(new Set<string>())
   const autoGuideMatcherRef = useRef<ReturnType<typeof createWorldGuideMatcher> | null>(null)
   const autoGuideAbortRef = useRef<AbortController | null>(null)
   const lastSpokenMessageRef = useRef('')
@@ -344,7 +346,9 @@ function App() {
     setMediaFailed(false)
   }
 
-  const carouselPaused = carouselPointerPaused || carouselFocusPaused || mediaOpen || prefersReducedMotion
+  // Pointer hover should not stop the wheel's ambient rotation. Keyboard focus,
+  // open media, and reduced-motion preferences still pause it deliberately.
+  const carouselPaused = carouselFocusPaused || mediaOpen || prefersReducedMotion
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -705,6 +709,8 @@ function App() {
   }
 
   const showTourCue = (context: LuoyinTourContext) => {
+    const key = `${context.page}:${context.sectionId}:${context.cueId}`
+    if (dismissedTourCueKeysRef.current.has(key)) return
     const current = tourCueRef.current
     if (current?.cueId === context.cueId && current.sectionId === context.sectionId && current.page === context.page) return
     tourCueRef.current = context
@@ -723,6 +729,8 @@ function App() {
   }
 
   const dismissTourCue = () => {
+    const current = tourCueRef.current
+    if (current) dismissedTourCueKeysRef.current.add(`${current.page}:${current.sectionId}:${current.cueId}`)
     tourCueRef.current = null
     setTourCue(null)
   }
@@ -991,7 +999,7 @@ function App() {
         </div>
       </section>
 
-      <section className="exhibition home-museum-chapter home-museum-chapter--wheel" id="exhibition" ref={exhibitionRef} aria-label={inline(language, 'Five immersive halls', '五个沉浸展厅')} data-museum-chapter="halls" data-luoyin-tour-cue="home-exhibition-wheel" data-luoyin-tour-page="home" onMouseEnter={() => setCarouselPointerPaused(true)} onMouseLeave={() => setCarouselPointerPaused(false)} onPointerDown={() => { carouselPointerDownRef.current = true; setCarouselFocusPaused(false) }} onPointerUp={() => { carouselPointerDownRef.current = false }} onFocusCapture={() => { if (!carouselPointerDownRef.current) setCarouselFocusPaused(true) }} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCarouselFocusPaused(false) }}>
+      <section className="exhibition home-museum-chapter home-museum-chapter--wheel" id="exhibition" ref={exhibitionRef} aria-label={inline(language, 'Five immersive halls', '五个沉浸展厅')} data-museum-chapter="halls" data-luoyin-tour-cue="home-exhibition-wheel" data-luoyin-tour-page="home" onPointerDown={() => { carouselPointerDownRef.current = true; setCarouselFocusPaused(false) }} onPointerUp={() => { carouselPointerDownRef.current = false }} onFocusCapture={() => { if (!carouselPointerDownRef.current) setCarouselFocusPaused(true) }} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCarouselFocusPaused(false) }}>
         <div className={`hall-visual-stage ${zone.tone}`} id={`zone-panel-${activeZone}`} role="tabpanel" aria-labelledby={`zone-tab-${activeZone}`}>
           <button className="zone-visual-enter" type="button" onClick={() => openZoneHall(activeZone)} aria-label={`${inline(language, 'Enter', '进入')} ${zone.title[language]}`}>
             {previousZone !== null && previousZone !== activeZone && <picture className="zone-visual-image zone-visual-image--previous"><source type="image/webp" media="(max-width: 700px)" srcSet={deliveryImage(zones[previousZone].mobileImage)} /><source media="(max-width: 700px)" srcSet={zones[previousZone].mobileImage} /><source type="image/webp" srcSet={deliveryImage(zones[previousZone].image)} /><img src={zones[previousZone].image} loading="lazy" decoding="async" alt="" aria-hidden="true" /></picture>}
