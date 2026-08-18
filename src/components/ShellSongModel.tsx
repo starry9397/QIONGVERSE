@@ -246,10 +246,44 @@ export function ShellSongModel({ language }: { language: Language }) {
           group.add(gltf.scene)
         }, undefined, () => setFailed(true))
         let dragging = false
+        let draggingPointerId: number | null = null
         let lastX = 0
-        const pointerDown = (event: PointerEvent) => { dragging = true; lastX = event.clientX; host.setPointerCapture(event.pointerId) }
-        const pointerMove = (event: PointerEvent) => { if (!dragging) return; yawRef.current += (event.clientX - lastX) * .012; lastX = event.clientX }
-        const pointerUp = () => { dragging = false }
+        const pointers = new Map<number, { x: number; y: number }>()
+        let pinchDistance: number | null = null
+        const pointerDown = (event: PointerEvent) => {
+          pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+          if (pointers.size === 1) {
+            dragging = true
+            draggingPointerId = event.pointerId
+            lastX = event.clientX
+            host.setPointerCapture(event.pointerId)
+          } else if (pointers.size === 2) {
+            const points = [...pointers.values()]
+            pinchDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)
+          }
+        }
+        const pointerMove = (event: PointerEvent) => {
+          if (!pointers.has(event.pointerId)) return
+          pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+          if (pointers.size >= 2 && pinchDistance !== null) {
+            const points = [...pointers.values()]
+            const nextDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y)
+            distanceRef.current = clamp(distanceRef.current - (nextDistance - pinchDistance) * .008, 2.15, 5.1)
+            pinchDistance = nextDistance
+            return
+          }
+          if (!dragging || draggingPointerId !== event.pointerId) return
+          yawRef.current += (event.clientX - lastX) * .012
+          lastX = event.clientX
+        }
+        const pointerUp = (event: PointerEvent) => {
+          pointers.delete(event.pointerId)
+          if (draggingPointerId === event.pointerId) {
+            dragging = false
+            draggingPointerId = null
+          }
+          if (pointers.size < 2) pinchDistance = null
+        }
         const keyDown = (event: KeyboardEvent) => { if (event.key === 'ArrowLeft') { yawRef.current -= .13; event.preventDefault() } if (event.key === 'ArrowRight') { yawRef.current += .13; event.preventDefault() } }
         const wheel = (event: WheelEvent) => { event.preventDefault(); distanceRef.current = clamp(distanceRef.current + event.deltaY * .003, 2.15, 5.1) }
         host.addEventListener('pointerdown', pointerDown)
@@ -270,6 +304,8 @@ export function ShellSongModel({ language }: { language: Language }) {
           host.removeEventListener('pointercancel', pointerUp)
           host.removeEventListener('keydown', keyDown)
           host.removeEventListener('wheel', wheel)
+          pointers.clear()
+          pinchDistance = null
         }
       } catch { setFailed(true) }
     }
