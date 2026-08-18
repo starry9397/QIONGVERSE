@@ -85,6 +85,7 @@ type SourceDeskEntry = {
   publisher: string
   canonicalUrl: string | null
   topics: string[]
+  zoneIds: string[]
   scope: RuntimeLocalized
   limitation: RuntimeLocalized
   collaborationStatus: 'no_partnership_claim'
@@ -118,7 +119,11 @@ type AutoGuideView = {
 
 type SpeechSegment = { mimeType: string; data: string }
 
-const sourceDeskEntries = sourceDeskData.entries as SourceDeskEntry[]
+const sourceRegistryById = new Map(sourceRegistryData.records.map((record) => [record.id, record]))
+const sourceDeskEntries = sourceDeskData.entries.map((entry) => ({
+  ...entry,
+  zoneIds: sourceRegistryById.get(entry.sourceRecordId)?.zoneIds || [],
+})) as SourceDeskEntry[]
 completeLocalizationTree(zones)
 assertLocalizationTree(zones, 'home zone records')
 assertLocalizationTree(sourceDeskEntries, 'source desk entries')
@@ -238,6 +243,32 @@ const sourceDeskLayerCopy = {
 assertLocalizationTree(sourceDeskCopy, 'source desk interface copy')
 assertLocalizationTree(sourceDeskLayerCopy, 'source desk layer labels')
 
+const sourceArchiveCopy = {
+  archiveKicker: { en: 'ARCHIVE / SIX-HALL INDEX', zh: '档案馆 / 六厅索引', id: 'ARSIP / INDEKS ENAM AULA', ja: 'アーカイブ / 6ホール索引', ko: '아카이브 / 6개 홀 색인', ru: 'АРХИВ / УКАЗАТЕЛЬ ШЕСТИ ЗАЛОВ', ar: 'الأرشيف / فهرس القاعات الست' },
+  archiveTitle: { en: 'A living archive of Hainan readings', zh: '持续更新的海南阅读档案', id: 'Arsip pembacaan Hainan yang hidup', ja: '海南を読むための生きたアーカイブ', ko: '하이난 읽기의 살아 있는 아카이브', ru: 'Живой архив чтения Хайнаня', ar: 'أرشيف حي لقراءات هاينان' },
+  archiveIntro: { en: 'Browse the six halls through three clearly separated layers: reviewed public sources, project-curated visual context, and bounded AI curation. Every record states what it can support and what it cannot.', zh: '从三种清晰分开的资料层阅读六大展厅：已核验公开来源、项目策展视觉语境与受限 AI 编排。每条记录都会说明可支持与不可支持的范围。', id: 'Jelajahi enam aula melalui tiga lapisan yang terpisah: sumber publik yang ditinjau, konteks visual proyek, dan kurasi AI terbatas. Setiap catatan menjelaskan dukungan dan batasannya.', ja: '確認済み公開出典、プロジェクトの視覚的文脈、制限付き AI キュレーションという3つの層から、6つのホールを読み解きます。各記録は対応範囲と限界を示します。', ko: '검토된 공개 출처, 프로젝트 시각 맥락, 제한된 AI 큐레이션의 세 층으로 여섯 홀을 살펴봅니다. 각 기록에는 지원 범위와 한계가 명시됩니다.', ru: 'Исследуйте шесть залов через три отдельные границы: проверенные публичные источники, визуальный контекст проекта и ограниченное курирование ИИ. В каждой записи указаны возможности и ограничения.', ar: 'استكشف القاعات الست عبر ثلاث طبقات منفصلة بوضوح: المصادر العامة المُراجعة، والسياق المرئي للمشروع، وتنسيق الذكاء الاصطناعي المحدود. يوضح كل سجل ما يدعمه وما لا يدعمه.' },
+  hallFilter: { en: 'Hall', zh: '展厅', id: 'Aula', ja: 'ホール', ko: '홀', ru: 'Зал', ar: 'القاعة' },
+  layerFilter: { en: 'Layer', zh: '资料层', id: 'Lapisan', ja: 'レイヤー', ko: '레이어', ru: 'Слой', ar: 'الطبقة' },
+  allHalls: { en: 'All six halls', zh: '六厅全部', id: 'Enam aula', ja: '6ホールすべて', ko: '6개 홀 전체', ru: 'Все шесть залов', ar: 'القاعات الست' },
+  freeTradeHall: { en: 'Free Trade Port', zh: '自贸港主厅', id: 'Pelabuhan Perdagangan Bebas', ja: '自由貿易港', ko: '자유무역항', ru: 'Порт свободной торговли', ar: 'ميناء التجارة الحرة' },
+  tropicalHall: { en: 'Tropical Island', zh: '热带海岛厅', id: 'Pulau Tropis', ja: '熱帯の島', ko: '열대 섬', ru: 'Тропический остров', ar: 'الجزيرة الاستوائية' },
+  lijinHall: { en: 'Li-Miao Heritage', zh: '黎苗非遗厅', id: 'Warisan Li-Miao', ja: '黎族・苗族文化遺産', ko: '리·먀오 문화유산', ru: 'Наследие ли и мяо', ar: 'تراث لي-مياو' },
+  aerospaceHall: { en: 'Wenchang Aerospace', zh: '文昌航天厅', id: 'Kedirgantaraan Wenchang', ja: '文昌宇宙', ko: '원창 항공우주', ru: 'Космонавтика Вэньчана', ar: 'فضاء ونتشانغ' },
+  hualiHall: { en: 'Dongfang Rosewood', zh: '东方花梨厅', id: 'Kayu Mawar Dongfang', ja: '東方花梨', ko: '둥팡 로즈우드', ru: 'Дунфанская красная древесина', ar: 'خشب الورد في دونغفانغ' },
+  villageHall: { en: 'Beautiful Villages', zh: '美丽乡村厅', id: 'Desa-desa Indah', ja: '美しい農村', ko: '아름다운 농촌', ru: 'Красивые деревни', ar: 'القرى الجميلة' },
+  allLayers: { en: 'All layers', zh: '全部资料层', id: 'Semua lapisan', ja: 'すべてのレイヤー', ko: '모든 레이어', ru: 'Все слои', ar: 'كل الطبقات' },
+  reviewedLayer: { en: 'Reviewed sources', zh: '已核验来源', id: 'Sumber yang ditinjau', ja: '確認済み出典', ko: '검토된 출처', ru: 'Проверенные источники', ar: 'المصادر المُراجعة' },
+  projectLayer: { en: 'Project context', zh: '项目策展素材', id: 'Konteks proyek', ja: 'プロジェクト文脈', ko: '프로젝트 맥락', ru: 'Контекст проекта', ar: 'سياق المشروع' },
+  aiLayer: { en: 'AI curation', zh: 'AI 编排边界', id: 'Kurasi AI', ja: 'AI キュレーション', ko: 'AI 큐레이션', ru: 'Курирование ИИ', ar: 'تنسيق الذكاء الاصطناعي' },
+  searchPlaceholder: { en: 'Search title, publisher, topic or record ID', zh: '搜索标题、发布者、主题或记录编号', id: 'Cari judul, penerbit, topik, atau ID catatan', ja: 'タイトル、発行者、トピック、記録IDを検索', ko: '제목, 발행자, 주제 또는 기록 ID 검색', ru: 'Поиск по названию, издателю, теме или ID записи', ar: 'ابحث عن العنوان أو الناشر أو الموضوع أو معرّف السجل' },
+  recordsShown: { en: 'records shown', zh: '条记录正在显示', id: 'catatan ditampilkan', ja: '件を表示', ko: '개 기록 표시', ru: 'записей показано', ar: 'سجلات معروضة' },
+  topics: { en: 'Topics', zh: '主题', id: 'Topik', ja: 'トピック', ko: '주제', ru: 'Темы', ar: 'الموضوعات' },
+  recordId: { en: 'Record ID', zh: '记录编号', id: 'ID catatan', ja: '記録ID', ko: '기록 ID', ru: 'ID записи', ar: 'معرّف السجل' },
+  coveredHalls: { en: 'Covered halls', zh: '覆盖展厅', id: 'Aula tercakup', ja: '対象ホール', ko: '대상 홀', ru: 'Охваченные залы', ar: 'القاعات المشمولة' },
+  noMatches: { en: 'No archive records match these filters. Try another hall, layer, or keyword.', zh: '没有符合当前筛选条件的档案记录，请更换展厅、资料层或关键词。', id: 'Tidak ada catatan arsip yang cocok. Coba aula, lapisan, atau kata kunci lain.', ja: '条件に一致するアーカイブ記録がありません。ホール、レイヤー、キーワードを変更してください。', ko: '현재 필터와 일치하는 기록이 없습니다. 홀, 레이어 또는 키워드를 바꿔 보세요.', ru: 'Нет архивных записей, соответствующих фильтрам. Попробуйте другой зал, слой или ключевое слово.', ar: 'لا توجد سجلات أرشيفية مطابقة لهذه المرشحات. جرّب قاعة أو طبقة أو كلمة مفتاحية أخرى.' },
+} satisfies Record<string, RuntimeLocalized>
+assertLocalizationTree(sourceArchiveCopy, 'source archive interface copy')
+
 const sourceDeskIntentCopy = {
   culturalCollaboration: { en: 'Cultural collaboration', zh: '文化合作', id: 'Kolaborasi budaya', ja: '文化協働', ko: '문화 협력', ru: 'Культурное сотрудничество', ar: 'تعاون ثقافي' },
   responsibleTravel: { en: 'Responsible travel planning', zh: '负责任的旅行规划', id: 'Perencanaan perjalanan bertanggung jawab', ja: '責任ある旅行計画', ko: '책임 있는 여행 계획', ru: 'Ответственное планирование поездки', ar: 'تخطيط سفر مسؤول' },
@@ -290,6 +321,9 @@ function App() {
   const [leadReference, setLeadReference] = useState('')
   const [sourceDeskOpen, setSourceDeskOpen] = useState(false)
   const [sourceDeskTopic, setSourceDeskTopic] = useState('all')
+  const [sourceDeskHall, setSourceDeskHall] = useState('all')
+  const [sourceDeskLayerFilter, setSourceDeskLayerFilter] = useState('all')
+  const [sourceDeskQuery, setSourceDeskQuery] = useState('')
   const [sourceDeskSourceId, setSourceDeskSourceId] = useState(sourceDeskEntries[0]?.id || '')
   const [sourceDeskIntent, setSourceDeskIntent] = useState('culture-collaboration')
   const [sourceDeskConsent, setSourceDeskConsent] = useState(false)
@@ -357,7 +391,32 @@ function App() {
     { id: 'aerospace', label: sourceDeskCopy.aerospace },
     { id: 'free-trade-port', label: sourceDeskCopy.freeTradePort },
   ]
-  const visibleSourceDeskEntries = sourceDeskEntries.filter((entry) => entry.status === 'reviewed' && (sourceDeskTopic === 'all' || entry.topics.includes(sourceDeskTopic)))
+  const sourceDeskHalls: Array<{ id: string; label: RuntimeLocalized }> = [
+    { id: 'all', label: sourceArchiveCopy.allHalls },
+    { id: 'free-trade-port', label: sourceArchiveCopy.freeTradeHall },
+    { id: 'tropical', label: sourceArchiveCopy.tropicalHall },
+    { id: 'lijin', label: sourceArchiveCopy.lijinHall },
+    { id: 'aerospace', label: sourceArchiveCopy.aerospaceHall },
+    { id: 'huali', label: sourceArchiveCopy.hualiHall },
+    { id: 'village', label: sourceArchiveCopy.villageHall },
+  ]
+  const sourceDeskLayers: Array<{ id: string; label: RuntimeLocalized }> = [
+    { id: 'all', label: sourceArchiveCopy.allLayers },
+    { id: 'verified_source', label: sourceArchiveCopy.reviewedLayer },
+    { id: 'service_orientation', label: sourceDeskLayerCopy.service_orientation },
+    { id: 'project_context', label: sourceArchiveCopy.projectLayer },
+    { id: 'ai_curation', label: sourceArchiveCopy.aiLayer },
+  ]
+  const sourceDeskSearch = sourceDeskQuery.trim().toLocaleLowerCase()
+  const visibleSourceDeskEntries = sourceDeskEntries.filter((entry) => {
+    if (entry.status !== 'reviewed') return false
+    if (sourceDeskTopic !== 'all' && !entry.topics.includes(sourceDeskTopic)) return false
+    if (sourceDeskHall !== 'all' && !entry.zoneIds.includes(sourceDeskHall)) return false
+    if (sourceDeskLayerFilter !== 'all' && entry.displayKind !== sourceDeskLayerFilter) return false
+    if (!sourceDeskSearch) return true
+    const haystack = [entry.id, entry.publisher, ...entry.topics, localize(entry.title, language), localize(entry.scope, language), localize(entry.limitation, language)].join(' ').toLocaleLowerCase()
+    return haystack.includes(sourceDeskSearch)
+  })
   const sourceDeskLayer = (entry: SourceDeskEntry) => localize(sourceDeskLayerCopy[entry.displayKind], language)
 
   const switchZone = (index: number) => {
@@ -1162,11 +1221,15 @@ function App() {
     </LuoyinDesktopPet>
     {sourceDeskOpen && <div className="source-desk-modal" role="dialog" aria-modal="true" aria-labelledby="source-desk-title">
       <div className="source-desk-sheet">
-        <div className="lead-sheet-head"><div><p className="mono-label">{sourceText('kicker')}</p><h2 id="source-desk-title">{sourceText('title')}</h2></div><button className="close-button" type="button" onClick={() => setSourceDeskOpen(false)} aria-label={sourceText('close')}>×</button></div>
-        <p className="source-desk-intro">{sourceText('intro')}</p>
-        <div className="source-topic-filter" role="group" aria-label={sourceText('filterTopics')}>{sourceDeskTopics.map((topic) => <button key={topic.id} type="button" className={sourceDeskTopic === topic.id ? 'source-topic active' : 'source-topic'} aria-pressed={sourceDeskTopic === topic.id} onClick={() => setSourceDeskTopic(topic.id)}>{localize(topic.label, language)}</button>)}</div>
-        <div className="source-desk-list">{visibleSourceDeskEntries.map((entry) => <article className="source-entry" key={entry.id}><div className="source-entry-meta"><span>{sourceDeskLayer(entry)}</span><span>{sourceCheckedAt.get(entry.sourceRecordId) || '—'}</span><span>{sourceText('noPartnership')}</span></div><div className="source-entry-copy"><h3>{localize(entry.title, language)}</h3><p className="source-publisher">{entry.publisher}</p><dl><div><dt>{sourceText('scope')}</dt><dd>{localize(entry.scope, language)}</dd></div><div><dt>{sourceText('limitation')}</dt><dd>{localize(entry.limitation, language)}</dd></div></dl>{entry.canonicalUrl && <a className="source-official-link" href={entry.canonicalUrl} target="_blank" rel="noopener noreferrer">{sourceText('openOriginal')} <span aria-hidden="true">↗</span></a>}{entry.canonicalUrl && <button className={sourceDeskSourceId === entry.id ? 'source-select active' : 'source-select'} type="button" aria-pressed={sourceDeskSourceId === entry.id} onClick={() => { setSourceDeskSourceId(entry.id); setSourceDeskStatus('idle'); setSourceDeskError(''); setSourceDeskReference('') }}>{sourceDeskSourceId === entry.id ? sourceText('selectedSimulation') : sourceText('useSimulation')}</button>}</div></article>)}</div>
-        {visibleSourceDeskEntries.length === 0 && <p className="source-desk-empty" role="status">{sourceText('empty')}</p>}
+        <div className="lead-sheet-head"><div><p className="mono-label">{sourceText('kicker')}</p><h2 id="source-desk-title">{localize(sourceArchiveCopy.archiveTitle, language)}</h2></div><button className="close-button" type="button" onClick={() => setSourceDeskOpen(false)} aria-label={sourceText('close')}>×</button></div>
+        <p className="source-desk-intro">{sourceText('intro')} {localize(sourceArchiveCopy.archiveIntro, language)}</p>
+        <div className="source-archive-summary" aria-live="polite"><strong>{visibleSourceDeskEntries.length}</strong> <span>{localize(sourceArchiveCopy.recordsShown, language)}</span><span className="source-archive-summary-divider" aria-hidden="true">/</span><span>{sourceDeskEntries.length} {localize(sourceArchiveCopy.archiveKicker, language).split(' / ')[0].toLocaleLowerCase()}</span></div>
+        <label className="source-archive-search"><span className="sr-only">{localize(sourceArchiveCopy.searchPlaceholder, language)}</span><input type="search" value={sourceDeskQuery} onChange={(event) => setSourceDeskQuery(event.target.value)} placeholder={localize(sourceArchiveCopy.searchPlaceholder, language)} /></label>
+        <div className="source-archive-filter-group"><span className="source-filter-label">{localize(sourceArchiveCopy.hallFilter, language)}</span><div className="source-topic-filter" role="group" aria-label={localize(sourceArchiveCopy.hallFilter, language)}>{sourceDeskHalls.map((hall) => <button key={hall.id} type="button" className={sourceDeskHall === hall.id ? 'source-topic active' : 'source-topic'} aria-pressed={sourceDeskHall === hall.id} onClick={() => setSourceDeskHall(hall.id)}>{localize(hall.label, language)}</button>)}</div></div>
+        <div className="source-archive-filter-group"><span className="source-filter-label">{localize(sourceArchiveCopy.layerFilter, language)}</span><div className="source-topic-filter" role="group" aria-label={localize(sourceArchiveCopy.layerFilter, language)}>{sourceDeskLayers.map((layer) => <button key={layer.id} type="button" className={sourceDeskLayerFilter === layer.id ? 'source-topic active' : 'source-topic'} aria-pressed={sourceDeskLayerFilter === layer.id} onClick={() => setSourceDeskLayerFilter(layer.id)}>{localize(layer.label, language)}</button>)}</div></div>
+        <div className="source-archive-filter-group"><span className="source-filter-label">{sourceText('filterTopics')}</span><div className="source-topic-filter" role="group" aria-label={sourceText('filterTopics')}>{sourceDeskTopics.map((topic) => <button key={topic.id} type="button" className={sourceDeskTopic === topic.id ? 'source-topic active' : 'source-topic'} aria-pressed={sourceDeskTopic === topic.id} onClick={() => setSourceDeskTopic(topic.id)}>{localize(topic.label, language)}</button>)}</div></div>
+        <div className="source-desk-list">{visibleSourceDeskEntries.map((entry) => <article className="source-entry" key={entry.id}><div className="source-entry-meta"><span>{sourceDeskLayer(entry)}</span><span>{sourceCheckedAt.get(entry.sourceRecordId) || '—'}</span><span>{sourceText('noPartnership')}</span><span>{localize(sourceArchiveCopy.recordId, language)}: {entry.id}</span></div><div className="source-entry-copy"><h3>{localize(entry.title, language)}</h3><p className="source-publisher">{entry.publisher}</p><dl><div><dt>{sourceText('scope')}</dt><dd>{localize(entry.scope, language)}</dd></div><div><dt>{sourceText('limitation')}</dt><dd>{localize(entry.limitation, language)}</dd></div><div><dt>{localize(sourceArchiveCopy.coveredHalls, language)}</dt><dd>{sourceDeskHalls.filter((hall) => hall.id !== 'all' && entry.zoneIds.includes(hall.id)).map((hall) => localize(hall.label, language)).join(' · ') || '—'}</dd></div><div><dt>{localize(sourceArchiveCopy.topics, language)}</dt><dd>{entry.topics.join(' · ')}</dd></div></dl>{entry.canonicalUrl && <a className="source-official-link" href={entry.canonicalUrl} target="_blank" rel="noopener noreferrer">{sourceText('openOriginal')} <span aria-hidden="true">↗</span></a>}{entry.canonicalUrl && <button className={sourceDeskSourceId === entry.id ? 'source-select active' : 'source-select'} type="button" aria-pressed={sourceDeskSourceId === entry.id} onClick={() => { setSourceDeskSourceId(entry.id); setSourceDeskStatus('idle'); setSourceDeskError(''); setSourceDeskReference('') }}>{sourceDeskSourceId === entry.id ? sourceText('selectedSimulation') : sourceText('useSimulation')}</button>}</div></article>)}</div>
+        {visibleSourceDeskEntries.length === 0 && <p className="source-desk-empty" role="status">{localize(sourceArchiveCopy.noMatches, language)} {sourceText('empty')}</p>}
         {sourceDeskStatus === 'success' ? <div className="source-desk-receipt" aria-live="polite"><span className="mono-label">{sourceText('receiptKicker')}</span><h3>{sourceText('receiptTitle')}</h3><p>{sourceText('reference')}: <code>{sourceDeskReference}</code></p><p>{sourceText('noInstitution')}</p><button className="outline-button" type="button" onClick={() => setSourceDeskOpen(false)}>{sourceText('return')}</button></div> : <form className="source-simulation-form" onSubmit={(event) => { event.preventDefault(); submitSourceDeskHandoff() }}><fieldset><legend>{sourceText('simulationPurpose')}</legend><div className="source-intents">{leadIntents.map((intent) => <button type="button" key={intent.id} className={sourceDeskIntent === intent.id ? 'source-intent active' : 'source-intent'} aria-pressed={sourceDeskIntent === intent.id} onClick={() => setSourceDeskIntent(intent.id)}>{localize(intent.label, language)}</button>)}</div></fieldset><label className="lead-consent"><input type="checkbox" checked={sourceDeskConsent} onChange={(event) => setSourceDeskConsent(event.target.checked)} /><span>{sourceText('consent')}</span></label>{sourceDeskError && <p className="lead-error" role="alert">{sourceDeskError}</p>}<button className="lead-submit" type="submit" disabled={!sourceDeskConsent || sourceDeskStatus === 'sending' || !sourceDeskSourceId}>{sourceDeskStatus === 'sending' ? sourceText('preparing') : sourceText('simulate')}</button></form>}
       </div>
     </div>}
