@@ -22,13 +22,13 @@ Replace the root Luoyin drawer with a persistent 2D desktop pet and compact floa
 - The pointer is captured from press through release so a confirmed long press keeps receiving movement after leaving the artwork; default scrolling is still prevented only after drag activation.
 - Clamp movement to viewport safe margins. Dragging never opens chat; ordinary touch scrolling is not blocked before drag activation.
 - The pet close button hides the pet and panel for the current React session. Existing Ask Luoyin controls restore it and open chat. Position and conversation are never stored in browser storage.
-- Closing an automatic page-tour cue with `x` records that cue as dismissed for the current React session, so visibility changes and scrolling do not immediately show the same cue again. Other chapters can still introduce their own cue, and manual chat remains available.
+- Closing an automatic page-tour cue with `x` disables page-tour prompts for the visitor and persists only that boolean preference under `qiongverse.luoyin-tour-prompts`. Visibility changes, scrolling, route changes, and fresh visits on the same origin do not show page-tour cues again. The chat panel provides a localized control to re-enable them; manual chat and spatial automatic exhibit guidance remain available.
 - Each fresh page load starts the pet in the left-bottom safe area. A position chosen by dragging remains only during the current React session.
 - Enter and Space open chat, Escape closes it and returns focus to the pet, controls have bilingual accessible names, image failure retains a labelled text trigger, and reduced motion removes pet animation.
 
 ## Privacy, Failure, And Layering
 
-- No camera, microphone, media permission, tracking SDK, secret, localStorage, sessionStorage, location, or new server interface is introduced.
+- No camera, microphone, media permission, tracking SDK, secret, location, or new server interface is introduced. The only additional browser storage is the boolean page-tour preference `qiongverse.luoyin-tour-prompts`; no dialogue, location, route, or movement data is stored.
 - Keep pet and panel above route content but below source desk, handoff, media preview, and immersive detail sheets. Root blocking dialogs temporarily suppress pet interaction.
 - Preserve source labels, API fallback copy, rate limiting, and human-confirmation limits already enforced by the guide service.
 

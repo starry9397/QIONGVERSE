@@ -23,6 +23,25 @@ const TradePage = lazy(() => import('./components/TradePage'))
 
 type ExperienceRoute = 'luoyin-tide' | 'travel-atlas' | 'market'
 
+const tourCuePreferenceStorageKey = 'qiongverse.luoyin-tour-prompts'
+
+function readTourCuePreference() {
+  try {
+    return window.localStorage.getItem(tourCuePreferenceStorageKey) !== 'disabled'
+  } catch {
+    return true
+  }
+}
+
+function saveTourCuePreference(enabled: boolean) {
+  try {
+    if (enabled) window.localStorage.removeItem(tourCuePreferenceStorageKey)
+    else window.localStorage.setItem(tourCuePreferenceStorageKey, 'disabled')
+  } catch {
+    // A blocked storage area must not prevent the current visit from working.
+  }
+}
+
 function DeferredHainanMap({ language }: { language: Language }) {
   const slotRef = useRef<HTMLDivElement>(null)
   const [shouldLoad, setShouldLoad] = useState(() => window.location.hash === '#hainan-map')
@@ -178,6 +197,8 @@ const autoGuideCopy = {
   right: { en: 'on your right', zh: '右侧', id: 'di kanan', ja: '右側', ko: '오른쪽', ru: 'справа', ar: 'على اليمين' },
   enabled: { en: 'Automatic guide', zh: '自动导览', id: 'Panduan otomatis', ja: '自動ガイド', ko: '자동 안내', ru: 'Автогид', ar: 'الدليل التلقائي' },
   pause: { en: 'Automatic guide paused while another panel is open.', zh: '其他面板打开时，自动导览会暂停。', id: 'Panduan otomatis dijeda saat panel lain terbuka.', ja: '別のパネルを開いている間、自動ガイドは一時停止します。', ko: '다른 패널이 열려 있는 동안 자동 안내가 일시 중지됩니다.', ru: 'Автогид приостановлен, пока открыта другая панель.', ar: 'تم إيقاف الدليل التلقائي مؤقتاً أثناء فتح لوحة أخرى.' },
+  tourPromptsEnabled: { en: 'Disable page tour prompts', zh: '关闭页面导览提示', id: 'Nonaktifkan petunjuk tur halaman', ja: 'ページ案内のヒントを無効化', ko: '페이지 안내 힌트 끄기', ru: 'Отключить подсказки навигации', ar: 'تعطيل تلميحات جولة الصفحات' },
+  tourPromptsDisabled: { en: 'Enable page tour prompts', zh: '重新启用页面导览提示', id: 'Aktifkan petunjuk tur halaman', ja: 'ページ案内のヒントを再有効化', ko: '페이지 안내 힌트 다시 켜기', ru: 'Включить подсказки навигации', ar: 'تفعيل تلميحات جولة الصفحات' },
 } satisfies Record<string, RuntimeLocalized>
 assertLocalizationTree(autoGuideCopy, 'Luoyin automatic guide copy')
 
@@ -252,6 +273,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [guideServiceMode, setGuideServiceMode] = useState<'checking' | 'glm' | 'local' | 'unavailable'>('checking')
   const [tourCue, setTourCue] = useState<LuoyinTourContext | null>(null)
+  const [tourCuesEnabled, setTourCuesEnabled] = useState(readTourCuePreference)
   const [autoGuideEnabled, setAutoGuideEnabled] = useState(true)
   const [autoGuideCue, setAutoGuideCue] = useState<AutoGuideView | null>(null)
   const [speechEnabled, setSpeechEnabled] = useState(false)
@@ -292,6 +314,7 @@ function App() {
   const guideTranscriptRef = useRef<HTMLDivElement>(null)
   const guideInputRef = useRef<HTMLInputElement>(null)
   const tourCueRef = useRef<LuoyinTourContext | null>(null)
+  const tourCuesEnabledRef = useRef(tourCuesEnabled)
   // Keep tour-cue dismissals in the current React session so scrolling cannot
   // immediately re-open the same cue through the visibility observer.
   const dismissedTourCueKeysRef = useRef(new Set<string>())
@@ -370,6 +393,25 @@ function App() {
     }
     window.addEventListener('storage', syncStoredLanguage)
     return () => window.removeEventListener('storage', syncStoredLanguage)
+  }, [])
+
+  useEffect(() => {
+    tourCuesEnabledRef.current = tourCuesEnabled
+  }, [tourCuesEnabled])
+
+  useEffect(() => {
+    const syncTourCuePreference = (event: StorageEvent) => {
+      if (event.key !== tourCuePreferenceStorageKey) return
+      const enabled = event.newValue !== 'disabled'
+      tourCuesEnabledRef.current = enabled
+      setTourCuesEnabled(enabled)
+      if (!enabled) {
+        tourCueRef.current = null
+        setTourCue(null)
+      }
+    }
+    window.addEventListener('storage', syncTourCuePreference)
+    return () => window.removeEventListener('storage', syncTourCuePreference)
   }, [])
 
   useEffect(() => {
@@ -708,7 +750,22 @@ function App() {
     })
   }
 
+  const toggleTourCues = () => {
+    const enabled = !tourCuesEnabledRef.current
+    tourCuesEnabledRef.current = enabled
+    setTourCuesEnabled(enabled)
+    saveTourCuePreference(enabled)
+    if (enabled) {
+      dismissedTourCueKeysRef.current.clear()
+      window.requestAnimationFrame(() => window.dispatchEvent(new Event('scroll')))
+    } else {
+      tourCueRef.current = null
+      setTourCue(null)
+    }
+  }
+
   const showTourCue = (context: LuoyinTourContext) => {
+    if (!tourCuesEnabledRef.current) return
     const key = `${context.page}:${context.sectionId}:${context.cueId}`
     if (dismissedTourCueKeysRef.current.has(key)) return
     const current = tourCueRef.current
@@ -731,6 +788,9 @@ function App() {
   const dismissTourCue = () => {
     const current = tourCueRef.current
     if (current) dismissedTourCueKeysRef.current.add(`${current.page}:${current.sectionId}:${current.cueId}`)
+    tourCuesEnabledRef.current = false
+    setTourCuesEnabled(false)
+    saveTourCuePreference(false)
     tourCueRef.current = null
     setTourCue(null)
   }
@@ -1094,7 +1154,7 @@ function App() {
         <div className="guide-top"><div className="guide-identity"><div className="guide-orb">◎</div><div><p className="mono-label">SHELLSONG / 螺音</p><h2 id="guide-title">{t.guideTitle}</h2></div></div><button className="close-button" type="button" onClick={closeGuideChat} aria-label={t.close}>×</button></div>
         <p className="guide-body">{t.guideBody}</p>
         <p className="guide-state"><span className="state-dot" /> {guideState} / {localize(guideZoneTitle, language)}</p>
-        <div className="guide-utility-actions"><button className="source-desk-trigger" type="button" onClick={openSourceDesk}>{inline(language, 'Verified Source Desk', '已核验来源服务台')} <span>↗</span></button><button className="lead-trigger" type="button" onClick={() => { setGuideOpen(false); resetLead(); setLeadOpen(true) }}>{inline(language, 'Request human follow-up', '请求人工跟进')} <span>↗</span></button><button className="lead-trigger" type="button" aria-pressed={autoGuideEnabled} onClick={toggleAutoGuide}>{localize(autoGuideCopy.enabled, language)} <span aria-hidden="true">{autoGuideEnabled ? '◉' : '○'}</span></button><button className="lead-trigger guide-speech-toggle" type="button" aria-pressed={speechEnabled} onClick={toggleSpeech}>{speechStatus === 'unavailable' ? inline(language, 'Voice unavailable', '合成语音暂不可用') : speechEnabled ? inline(language, 'Disable voice', '关闭语音') : inline(language, 'Enable voice', '开启语音')} <span aria-hidden="true">◉</span></button></div>
+        <div className="guide-utility-actions"><button className="source-desk-trigger" type="button" onClick={openSourceDesk}>{inline(language, 'Verified Source Desk', '已核验来源服务台')} <span>↗</span></button><button className="lead-trigger" type="button" onClick={() => { setGuideOpen(false); resetLead(); setLeadOpen(true) }}>{inline(language, 'Request human follow-up', '请求人工跟进')} <span>↗</span></button><button className="lead-trigger" type="button" aria-pressed={autoGuideEnabled} onClick={toggleAutoGuide}>{localize(autoGuideCopy.enabled, language)} <span aria-hidden="true">{autoGuideEnabled ? '◉' : '○'}</span></button><button className="lead-trigger" type="button" aria-pressed={tourCuesEnabled} onClick={toggleTourCues}>{localize(tourCuesEnabled ? autoGuideCopy.tourPromptsEnabled : autoGuideCopy.tourPromptsDisabled, language)} <span aria-hidden="true">{tourCuesEnabled ? '◉' : '○'}</span></button><button className="lead-trigger guide-speech-toggle" type="button" aria-pressed={speechEnabled} onClick={toggleSpeech}>{speechStatus === 'unavailable' ? inline(language, 'Voice unavailable', '合成语音暂不可用') : speechEnabled ? inline(language, 'Disable voice', '关闭语音') : inline(language, 'Enable voice', '开启语音')} <span aria-hidden="true">◉</span></button></div>
         <div className="guide-answer-area" ref={guideTranscriptRef} aria-live="polite" aria-busy={loading} aria-label={guideText('conversation')}>{guideMessages.length === 0 && <p className="guide-welcome">{t.guideWelcome}</p>}{guideMessages.map((message) => message.role === 'visitor' ? <div className="guide-message visitor-message" key={message.id}><span className="message-label">{guideText('you')} / {message.zoneTitle}</span><p>{message.text}</p></div> : <div className="guide-message guide-message-reply" key={message.id}><div className="answer-meta"><span className="answer-label">{message.mode === 'fallback' || message.mode === 'error' ? guideText('offlineFallback') : message.mode === 'local' ? guideText('localContext') : message.mode === 'glm' ? guideText('glmResponse') : message.layer || t.mock}</span>{message.sourceLabel && !(message.mode === 'local' && (message.sourceLabel === 'Local contextual guide' || message.sourceLabel === '本地语境导览')) && <span className="answer-source">{message.sourceLabel}</span>}{message.sourceUrl && <a className="answer-source answer-source-link" href={message.sourceUrl} target="_blank" rel="noopener noreferrer">{inline(language, 'Open reviewed source', '打开已核验来源')}</a>}{message.sourceClass && message.sourceClass !== 'local_contextual_guide' && <span className="answer-source-class">{message.sourceClass.replaceAll('_', ' ')}</span>}{message.sourceStatus && message.sourceStatus !== 'local' && <span className="answer-source-status">{message.sourceStatus}</span>}</div><p className="guide-answer">{message.text}</p></div>)}{loading && <p className="guide-answer loading">{guideText('loading')}</p>}</div>
         <div className="guide-input"><input ref={guideInputRef} value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitQuestion() }} placeholder={t.guideInput} aria-label={t.guideInput} /><button onClick={submitQuestion} disabled={loading || !question.trim()} aria-label={t.send}>↗</button></div>
         <p className="guide-disclaimer">{guideServiceMode === 'checking' ? guideText('checking') : guideServiceMode === 'glm' ? guideText('glmConnected') : guideServiceMode === 'local' ? guideText('localActive') : guideText('unavailable')}{speechStatus === 'unavailable' && <>{' '}{guideText('speechNotice')}</>}</p>
