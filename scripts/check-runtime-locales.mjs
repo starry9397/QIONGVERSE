@@ -5,6 +5,7 @@ const root = resolve(import.meta.dirname, '..')
 const locales = ['en', 'zh', 'id', 'ja', 'ko', 'ru', 'ar']
 const staticSevenLanguageFiles = [
   'knowledge/luoyin-offline-knowledge.json',
+  'knowledge/luoyin-factual-cards.json',
   'knowledge/source-desk.json',
 ]
 const hydratedKnowledgeFiles = [
