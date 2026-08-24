@@ -1,1 +1,208 @@
-import { useEffect, useState, type RefObject } from 'react' import { assertLocalizationTree, localize, type Language, type Localized } from '../i18n'  export type HomeHeroOverviewProps = {   language: Language   onExploreHalls: () => void   onAskLuoyin: () => void   onOpenIntroVideo: () => void   introVideoTriggerRef?: RefObject<HTMLButtonElement | null> }  const copy = {   kicker: {     en: 'HAINAN DIGITAL CULTURAL JOURNEY',     zh: '海南数字文化漫游',     id: 'PERJALANAN BUDAYA DIGITAL HAINAN',     ja: '海南デジタル文化の旅',     ko: '하이난 디지털 문화 여행',     ru: 'ЦИФРОВОЕ КУЛЬТУРНОЕ ПУТЕШЕСТВИЕ ПО ХАЙНАНЮ',     ar: 'رحلة هاينان الثقافية الرقمية',   },   title: {     en: 'From seeing Hainan to entering Hainan.',     zh: '从看见海南，走进海南。',     id: 'Dari melihat Hainan, memasuki Hainan.',     ja: '海南を見つめ、海南へ入る。',     ko: '하이난을 바라보고, 하이난으로 들어갑니다.',     ru: 'От взгляда на Хайнань — к входу в Хайнань.',     ar: 'من رؤية هاينان إلى الدخول إلى هاينان.',   },   body: {     en: 'Six halls connect island nature, living craft, place memory and future imagination through one navigable cultural path.',     zh: '六大展厅将海岛自然、活态技艺、地方记忆与未来想象，组织成一条可以进入的文化路径。',     id: 'Enam aula menghubungkan alam pulau, kerajinan hidup, ingatan tempat, dan imajinasi masa depan dalam satu jalur budaya yang dapat dijelajahi.',     ja: '六つの展示室が島の自然、受け継がれる技、場所の記憶、未来への想像を、歩いて入れる文化の道としてつなぎます。',     ko: '여섯 개의 전시관이 섬의 자연, 살아 있는 공예, 장소의 기억과 미래의 상상을 하나의 탐험 가능한 문화 경로로 연결합니다.',     ru: 'Шесть залов соединяют природу острова, живое ремесло, память места и воображение будущего в один исследуемый культурный маршрут.',     ar: 'تصل ست قاعات بين طبيعة الجزيرة والحرف الحية وذاكرة المكان وتخيّل المستقبل في مسار ثقافي واحد قابل للاستكشاف.',   },   explore: {     en: 'Explore six halls',     zh: '探索六大展厅',     id: 'Jelajahi enam aula',     ja: '六つの展示室を探る',     ko: '여섯 전시관 탐험',     ru: 'Исследовать шесть залов',     ar: 'استكشف القاعات الست',   },   ask: {     en: 'Ask Luoyin',     zh: '询问螺音',     id: 'Tanya Luoyin',     ja: '螺音に聞く',     ko: '뤄인에게 묻기',     ru: 'Спросить Луоинь',     ar: 'اسأل لويين',   },   indexLabel: {     en: 'A navigable archive of six perspectives',     zh: '六种观看海南的入口',     id: 'Arsip yang dapat dijelajahi dari enam sudut pandang',     ja: '六つの視点からたどるアーカイブ',     ko: '여섯 시선으로 탐험하는 아카이브',     ru: 'Архив, который можно пройти шестью взглядами',     ar: 'أرشيف قابل للاستكشاف من ست زوايا',   },   railLabel: {     en: 'Six hall overview',     zh: '六厅总览',     id: 'Ikhtisar enam aula',     ja: '六つの展示室の概要',     ko: '여섯 전시관 개요',     ru: 'Обзор шести залов',     ar: 'نظرة عامة على القاعات الست',   },   openOverview: {     en: 'Open overview panel',     zh: '展开总览面板',     id: 'Buka panel ikhtisar',     ja: '概要パネルを開く',     ko: '개요 패널 열기',     ru: 'Открыть панель обзора',     ar: 'فتح لوحة النظرة العامة',   },   closeOverview: {     en: 'Collapse overview panel',     zh: '收起总览面板',     id: 'Ciutkan panel ikhtisar',     ja: '概要パネルを閉じる',     ko: '개요 패널 접기',     ru: 'Свернуть панель обзора',     ar: 'طي لوحة النظرة العامة',   },   introVideo: {     en: 'Watch project film',     zh: '观看项目影片',     id: 'Tonton film proyek',     ja: 'プロジェクト映像を見る',     ko: '프로젝트 영상 보기',     ru: 'Смотреть фильм о проекте',     ar: 'شاهد فيلم المشروع',   }, } satisfies Record<string, Localized>  assertLocalizationTree(copy, 'home hero overview copy')  export default function HomeHeroOverview({ language, onExploreHalls, onAskLuoyin, onOpenIntroVideo, introVideoTriggerRef }: HomeHeroOverviewProps) {   const [expanded, setExpanded] = useState(() => window.innerWidth <= 760)   const [hovered, setHovered] = useState(false)   const [focused, setFocused] = useState(false)   useEffect(() => {     const media = window.matchMedia('(max-width: 760px)')     const syncMobileState = () => {       if (media.matches) setExpanded(true)     }     syncMobileState()     media.addEventListener('change', syncMobileState)     return () => media.removeEventListener('change', syncMobileState)   }, [])   const isOpen = expanded || hovered || focused   const toggleLabel = isOpen ? copy.closeOverview : copy.openOverview   const handleToggle = () => {     const nextExpanded = !expanded     setExpanded(nextExpanded)     if (!nextExpanded) {       setHovered(false)       setFocused(false)     }   }    return <div     className={`home-restructured-hero-overview${isOpen ? ' is-expanded' : ' is-collapsed'}`}     onMouseEnter={() => setHovered(true)}     onMouseLeave={() => setHovered(false)}     onFocusCapture={() => setFocused(true)}     onBlurCapture={(event) => {       if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)     }}   >     <div className="home-restructured-hero-rail">       <button         type="button"         className="home-restructured-hero-toggle"         aria-expanded={isOpen}         aria-controls="home-hero-overview-panel"         aria-label={localize(toggleLabel, language)}         title={localize(toggleLabel, language)}         onClick={handleToggle}       >         <span className="home-restructured-hero-toggle-index">01—06</span>         <span className="home-restructured-hero-island-mark" aria-hidden="true">           <svg viewBox="0 0 32 38" role="presentation" focusable="false">             <defs>               <linearGradient id="home-hero-logo-sea" x1="0" y1="0" x2="1" y2="1">                 <stop offset="0" stopColor="#7fe1ed" />                 <stop offset="1" stopColor="#2d92b0" />               </linearGradient>               <linearGradient id="home-hero-logo-pearl" x1="0" y1="0" x2="1" y2="1">                 <stop offset="0" stopColor="#fffdf2" />                 <stop offset=".58" stopColor="#f6e8c8" />                 <stop offset="1" stopColor="#c78d45" />               </linearGradient>             </defs>             <ellipse className="home-restructured-hero-island-ring" cx="16" cy="16" rx="10.5" ry="11.5" />             <path className="home-restructured-hero-island-orbit" d="M1.8 15.4c4.2-5.7 13.8-7.7 24.5-3.5 3.4 1.3 4.2 3.8 1.4 5.6-4.8 3.1-15.4 3.5-23.4.4" />             <circle className="home-restructured-hero-island-pearl" cx="25.9" cy="14.2" r="2.05" />             <path className="home-restructured-hero-island-window" d="M10.8 12.6c1.3-3.1 5.1-5.1 8.8-3.8 2.7 1 3.9 3.4 3.2 5.9-1 3.5-5.2 5.6-8.5 4.4-3.3-1.2-4.9-3.7-3.5-6.5Z" />             <path className="home-restructured-hero-island-swoosh" d="M8.6 19.3c3.7-2.8 6.5-2.2 8.5-.3 2.6 2.5 5.8 2.2 8.5.1" />             <path className="home-restructured-hero-island-star" d="m16 4.8.9 2.8 2.7.9-2.7.9-.9 2.8-.9-2.8-2.7-.9 2.7-.9Z" />             <path className="home-restructured-hero-island-wave" d="M4 31c3-2.6 5.6 2.6 8.6 0s5.6 2.6 8.6 0 5.6 2.6 8.6 0" />           </svg>         </span>         <span className="home-restructured-hero-toggle-label">{localize(copy.railLabel, language)}</span>         <span className="home-restructured-hero-toggle-arrow" aria-hidden="true">{isOpen ? '‹' : '›'}</span>       </button>       <button         type="button"         className="home-intro-video-trigger"         ref={introVideoTriggerRef}         aria-haspopup="dialog"         aria-controls="home-intro-video-dialog"         aria-label={localize(copy.introVideo, language)}         title={localize(copy.introVideo, language)}         onClick={onOpenIntroVideo}       >         <span className="home-intro-video-trigger-icon" aria-hidden="true">▶</span>         <span className="home-intro-video-trigger-label">{localize(copy.introVideo, language)}</span>       </button>     </div>     <div id="home-hero-overview-panel" className="home-restructured-hero-copy">       <p className="home-restructured-kicker">{localize(copy.kicker, language)}</p>       <h2>{localize(copy.title, language)}</h2>       <p className="home-restructured-hero-body">{localize(copy.body, language)}</p>       <div className="home-restructured-hero-actions">         <button type="button" className="home-restructured-primary-action" onClick={onExploreHalls}>           {localize(copy.explore, language)} <span aria-hidden="true">↘</span>         </button>         <button type="button" className="home-restructured-secondary-action" onClick={onAskLuoyin}>           {localize(copy.ask, language)} <span aria-hidden="true">◎</span>         </button>       </div>     </div>     <div className="home-restructured-hero-index" aria-label={localize(copy.indexLabel, language)}>       <span>{localize(copy.indexLabel, language)}</span>       <b>01—06</b>     </div>   </div> }
+import { useEffect, useState, type RefObject } from 'react'
+import { assertLocalizationTree, localize, type Language, type Localized } from '../i18n'
+
+export type HomeHeroOverviewProps = {
+  language: Language
+  onExploreHalls: () => void
+  onAskLuoyin: () => void
+  onOpenIntroVideo: () => void
+  introVideoTriggerRef?: RefObject<HTMLButtonElement | null>
+}
+
+const copy = {
+  kicker: {
+    en: 'HAINAN DIGITAL CULTURAL JOURNEY',
+    zh: '海南数字文化漫游',
+    id: 'PERJALANAN BUDAYA DIGITAL HAINAN',
+    ja: '海南デジタル文化の旅',
+    ko: '하이난 디지털 문화 여행',
+    ru: 'ЦИФРОВОЕ КУЛЬТУРНОЕ ПУТЕШЕСТВИЕ ПО ХАЙНАНЮ',
+    ar: 'رحلة هاينان الثقافية الرقمية',
+  },
+  title: {
+    en: 'From seeing Hainan to entering Hainan.',
+    zh: '从看见海南，走进海南。',
+    id: 'Dari melihat Hainan, memasuki Hainan.',
+    ja: '海南を見つめ、海南へ入る。',
+    ko: '하이난을 바라보고, 하이난으로 들어갑니다.',
+    ru: 'От взгляда на Хайнань — к входу в Хайнань.',
+    ar: 'من رؤية هاينان إلى الدخول إلى هاينان.',
+  },
+  body: {
+    en: 'Six halls connect island nature, living craft, place memory and future imagination through one navigable cultural path.',
+    zh: '六大展厅将海岛自然、活态技艺、地方记忆与未来想象，组织成一条可以进入的文化路径。',
+    id: 'Enam aula menghubungkan alam pulau, kerajinan hidup, ingatan tempat, dan imajinasi masa depan dalam satu jalur budaya yang dapat dijelajahi.',
+    ja: '六つの展示室が島の自然、受け継がれる技、場所の記憶、未来への想像を、歩いて入れる文化の道としてつなぎます。',
+    ko: '여섯 개의 전시관이 섬의 자연, 살아 있는 공예, 장소의 기억과 미래의 상상을 하나의 탐험 가능한 문화 경로로 연결합니다.',
+    ru: 'Шесть залов соединяют природу острова, живое ремесло, память места и воображение будущего в один исследуемый культурный маршрут.',
+    ar: 'تصل ست قاعات بين طبيعة الجزيرة والحرف الحية وذاكرة المكان وتخيّل المستقبل في مسار ثقافي واحد قابل للاستكشاف.',
+  },
+  explore: {
+    en: 'Explore six halls',
+    zh: '探索六大展厅',
+    id: 'Jelajahi enam aula',
+    ja: '六つの展示室を探る',
+    ko: '여섯 전시관 탐험',
+    ru: 'Исследовать шесть залов',
+    ar: 'استكشف القاعات الست',
+  },
+  ask: {
+    en: 'Ask Luoyin',
+    zh: '询问螺音',
+    id: 'Tanya Luoyin',
+    ja: '螺音に聞く',
+    ko: '뤄인에게 묻기',
+    ru: 'Спросить Луоинь',
+    ar: 'اسأل لويين',
+  },
+  indexLabel: {
+    en: 'A navigable archive of six perspectives',
+    zh: '六种观看海南的入口',
+    id: 'Arsip yang dapat dijelajahi dari enam sudut pandang',
+    ja: '六つの視点からたどるアーカイブ',
+    ko: '여섯 시선으로 탐험하는 아카이브',
+    ru: 'Архив, который можно пройти шестью взглядами',
+    ar: 'أرشيف قابل للاستكشاف من ست زوايا',
+  },
+  railLabel: {
+    en: 'Six hall overview',
+    zh: '六厅总览',
+    id: 'Ikhtisar enam aula',
+    ja: '六つの展示室の概要',
+    ko: '여섯 전시관 개요',
+    ru: 'Обзор шести залов',
+    ar: 'نظرة عامة على القاعات الست',
+  },
+  openOverview: {
+    en: 'Open overview panel',
+    zh: '展开总览面板',
+    id: 'Buka panel ikhtisar',
+    ja: '概要パネルを開く',
+    ko: '개요 패널 열기',
+    ru: 'Открыть панель обзора',
+    ar: 'فتح لوحة النظرة العامة',
+  },
+  closeOverview: {
+    en: 'Collapse overview panel',
+    zh: '收起总览面板',
+    id: 'Ciutkan panel ikhtisar',
+    ja: '概要パネルを閉じる',
+    ko: '개요 패널 접기',
+    ru: 'Свернуть панель обзора',
+    ar: 'طي لوحة النظرة العامة',
+  },
+  introVideo: {
+    en: 'Watch project film',
+    zh: '观看项目影片',
+    id: 'Tonton film proyek',
+    ja: 'プロジェクト映像を見る',
+    ko: '프로젝트 영상 보기',
+    ru: 'Смотреть фильм о проекте',
+    ar: 'شاهد فيلم المشروع',
+  },
+} satisfies Record<string, Localized>
+
+assertLocalizationTree(copy, 'home hero overview copy')
+
+export default function HomeHeroOverview({ language, onExploreHalls, onAskLuoyin, onOpenIntroVideo, introVideoTriggerRef }: HomeHeroOverviewProps) {
+  const [expanded, setExpanded] = useState(() => window.innerWidth <= 760)
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 760px)')
+    const syncMobileState = () => {
+      if (media.matches) setExpanded(true)
+    }
+    syncMobileState()
+    media.addEventListener('change', syncMobileState)
+    return () => media.removeEventListener('change', syncMobileState)
+  }, [])
+  const isOpen = expanded || hovered || focused
+  const toggleLabel = isOpen ? copy.closeOverview : copy.openOverview
+  const handleToggle = () => {
+    const nextExpanded = !expanded
+    setExpanded(nextExpanded)
+    if (!nextExpanded) {
+      setHovered(false)
+      setFocused(false)
+    }
+  }
+
+  return <div
+    className={`home-restructured-hero-overview${isOpen ? ' is-expanded' : ' is-collapsed'}`}
+    onMouseEnter={() => setHovered(true)}
+    onMouseLeave={() => setHovered(false)}
+    onFocusCapture={() => setFocused(true)}
+    onBlurCapture={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false)
+    }}
+  >
+    <div className="home-restructured-hero-rail">
+      <button
+        type="button"
+        className="home-restructured-hero-toggle"
+        aria-expanded={isOpen}
+        aria-controls="home-hero-overview-panel"
+        aria-label={localize(toggleLabel, language)}
+        title={localize(toggleLabel, language)}
+        onClick={handleToggle}
+      >
+        <span className="home-restructured-hero-toggle-index">01—06</span>
+        <span className="home-restructured-hero-island-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 38" role="presentation" focusable="false">
+            <defs>
+              <linearGradient id="home-hero-logo-sea" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#7fe1ed" />
+                <stop offset="1" stopColor="#2d92b0" />
+              </linearGradient>
+              <linearGradient id="home-hero-logo-pearl" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#fffdf2" />
+                <stop offset=".58" stopColor="#f6e8c8" />
+                <stop offset="1" stopColor="#c78d45" />
+              </linearGradient>
+            </defs>
+            <ellipse className="home-restructured-hero-island-ring" cx="16" cy="16" rx="10.5" ry="11.5" />
+            <path className="home-restructured-hero-island-orbit" d="M1.8 15.4c4.2-5.7 13.8-7.7 24.5-3.5 3.4 1.3 4.2 3.8 1.4 5.6-4.8 3.1-15.4 3.5-23.4.4" />
+            <circle className="home-restructured-hero-island-pearl" cx="25.9" cy="14.2" r="2.05" />
+            <path className="home-restructured-hero-island-window" d="M10.8 12.6c1.3-3.1 5.1-5.1 8.8-3.8 2.7 1 3.9 3.4 3.2 5.9-1 3.5-5.2 5.6-8.5 4.4-3.3-1.2-4.9-3.7-3.5-6.5Z" />
+            <path className="home-restructured-hero-island-swoosh" d="M8.6 19.3c3.7-2.8 6.5-2.2 8.5-.3 2.6 2.5 5.8 2.2 8.5.1" />
+            <path className="home-restructured-hero-island-star" d="m16 4.8.9 2.8 2.7.9-2.7.9-.9 2.8-.9-2.8-2.7-.9 2.7-.9Z" />
+            <path className="home-restructured-hero-island-wave" d="M4 31c3-2.6 5.6 2.6 8.6 0s5.6 2.6 8.6 0 5.6 2.6 8.6 0" />
+          </svg>
+        </span>
+        <span className="home-restructured-hero-toggle-label">{localize(copy.railLabel, language)}</span>
+        <span className="home-restructured-hero-toggle-arrow" aria-hidden="true">{isOpen ? '‹' : '›'}</span>
+      </button>
+      <button
+        type="button"
+        className="home-intro-video-trigger"
+        ref={introVideoTriggerRef}
+        aria-haspopup="dialog"
+        aria-controls="home-intro-video-dialog"
+        aria-label={localize(copy.introVideo, language)}
+        title={localize(copy.introVideo, language)}
+        onClick={onOpenIntroVideo}
+      >
+        <span className="home-intro-video-trigger-icon" aria-hidden="true">▶</span>
+        <span className="home-intro-video-trigger-label">{localize(copy.introVideo, language)}</span>
+      </button>
+    </div>
+    <div id="home-hero-overview-panel" className="home-restructured-hero-copy">
+      <p className="home-restructured-kicker">{localize(copy.kicker, language)}</p>
+      <h2>{localize(copy.title, language)}</h2>
+      <p className="home-restructured-hero-body">{localize(copy.body, language)}</p>
+      <div className="home-restructured-hero-actions">
+        <button type="button" className="home-restructured-primary-action" onClick={onExploreHalls}>
+          {localize(copy.explore, language)} <span aria-hidden="true">↘</span>
+        </button>
+        <button type="button" className="home-restructured-secondary-action" onClick={onAskLuoyin}>
+          {localize(copy.ask, language)} <span aria-hidden="true">◎</span>
+        </button>
+      </div>
+    </div>
+    <div className="home-restructured-hero-index" aria-label={localize(copy.indexLabel, language)}>
+      <span>{localize(copy.indexLabel, language)}</span>
+      <b>01—06</b>
+    </div>
+  </div>
+}
