@@ -962,9 +962,21 @@ function isDecisionBoundaryQuestion(question) {
   return explicitCurrent || personalOrAction
 }
 
+function isExplicitProjectContextQuestion(question) {
+  const normalized = String(question || '').toLocaleLowerCase().normalize('NFKC')
+  return /\b(this|that|current|pictured|shown|image|photo|project|exhibition|exhibit|hall|scene|render|concept|curated|catalogue|display|object|artifact|artefact|shellsong|luoyin|qiongverse|aigc)\b|当前|这个|这件|这张|这里|本项目|项目|展厅|展区|展项|展品|图片|图像|照片|画面|场景|渲染|概念展品|策展|展柜|螺音|虚构|大世界|页面/u.test(normalized)
+}
+
+function isOpenDomainProjectCard(item) {
+  return item?.id === 'rosewood-curatorial-reading'
+}
+
 function guideQuestionMode(question, knowledgeItem = null) {
   if (isDecisionBoundaryQuestion(question)) return 'decision_boundary'
+  const explicitProjectContext = isExplicitProjectContextQuestion(question)
+  if (isOpenDomainProjectCard(knowledgeItem) && !explicitProjectContext) return 'open_domain'
   if (knowledgeItem?.answerKind === 'general_knowledge') return 'fact_card'
+  if (isOpenDomainProjectCard(knowledgeItem) && explicitProjectContext) return 'project_context'
   if (knowledgeItem && knowledgeItem.id !== 'general-question-boundary') return 'project_context'
   return 'open_domain'
 }
@@ -1038,31 +1050,39 @@ function answerModeForItem(item) {
 
 function answerModeForQuestion(question, item, source = null) {
   if (isDecisionBoundaryQuestion(question)) return 'regulated_orientation'
+  const questionMode = guideQuestionMode(question, item)
+  if (questionMode === 'open_domain' && isOpenDomainProjectCard(item)) return 'open_domain'
   if (item) return answerModeForItem(item)
   if (source) return 'source_oriented'
   return 'open_domain'
 }
 
-function knowledgeResponse(item, language, reason, question = '') {
-  const source = knowledgeSource(item)
-  const fallback = reason === 'fallback'
+function knowledgePresentation(item, language, question, source = null) {
   const localizedGuide = guideCopy[language] || guideCopy.en
-  if (source) {
+  const questionMode = guideQuestionMode(question, item)
+  const projectCardAsOptionalContext = questionMode === 'open_domain' && isOpenDomainProjectCard(item)
+  if (projectCardAsOptionalContext) {
     return {
-      answer: localized(item.answer, language),
-      ...(item.answerKind ? { answerKind: item.answerKind } : {}),
-      answerMode: answerModeForQuestion(question, item, source),
-      layer: 'reviewed_source_orientation',
-      ...sourceMetadata(source, language),
-      handoff: false,
-      mode: fallback ? 'fallback' : 'local',
+      sourceLabel: localizedGuide.generalKnowledge,
+      sourceUrl: null,
+      sourceClass: 'ai_suggestion',
+      sourceStatus: 'needs_review',
+      sourcePublisher: null,
+      sourceCheckedAt: null,
+    }
+  }
+  if (source) return sourceMetadata(source, language)
+  if (!item) {
+    return {
+      sourceLabel: localizedGuide.ai,
+      sourceUrl: null,
+      sourceClass: 'ai_suggestion',
+      sourceStatus: 'needs_review',
+      sourcePublisher: null,
+      sourceCheckedAt: null,
     }
   }
   return {
-    answer: localized(item.answer, language),
-    ...(item.answerKind ? { answerKind: item.answerKind } : {}),
-    answerMode: answerModeForQuestion(question, item),
-    layer: item.evidenceClass,
     sourceLabel: item.answerKind === 'general_knowledge'
       ? `${localizedGuide.generalKnowledge || localizedGuide.ai}: ${localized(item.title, language)}`
       : item.evidenceClass === 'ai_suggestion'
@@ -1073,9 +1093,33 @@ function knowledgeResponse(item, language, reason, question = '') {
     sourceStatus: item.answerKind === 'general_knowledge' ? 'local' : item.status,
     sourcePublisher: null,
     sourceCheckedAt: null,
+  }
+}
+
+function knowledgeResponse(item, language, reason, question = '') {
+  const answerMode = answerModeForQuestion(question, item)
+  const source = answerMode === 'open_domain' && isOpenDomainProjectCard(item) ? null : knowledgeSource(item)
+  const fallback = reason === 'fallback'
+  if (source) {
+    return {
+      answer: localized(item.answer, language),
+      ...(item.answerKind ? { answerKind: item.answerKind } : {}),
+      answerMode,
+      layer: 'reviewed_source_orientation',
+      ...knowledgePresentation(item, language, question, source),
+      handoff: false,
+      mode: fallback ? 'fallback' : 'local',
+    }
+  }
+  return {
+    answer: localized(item.answer, language),
+    ...(item.answerKind ? { answerKind: item.answerKind } : {}),
+    answerMode,
+    layer: item.evidenceClass,
+    ...knowledgePresentation(item, language, question),
     handoff: false,
     mode: fallback ? 'fallback' : 'local',
-    ...(fallback ? { fallbackLabel: localizedGuide.offline } : {}),
+    ...(fallback ? { fallbackLabel: (guideCopy[language] || guideCopy.en).offline } : {}),
   }
 }
 
@@ -1087,6 +1131,14 @@ function knowledgePromptContext(item, language, questionMode = 'open_domain') {
     return 'No catalogue card matches this question. This is not a reason to refuse: answer an ordinary open-domain question from general knowledge directly. Use the selected hall only as optional context, do not invent project-specific or current operational facts, and label the response as an AI suggestion in metadata rather than leading with a disclaimer.'
   }
   const source = knowledgeSource(item)
+  if (questionMode === 'open_domain' && isOpenDomainProjectCard(item)) {
+    return [
+      `optional exhibition context only: ${localized(item.title, language)}.`,
+      'The current hall contains a project-curated visual study; use it only as a scene cue after answering the visitor’s ordinary knowledge question.',
+      'Answer the visitor’s ordinary knowledge question first using general knowledge. Do not treat the project image, render, or curatorial wording as evidence for species, age, provenance, maker, authenticity, price, or historical fact.',
+      'Do not lead with a project disclaimer or repeat the exhibition limitation unless the visitor asks about this specific scene or object. If the question is about the material or craft generally, give the concrete educational explanation first.',
+    ].join('\n')
+  }
   const sourceContext = source
     ? `Reviewed source: ${source.publisher}; ${localized(source.title, language)}; ${source.canonicalUrl}. Source scope: ${localized(source.scope, language)}`
     : `Evidence class: ${item.evidenceClass}; answer kind: ${item.answerKind || 'project_context'}; no reviewed source citation is attached.`
@@ -1173,6 +1225,29 @@ function localOpenDomainFallback(zone, language, question, reason = 'mock') {
   const regulated = isDecisionBoundaryQuestion(question)
   const zoneTitle = zone?.title || zones.tropical.title
   const visualCue = localized(zone?.mock, language) || localized(zones.tropical.mock, language)
+  const hualiQuestion = /\b(rosewood|huali|wood grain|wood material)\b|花梨|木纹|木材|木质|木头/iu.test(String(question || ''))
+  if (!regulated && hualiQuestion) {
+    const answers = {
+      en: 'Rosewood is a broad trade and cultural name used for several hardwoods, so the exact species can vary by region and context. Grain, colour, density, scent and workability are useful descriptive features, but a name or image alone cannot prove species, provenance or authenticity. A specific object needs traceable records and specialist examination.',
+      zh: '“花梨木”是一个可能对应多种硬木的贸易与文化称谓，具体树种会因地区和语境而不同。纹理、色泽、密度、气味与加工性能可以用于一般描述，但仅凭名称或图片不能证明树种、产地或真伪；具体物件仍需要可追溯资料与专业检验。',
+      id: 'Rosewood adalah sebutan perdagangan dan budaya yang dapat merujuk pada beberapa kayu keras, sehingga jenis tepatnya bergantung pada wilayah dan konteks. Serat, warna, kerapatan, aroma, dan kemudahan pengerjaan membantu deskripsi umum, tetapi nama atau gambar saja tidak membuktikan jenis, asal, atau keaslian. Benda tertentu memerlukan catatan yang dapat ditelusuri dan pemeriksaan ahli.',
+      ja: 'ローズウッドは複数の硬木を指し得る交易上・文化上の呼び名で、正確な樹種は地域や文脈で異なります。木目、色、密度、香り、加工性は一般的な説明に役立ちますが、名称や画像だけで樹種、産地、真正性を証明することはできません。個別の物には追跡可能な記録と専門家の検査が必要です。',
+      ko: '로즈우드는 여러 경목을 가리킬 수 있는 무역·문화적 명칭이므로 정확한 수종은 지역과 맥락에 따라 달라질 수 있습니다. 결, 색, 밀도, 향, 가공성은 일반적인 특징을 설명하는 데 도움이 되지만 이름이나 이미지만으로 수종·산지·진위를 증명할 수는 없습니다. 특정 물품은 추적 가능한 기록과 전문가 검사가 필요합니다.',
+      ru: 'Палисандр — широкое торговое и культурное название, которое может относиться к нескольким твёрдым породам; точный вид зависит от региона и контекста. Текстура, цвет, плотность, запах и обрабатываемость помогают описать материал в общем, но по одному названию или изображению нельзя доказать породу, происхождение или подлинность. Для конкретного предмета нужны прослеживаемые документы и экспертное исследование.',
+      ar: 'خشب الورد تسمية تجارية وثقافية واسعة قد تشير إلى عدة أخشاب صلبة، لذلك قد يختلف النوع الدقيق باختلاف المنطقة والسياق. تساعد العروق واللون والكثافة والرائحة وقابلية التشغيل في الوصف العام، لكن الاسم أو الصورة وحدهما لا يثبتان النوع أو المنشأ أو الأصالة. يحتاج الشيء المحدد إلى سجلات قابلة للتتبع وفحص متخصص.',
+    }
+    return {
+      answer: answers[language] || answers.en,
+      answerMode: 'open_domain_fallback',
+      layer: 'local_open_domain_knowledge',
+      sourceLabel: localizedGuide.generalKnowledge,
+      sourceUrl: null,
+      sourceClass: 'ai_suggestion',
+      sourceStatus: reason === 'fallback' ? 'local' : 'needs_review',
+      handoff: false,
+      mode: reason === 'fallback' ? 'fallback' : 'local',
+    }
+  }
   const copy = {
     en: regulated
       ? `For “${topic}”, I can give general orientation, but a current or personal decision needs the relevant official source or a qualified human. In ${zoneTitle}, start with this project context: ${visualCue}`
@@ -1282,7 +1357,9 @@ function localResponse(zone, language, question, reason = 'mock') {
     }
   }
   const knowledgeItem = knowledgeForQuestion(question, zone?.id)
-  if (knowledgeItem) return knowledgeResponse(knowledgeItem, language, reason, question)
+  const knowledgeMode = guideQuestionMode(question, knowledgeItem)
+  if (isOpenDomainProjectCard(knowledgeItem) && knowledgeMode === 'open_domain') return localOpenDomainFallback(zone, language, question, reason)
+  if (knowledgeItem && !(isOpenDomainProjectCard(knowledgeItem) && knowledgeMode === 'open_domain')) return knowledgeResponse(knowledgeItem, language, reason, question)
   let responseKind = 'default'
   let source = null
   let answer = localizedGuide.default(zone)
@@ -1392,7 +1469,8 @@ async function upstreamResponse(zone, language, question, context = null) {
   const knowledgeItem = knowledgeForQuestion(question, zone?.id)
   const questionMode = guideQuestionMode(question, knowledgeItem)
   const generation = glmGenerationProfile(questionMode)
-  const source = knowledgeSource(knowledgeItem) || sourceForQuestion(zone.id, question)
+  const projectCardAsOptionalContext = questionMode === 'open_domain' && isOpenDomainProjectCard(knowledgeItem)
+  const source = projectCardAsOptionalContext ? null : knowledgeSource(knowledgeItem) || sourceForQuestion(zone.id, question)
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15_000)
   try {
@@ -1427,23 +1505,7 @@ async function upstreamResponse(zone, language, question, context = null) {
       answer,
       ...(knowledgeItem?.answerKind ? { answerKind: knowledgeItem.answerKind } : {}),
       layer: source ? 'verified_primary_source' : knowledgeItem?.evidenceClass || 'ai_suggestion',
-      ...(source ? sourceMetadata(source, language) : knowledgeItem ? {
-        sourceLabel: knowledgeItem.answerKind === 'general_knowledge'
-          ? `${(guideCopy[language] || guideCopy.en).generalKnowledge || (guideCopy[language] || guideCopy.en).ai}: ${localized(knowledgeItem.title, language)}`
-          : localized(knowledgeItem.title, language),
-        sourceUrl: null,
-        sourceClass: knowledgeItem.evidenceClass,
-        sourceStatus: knowledgeItem.answerKind === 'general_knowledge' ? 'local' : knowledgeItem.status,
-        sourcePublisher: null,
-        sourceCheckedAt: null,
-      } : {
-        sourceLabel: (guideCopy[language] || guideCopy.en).ai,
-        sourceUrl: null,
-        sourceClass: 'ai_suggestion',
-        sourceStatus: 'needs_review',
-        sourcePublisher: null,
-        sourceCheckedAt: null,
-      }),
+      ...knowledgePresentation(knowledgeItem, language, question, source),
       handoff: false,
       mode: 'glm',
       answerMode: answerModeForQuestion(question, knowledgeItem, source),
@@ -1714,7 +1776,10 @@ const server = http.createServer(async (req, res) => {
     const speech = speakRequested ? await synthesizeSpeech(result.answer, language) : null
     if (result.mode === 'glm' && !result.sourceUrl) {
       const matchedItem = knowledgeForQuestion(question, zoneId)
-      const source = knowledgeSource(matchedItem) || sourceForQuestion(zoneId, question)
+      const matchedMode = guideQuestionMode(question, matchedItem)
+      const source = matchedMode === 'open_domain' && isOpenDomainProjectCard(matchedItem)
+        ? null
+        : knowledgeSource(matchedItem) || sourceForQuestion(zoneId, question)
       if (source) {
         Object.assign(result, { ...sourceMetadata(source, language), layer: 'verified_primary_source' })
       }
@@ -1821,6 +1886,19 @@ async function runSelfTest() {
     check('offline knowledge matches B2C collection boundary', marketKnowledge?.id === 'market-demo-boundary' && localResponse(zones.tropical, 'en', 'Is the market a real payment service?').sourceClass === 'project_context')
     check('offline knowledge matches regional map questions', knowledgeForQuestion('How should I use the Hainan regional map?')?.id === 'map-reading-boundary')
     check('knowledge matching avoids substring false positives', knowledgeForQuestion('authenticity', 'huali') === null && knowledgeForQuestion('How do museums verify authenticity?', 'huali') === null)
+    const hualiKnowledge = knowledgeForQuestion('东方花梨', 'huali')
+    check('ordinary huali topic routes to open-domain GLM mode', hualiKnowledge?.id === 'rosewood-curatorial-reading' && guideQuestionMode('东方花梨', hualiKnowledge) === 'open_domain')
+    check('ordinary huali definition is not forced into project context', guideQuestionMode('花梨木是什么？', hualiKnowledge) === 'open_domain')
+    check('general craft question keeps its factual-card mode', guideQuestionMode('木雕通常如何制作？', knowledgeForQuestion('木雕通常如何制作？', 'huali')) === 'fact_card')
+    check('ordinary wood question is not forced into project context', guideQuestionMode('如何判断木材的一般特征？', hualiKnowledge) === 'open_domain')
+    check('explicit exhibit question keeps project context mode', guideQuestionMode('这个展厅里的花梨展品是什么？', hualiKnowledge) === 'project_context' && guideQuestionMode('这张项目图片如何呈现花梨？', hualiKnowledge) === 'project_context')
+    check('project card is optional context for open-domain prompts', /optional exhibition context/u.test(knowledgePromptContext(hualiKnowledge, 'zh', 'open_domain')) && !/Approved project-authored context/u.test(knowledgePromptContext(hualiKnowledge, 'zh', 'open_domain')))
+    const hualiFallback = localResponse(zones.huali, 'zh', '东方花梨')
+    check('offline huali topic uses an open-domain fallback instead of a project disclaimer', hualiFallback.answerMode === 'open_domain_fallback' && hualiFallback.sourceClass === 'ai_suggestion' && !hualiFallback.answer.includes('展品是项目策展的视觉研究'))
+    const hualiRoute = await requestJson(baseUrl + '/api/luoyin', { question: '东方花梨', language: 'zh', zoneId: 'huali' })
+    check('legacy guide route exposes open-domain huali metadata', hualiRoute.status === 200 && hualiRoute.body.answerMode === 'open_domain_fallback' && hualiRoute.body.sourceClass === 'ai_suggestion' && hualiRoute.body.sourceStatus === 'needs_review' && !hualiRoute.body.answer.includes('展品是项目策展的视觉研究'))
+    const hualiProjectRoute = await requestJson(baseUrl + '/api/luoyin', { question: '这个展厅里的花梨展品是什么？', language: 'zh', zoneId: 'huali' })
+    check('legacy guide route keeps explicit huali exhibit context', hualiProjectRoute.status === 200 && hualiProjectRoute.body.answerMode === 'project_context' && hualiProjectRoute.body.sourceClass === 'project_context')
     check('offline knowledge matches voice questions', knowledgeForQuestion('Is Luoyin voice a real child?')?.id === 'ai-voice-boundary')
     check('offline knowledge matches tour questions', knowledgeForQuestion('Can Luoyin guide me through the tour?')?.id === 'guided-tour-interface')
     const unknownFallback = localResponse(zones.tropical, 'en', 'How do neural networks work?')

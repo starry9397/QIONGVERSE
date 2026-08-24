@@ -104,6 +104,7 @@ type GuideMessage = {
   sourceUrl?: string | null
   sourceClass?: string
   sourceStatus?: string
+  answerMode?: string
   mode?: 'local' | 'mock' | 'glm' | 'fallback' | 'error'
   speech?: { status: 'ready' | 'unavailable'; voice: string; segments?: Array<{ mimeType: string; data: string }> }
 }
@@ -194,6 +195,9 @@ const guideUiCopy = {
   offlineFallback: { en: 'offline fallback', zh: '离线本地回退', id: 'fallback lokal offline', ja: 'オフラインのローカル回答', ko: '오프라인 로컬 대체 답변', ru: 'локальный офлайн-ответ', ar: 'رد محلي دون اتصال' },
   localContext: { en: 'local contextual guide', zh: '本地语境导览', id: 'panduan kontekstual lokal', ja: 'ローカル文脈ガイド', ko: '로컬 맥락 안내', ru: 'локальный контекстный гид', ar: 'دليل سياقي محلي' },
   glmResponse: { en: 'GLM guide response', zh: 'GLM 导览回答', id: 'respons pemandu GLM', ja: 'GLM ガイドの回答', ko: 'GLM 안내 응답', ru: 'ответ гида GLM', ar: 'رد دليل GLM' },
+  glmKnowledgeResponse: { en: 'GLM knowledge answer', zh: 'GLM 科普回答', id: 'jawaban pengetahuan GLM', ja: 'GLM 知識回答', ko: 'GLM 지식 답변', ru: 'ответ GLM по знаниям', ar: 'إجابة معرفية من GLM' },
+  glmProjectResponse: { en: 'GLM project guide', zh: 'GLM 项目导览', id: 'panduan proyek GLM', ja: 'GLM プロジェクトガイド', ko: 'GLM 프로젝트 안내', ru: 'проектный гид GLM', ar: 'دليل مشروع GLM' },
+  glmRegulatedResponse: { en: 'GLM general orientation', zh: 'GLM 一般说明', id: 'orientasi umum GLM', ja: 'GLM 一般案内', ko: 'GLM 일반 안내', ru: 'общая ориентация GLM', ar: 'توجيه عام من GLM' },
   loading: { en: 'Listening to the tide…', zh: '正在听潮声……', id: 'Mendengarkan pasang…', ja: '潮の音を聴いています…', ko: '조수의 소리를 듣는 중…', ru: 'Слушаю прилив…', ar: 'أصغي إلى المد…' },
   checking: { en: 'Checking guide service…', zh: '正在检查导览服务……', id: 'Memeriksa layanan pemandu…', ja: 'ガイドサービスを確認中…', ko: '안내 서비스를 확인하는 중…', ru: 'Проверяем сервис гида…', ar: 'جارٍ التحقق من خدمة الدليل…' },
   glmConnected: { en: 'Live GLM guide is connected. Current or regulated details should be checked against a primary source.', zh: '实时 GLM 导览已连接。涉及当前或受监管的详情，请以权威一手来源为准。', id: 'Pemandu GLM langsung terhubung. Rincian terkini atau yang diatur perlu diperiksa pada sumber utama.', ja: 'リアルタイム GLM ガイドに接続しました。現在の情報や規制に関わる詳細は一次資料で確認してください。', ko: '실시간 GLM 안내가 연결되었습니다. 현재 정보나 규제 관련 세부 사항은 1차 출처에서 확인하세요.', ru: 'Онлайн-гид GLM подключён. Актуальные и регулируемые детали проверяйте по первичному источнику.', ar: 'اتصل دليل GLM المباشر. تحقّق من التفاصيل الحالية أو الخاضعة للتنظيم عبر مصدر أولي.' },
@@ -367,6 +371,18 @@ function App() {
   const speechAudioRef = useRef<HTMLAudioElement | null>(null)
   const t = copy[language]
   const guideText = (key: keyof typeof guideUiCopy) => localize(guideUiCopy[key], language)
+  const guideAnswerLabel = (message: GuideMessage) => {
+    if (message.mode === 'fallback' || message.mode === 'error') return guideText('offlineFallback')
+    if (message.mode === 'glm') {
+      if (message.answerMode === 'project_context') return guideText('glmProjectResponse')
+      if (message.answerMode === 'regulated_orientation') return guideText('glmRegulatedResponse')
+      if (message.answerMode === 'open_domain' || message.answerMode === 'open_domain_fallback' || message.answerMode === 'general_knowledge') return guideText('glmKnowledgeResponse')
+      return guideText('glmResponse')
+    }
+    if (message.answerMode === 'general_knowledge' || message.answerMode === 'open_domain_fallback') return guideText('localContext')
+    if (message.mode === 'local') return guideText('localContext')
+    return message.layer || t.mock
+  }
   const sourceText = (key: keyof typeof sourceDeskCopy) => localize(sourceDeskCopy[key], language)
   const tx = (english: string, chinese: string) => inline(language, english, chinese)
   const directionLabel = (direction: Direction) => localize(autoGuideCopy[direction], language)
@@ -1015,9 +1031,9 @@ function App() {
     let completed = false
     try {
       const response = await fetch(apiPath('/api/luoyin'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ question: trimmed, language, zoneId: guideZoneId, speak: speechEnabled }) })
-      const payload = await response.json() as { answer?: string; layer?: string; sourceLabel?: string; sourceUrl?: string | null; sourceClass?: string; sourceStatus?: string; handoff?: boolean; mode?: 'local' | 'mock' | 'glm' | 'fallback'; speech?: GuideMessage['speech'] }
+      const payload = await response.json() as { answer?: string; answerMode?: string; layer?: string; sourceLabel?: string; sourceUrl?: string | null; sourceClass?: string; sourceStatus?: string; handoff?: boolean; mode?: 'local' | 'mock' | 'glm' | 'fallback'; speech?: GuideMessage['speech'] }
       if (!payload.answer) throw new Error('empty_response')
-      const guideMessage: GuideMessage = { id: `guide-${Date.now()}`, role: 'guide', text: payload.answer || '', zoneTitle: localize(guideZoneTitle, language), layer: payload.layer || 'local_contextual_guide', sourceLabel: payload.sourceLabel || inline(language, 'Local contextual guide', '本地语境导览'), sourceUrl: payload.sourceUrl || null, sourceClass: payload.sourceClass || '', sourceStatus: payload.sourceStatus || '', mode: payload.mode === 'glm' ? 'glm' : payload.mode === 'fallback' ? 'fallback' : payload.mode === 'local' ? 'local' : 'mock', speech: payload.speech }
+      const guideMessage: GuideMessage = { id: `guide-${Date.now()}`, role: 'guide', text: payload.answer || '', zoneTitle: localize(guideZoneTitle, language), layer: payload.layer || 'local_contextual_guide', sourceLabel: payload.sourceLabel || inline(language, 'Local contextual guide', '本地语境导览'), sourceUrl: payload.sourceUrl || null, sourceClass: payload.sourceClass || '', sourceStatus: payload.sourceStatus || '', answerMode: payload.answerMode || '', mode: payload.mode === 'glm' ? 'glm' : payload.mode === 'fallback' ? 'fallback' : payload.mode === 'local' ? 'local' : 'mock', speech: payload.speech }
       setGuideMessages((messages) => [...messages, guideMessage].slice(-24))
       completed = true
     } catch {
@@ -1245,7 +1261,7 @@ function App() {
         <p className="guide-body">{t.guideBody}</p>
         <p className="guide-state"><span className="state-dot" /> {guideState} / {localize(guideZoneTitle, language)}</p>
         <div className="guide-utility-actions"><button className="source-desk-trigger" type="button" onClick={openSourceDesk}>{inline(language, 'Verified Source Desk', '已核验来源服务台')} <span>↗</span></button><button className="lead-trigger" type="button" onClick={() => { setGuideOpen(false); resetLead(); setLeadOpen(true) }}>{inline(language, 'Request human follow-up', '请求人工跟进')} <span>↗</span></button><button className="lead-trigger" type="button" aria-pressed={autoGuideEnabled} onClick={toggleAutoGuide}>{localize(autoGuideCopy.enabled, language)} <span aria-hidden="true">{autoGuideEnabled ? '◉' : '○'}</span></button><button className="lead-trigger" type="button" aria-pressed={tourCuesEnabled} onClick={toggleTourCues}>{localize(tourCuesEnabled ? autoGuideCopy.tourPromptsEnabled : autoGuideCopy.tourPromptsDisabled, language)} <span aria-hidden="true">{tourCuesEnabled ? '◉' : '○'}</span></button><button className="lead-trigger guide-speech-toggle" type="button" aria-pressed={speechEnabled} onClick={toggleSpeech}>{speechStatus === 'unavailable' ? inline(language, 'Voice unavailable', '合成语音暂不可用') : speechEnabled ? inline(language, 'Disable voice', '关闭语音') : inline(language, 'Enable voice', '开启语音')} <span aria-hidden="true">◉</span></button></div>
-        <div className="guide-answer-area" ref={guideTranscriptRef} aria-live="polite" aria-busy={loading} aria-label={guideText('conversation')}>{guideMessages.length === 0 && <p className="guide-welcome">{t.guideWelcome}</p>}{guideMessages.map((message) => message.role === 'visitor' ? <div className="guide-message visitor-message" key={message.id}><span className="message-label">{guideText('you')} / {message.zoneTitle}</span><p>{message.text}</p></div> : <div className="guide-message guide-message-reply" key={message.id}><div className="answer-meta"><span className="answer-label">{message.mode === 'fallback' || message.mode === 'error' ? guideText('offlineFallback') : message.mode === 'local' ? guideText('localContext') : message.mode === 'glm' ? guideText('glmResponse') : message.layer || t.mock}</span>{message.sourceLabel && !(message.mode === 'local' && (message.sourceLabel === 'Local contextual guide' || message.sourceLabel === '本地语境导览')) && <span className="answer-source">{message.sourceLabel}</span>}{message.sourceUrl && <a className="answer-source answer-source-link" href={message.sourceUrl} target="_blank" rel="noopener noreferrer">{inline(language, 'Open reviewed source', '打开已核验来源')}</a>}{message.sourceClass && message.sourceClass !== 'local_contextual_guide' && <span className="answer-source-class">{message.sourceClass.replaceAll('_', ' ')}</span>}{message.sourceStatus && message.sourceStatus !== 'local' && <span className="answer-source-status">{message.sourceStatus}</span>}</div><p className="guide-answer">{message.text}</p></div>)}{loading && <p className="guide-answer loading">{guideText('loading')}</p>}</div>
+        <div className="guide-answer-area" ref={guideTranscriptRef} aria-live="polite" aria-busy={loading} aria-label={guideText('conversation')}>{guideMessages.length === 0 && <p className="guide-welcome">{t.guideWelcome}</p>}{guideMessages.map((message) => message.role === 'visitor' ? <div className="guide-message visitor-message" key={message.id}><span className="message-label">{guideText('you')} / {message.zoneTitle}</span><p>{message.text}</p></div> : <div className="guide-message guide-message-reply" key={message.id}><div className="answer-meta"><span className="answer-label">{guideAnswerLabel(message)}</span>{message.sourceLabel && !(message.mode === 'local' && (message.sourceLabel === 'Local contextual guide' || message.sourceLabel === '本地语境导览')) && <span className="answer-source">{message.sourceLabel}</span>}{message.sourceUrl && <a className="answer-source answer-source-link" href={message.sourceUrl} target="_blank" rel="noopener noreferrer">{inline(language, 'Open reviewed source', '打开已核验来源')}</a>}{message.sourceClass && message.sourceClass !== 'local_contextual_guide' && <span className="answer-source-class">{message.sourceClass.replaceAll('_', ' ')}</span>}{message.sourceStatus && message.sourceStatus !== 'local' && <span className="answer-source-status">{message.sourceStatus}</span>}</div><p className="guide-answer">{message.text}</p></div>)}{loading && <p className="guide-answer loading">{guideText('loading')}</p>}</div>
         <div className="guide-input"><input ref={guideInputRef} value={question} onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitQuestion() }} placeholder={t.guideInput} aria-label={t.guideInput} /><button onClick={submitQuestion} disabled={loading || !question.trim()} aria-label={t.send}>↗</button></div>
         <p className="guide-disclaimer">{guideServiceMode === 'checking' ? guideText('checking') : guideServiceMode === 'glm' ? guideText('glmConnected') : guideServiceMode === 'local' ? guideText('localActive') : guideText('unavailable')}{speechStatus === 'unavailable' && <>{' '}{guideText('speechNotice')}</>}</p>
       </div>
