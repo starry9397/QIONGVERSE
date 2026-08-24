@@ -1434,6 +1434,7 @@ function systemPrompt(zone, language, source, knowledgeItem, questionMode = guid
     `Answer in ${localeNames[language] || localeNames.en} only. The selected locale is authoritative even when the visitor's question uses another language; do not switch languages unless the visitor changes the locale.`,
     modeInstruction,
     'Lead with the direct answer or conclusion. For an ordinary educational, cultural, ecological, craft, science or exhibition question, give two to four concrete sentences or short points before adding any qualifier.',
+    'For an unreviewed material or cultural term, explain common definitions and observable characteristics with calibrated wording such as “often” or “may”. Do not assert a specific species, provenance, legal protection status, date, maker or commercial status from a project label or image alone; answer the educational part first instead of refusing.',
     'Use supplied catalogue context as an optional factual starting point when it matches the question. Never turn the absence of a project card into a refusal or a generic boundary paragraph.',
     'Add at most one short source or uncertainty note when it materially helps. Do not repeat generic boundary language, introduce yourself, or ask the visitor to reformulate a normal question.',
     'Mention the fictional ShellSong layer only when the visitor asks about it or when it is necessary to distinguish a clearly fictional story element from a factual claim. Never add unrelated fictional material.',
@@ -1893,6 +1894,7 @@ async function runSelfTest() {
     check('ordinary wood question is not forced into project context', guideQuestionMode('如何判断木材的一般特征？', hualiKnowledge) === 'open_domain')
     check('explicit exhibit question keeps project context mode', guideQuestionMode('这个展厅里的花梨展品是什么？', hualiKnowledge) === 'project_context' && guideQuestionMode('这张项目图片如何呈现花梨？', hualiKnowledge) === 'project_context')
     check('project card is optional context for open-domain prompts', /optional exhibition context/u.test(knowledgePromptContext(hualiKnowledge, 'zh', 'open_domain')) && !/Approved project-authored context/u.test(knowledgePromptContext(hualiKnowledge, 'zh', 'open_domain')))
+    check('open-domain prompt calibrates unreviewed material facts', /calibrated wording/u.test(systemPrompt(zones.huali, 'en', null, hualiKnowledge, 'open_domain')) && /Do not assert a specific species/u.test(systemPrompt(zones.huali, 'en', null, hualiKnowledge, 'open_domain')))
     const hualiFallback = localResponse(zones.huali, 'zh', '东方花梨')
     check('offline huali topic uses an open-domain fallback instead of a project disclaimer', hualiFallback.answerMode === 'open_domain_fallback' && hualiFallback.sourceClass === 'ai_suggestion' && !hualiFallback.answer.includes('展品是项目策展的视觉研究'))
     const hualiRoute = await requestJson(baseUrl + '/api/luoyin', { question: '东方花梨', language: 'zh', zoneId: 'huali' })
