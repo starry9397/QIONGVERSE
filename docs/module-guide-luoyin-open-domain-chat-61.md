@@ -27,6 +27,12 @@ browser coordinates, movement history, or stored dialogue.
   `regulated_orientation`.
 - Provider failures use `open_domain_fallback` and never return
   `sourceClass: project_context`.
+- A minimal hidden website-capability block may tell GLM that the current
+  Market route is a session-only concept showcase without payment, orders,
+  stock or fulfilment, and that Luoyin is not an official representative. This
+  block prevents the model from inventing site capabilities; it is not a
+  catalogue card, is never returned to the browser, and does not change
+  open-domain response metadata.
 - Reviewed HTTPS sources may still return `verified_primary_source` metadata.
 - The normalized chat response defaults to `open_domain`, never
   `project_context`.
@@ -66,7 +72,10 @@ content-safety decisions remain upstream behavior and are not bypassed.
    `npm run check:i18n`, `npm run build:webify`, `npm run verify:webify`, and
    `git diff --check`.
 4. Scan the deployable build for likely credentials and authorization tokens.
-5. Deploy GitHub Pages, CloudBase static assets, and the shared Render backend.
-6. Verify both public sites with ordinary knowledge, explicit exhibit,
+5. Test a website-capability question such as “Is the market a real payment
+   service?” and require a direct negative answer without project-context
+   metadata.
+6. Deploy GitHub Pages, CloudBase static assets, and the shared Render backend.
+7. Verify both public sites with ordinary knowledge, explicit exhibit,
    project-service, and current regulated questions; no interactive response
    may contain project-context metadata.
