@@ -958,7 +958,7 @@ function isDecisionBoundaryQuestion(question) {
   if (explicitHighRisk) return true
   if (!operationalTopic) return false
   const explicitCurrent = /\b(current|latest|today|now|recent|real[- ]?time|live|currently)\b|当前|最新|今天|现在|近期|实时|目前/iu.test(normalized)
-  const personalOrAction = /\b(can i|should i|do i|am i|my |for me|guarantee|recommend|book|buy|sell|apply|file|diagnos|prescrib|calculate|choose|confirm|check|verify|what should|how do i)\b|我能|我该|我的|对我|保证|推荐|预订|购买|出售|申请|办理|诊断|处方|计算|选择|确认|核验|应该怎么/iu.test(normalized)
+  const personalOrAction = /\b(can i|should i|do i|am i|my\b|for me|guarantee|book for me|buy for me|sell for me|apply for me|file for me|calculate my|choose for me|what should i|how do i|is it safe for me)\b|我能|我该|我的|对我|给我办理|替我|保证|帮我预订|帮我购买|帮我出售|帮我申请|办理我的|诊断我|给我开药|给我计算|替我选择|我应该|请确认我的/iu.test(normalized)
   return explicitCurrent || personalOrAction
 }
 
@@ -1829,6 +1829,7 @@ async function runSelfTest() {
     check('open-domain prompt does not turn missing context into refusal', /not a reason to refuse/u.test(knowledgePromptContext(null, 'en', 'open_domain')) && /general knowledge directly/u.test(systemPrompt(zones.tropical, 'en', null, null, 'open_domain')))
     check('decision-boundary prompt keeps official confirmation gate', guideQuestionMode('What is the current visa eligibility?', null) === 'decision_boundary' && /official source or human confirmation/u.test(systemPrompt(zones.tropical, 'en', null, null, 'decision_boundary')))
     check('educational policy and medical concepts stay open-domain', !isDecisionBoundaryQuestion('What is tax policy?') && !isDecisionBoundaryQuestion('Explain how medical imaging works.'))
+    check('educational verification questions stay open-domain', !isDecisionBoundaryQuestion('How do museums verify authenticity?') && !isDecisionBoundaryQuestion('How is tax calculated in principle?') && !isDecisionBoundaryQuestion('How do launch schedules work?'))
     check('personal and current operational questions keep the confirmation gate', isDecisionBoundaryQuestion('What is the current visa eligibility?') && isDecisionBoundaryQuestion('Should I change my prescription?'))
     const mangroveFacts = localResponse(zones.tropical, 'zh', '红树林有什么生态作用？')
     check('offline factual answer explains mangrove ecology directly', mangroveFacts.answer.length > 40 && !mangroveFacts.answer.includes('我可以解释概念') && /根系|栖息|海岸|沉积物/u.test(mangroveFacts.answer))
