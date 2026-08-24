@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-24",
+  "description": "Concise general-knowledge cards for ordinary Luoyin questions. They are not object authentication or current operational data.",
+  "items": [
+    {
+      "id": "mangrove-ecological-functions",
+      "answerKind": "general_knowledge",
+      "evidenceClass": "ai_suggestion",
+      "status": "reviewed",
+      "sourceIds": [],
+      "reference": "NOAA National Ocean Service, What is a mangrove? https://oceanservice.noaa.gov/facts/mangroves.html",
+      "tags": ["mangrove", "ecology", "coastal wetland", "blue carbon", "红树林", "生态功能", "潮间带", "海岸湿地", "bakau", "マングローブ", "맹그로브", "мангры", "المانغروف"],
+      "title": {
+        "en": "Mangrove ecological functions",
+        "zh": "红树林的生态功能",
+        "id": "Fungsi ekologis mangrove",
+        "ja": "マングローブの生態機能",
+        "ko": "맹그로브의 생태 기능",
+        "ru": "Экологические функции мангров",
+        "ar": "الوظائف البيئية لأشجار المانغروف"
+      },
+      "answer": {
+        "en": "Mangroves are salt-tolerant woody plants of tropical and subtropical intertidal zones. Their tangled roots slow water, trap sediment and help stabilize shorelines. They provide habitat and nursery areas for fish, crabs, shrimp and birds, while their biomass and waterlogged soils can store organic carbon. The strength of each function depends on the species and site conditions.",
+        "zh": "红树林是生长在热带和亚热带潮间带的耐盐木本植物。交错的根系能够减缓水流、截留沉积物，并有助于稳定海岸线；红树林也为鱼类、螃蟹、虾类和鸟类提供栖息与育幼空间。其植物体和长期浸水的土壤还可以储存有机碳，但具体功能会因物种和地点条件不同而变化。",
+        "id": "Mangrove adalah tumbuhan berkayu tahan garam yang hidup di zona pasang surut tropis dan subtropis. Akar yang berjalin memperlambat aliran air, menangkap sedimen, dan membantu menstabilkan garis pantai. Mangrove menyediakan habitat dan area pembesaran bagi ikan, kepiting, udang, dan burung; biomassa serta tanah tergenang juga dapat menyimpan karbon organik. Kekuatan tiap fungsi bergantung pada spesies dan kondisi lokasi.",
+        "ja": "マングローブは熱帯・亜熱帯の潮間帯に生える耐塩性の木本植物です。絡み合った根は水の流れを弱め、堆積物をとどめ、海岸線の安定に役立ちます。魚、カニ、エビ、鳥の生息・育成場所にもなり、植物体と冠水した土壌は有機炭素を蓄えることがあります。各機能の程度は種と場所の条件で異なります。",
+        "ko": "맹그로브는 열대·아열대 조간대에 사는 염분 내성 목본 식물입니다. 얽힌 뿌리는 물의 흐름을 늦추고 퇴적물을 붙잡아 해안선 안정에 도움을 줍니다. 물고기·게·새우·새의 서식지와 치어 성장 공간이 되며, 식물체와 물에 잠긴 토양은 유기 탄소를 저장할 수 있습니다. 기능의 정도는 종과 장소 조건에 따라 달라집니다.",
+        "ru": "Мангровы — солеустойчивые древесные растения тропических и субтропических приливных зон. Переплетённые корни замедляют поток воды, задерживают осадок и помогают стабилизировать берег. Заросли служат местообитанием и «питомником» для рыб, крабов, креветок и птиц, а биомасса и переувлажнённые почвы могут накапливать органический углерод. Степень каждой функции зависит от вида и условий участка.",
+        "ar": "أشجار المانغروف نباتات خشبية متحملة للملوحة تعيش في مناطق المد والجزر المدارية وشبه المدارية. تُبطئ جذورها المتشابكة حركة الماء وتحجز الرواسب وتساعد على تثبيت الساحل. كما توفر موطناً ومناطق حضانة للأسماك والسرطانات والروبيان والطيور، ويمكن لكتلتها الحيوية وتربتها المشبعة بالماء تخزين الكربون العضوي. وتختلف قوة كل وظيفة باختلاف النوع وظروف الموقع."
+      },
+      "limitation": {
+        "en": "A picture cannot confirm a particular mangrove stand or quantify carbon storage, biodiversity or flood protection; site surveys and current environmental data are needed.",
+        "zh": "仅凭图片不能确认某个场景就是红树林群落，也不能计算碳储量、生物多样性或防洪能力；这些判断需要现场调查和最新环境数据。",
+        "id": "Gambar tidak dapat memastikan suatu pemandangan adalah tegakan mangrove atau menghitung karbon, keanekaragaman hayati, dan perlindungan banjir; diperlukan survei lokasi serta data lingkungan terkini.",
+        "ja": "画像だけでは、特定の景観がマングローブ群落かどうか、炭素貯留量・生物多様性・洪水防護の程度を確認できません。現地調査と最新の環境データが必要です。",
+        "ko": "이미지만으로 특정 장면이 맹그로브 군락인지, 탄소 저장량·생물다양성·홍수 방어 효과가 어느 정도인지 확인할 수 없습니다. 현장 조사와 최신 환경 자료가 필요합니다.",
+        "ru": "По изображению нельзя подтвердить, что перед нами мангровый лес, или оценить накопление углерода, биоразнообразие и защиту от наводнений; нужны полевые обследования и актуальные экологические данные.",
+        "ar": "لا تكفي الصورة لتأكيد أن المشهد غابة مانغروف أو لقياس تخزين الكربون أو التنوع الحيوي أو الحماية من الفيضانات؛ يلزم مسح ميداني وبيانات بيئية حديثة."
+      }
+    },
+    {
+      "id": "tropical-plant-examples",
+      "answerKind": "general_knowledge",
+      "evidenceClass": "ai_suggestion",
+      "status": "reviewed",
+      "sourceIds": [],
+      "reference": "Royal Botanic Gardens, Kew, Plants of the World Online. https://powo.science.kew.org/",
+      "tags": ["tropical plants", "coconut", "banana", "pandanus", "sea hibiscus", "nipa palm", "热带植物", "椰子", "香蕉", "露兜树", "海滨木槿", "水椰", "tanaman tropis", "熱帯植物", "열대 식물", "тропические растения", "نباتات مدارية"],
+      "title": {
+        "en": "Examples of tropical plants",
+        "zh": "热带植物例子",
+        "id": "Contoh tanaman tropis",
+        "ja": "熱帯植物の例",
+        "ko": "열대 식물의 예",
+        "ru": "Примеры тропических растений",
+        "ar": "أمثلة على النباتات المدارية"
+      },
+      "answer": {
+        "en": "Examples found in tropical or coastal landscapes include coconut palms, bananas, pandanus, sea hibiscus and nipa palms. They are not interchangeable: coconut and nipa are palms, banana is a large herb, and pandanus and sea hibiscus are woody plants. Their tolerance of salt, wind, shade and wet soil differs, so an image alone cannot identify a species or establish whether it is native or planted.",
+        "zh": "热带或海岸景观中常见的植物例子包括椰子、香蕉、露兜树、海滨木槿和水椰。它们并非同一类：椰子和水椰属于棕榈类，香蕉是大型草本，露兜树和海滨木槿属于木本植物。它们对盐分、风、遮阴和湿土的适应性不同，因此仅凭图像不能确认物种，也不能判断其是否原生或栽植。",
+        "id": "Contoh tanaman dalam lanskap tropis atau pesisir meliputi kelapa, pisang, pandan, waru laut, dan nipah. Kelapa dan nipah adalah palma, pisang merupakan herba besar, sedangkan pandan dan waru laut adalah tumbuhan berkayu. Toleransi terhadap garam, angin, naungan, dan tanah basah berbeda-beda; gambar saja tidak cukup untuk mengidentifikasi spesies atau memastikan apakah tanaman itu asli atau ditanam.",
+        "ja": "熱帯・海岸景観でよく見られる例には、ココヤシ、バナナ、タコノキ属、オオハマボウ、ニッパヤシがあります。ココヤシとニッパヤシはヤシ類、バナナは大型の草本、タコノキ属とオオハマボウは木本植物です。塩分、風、日陰、湿った土への適応は種ごとに異なるため、画像だけで種や自生・植栽を断定できません。",
+        "ko": "열대 또는 해안 경관에서 볼 수 있는 예로 코코넛야자, 바나나, 판다누스, 해변무궁화, 니파야자를 들 수 있습니다. 코코넛야자와 니파야자는 야자류이고, 바나나는 큰 초본이며, 판다누스와 해변무궁화는 목본 식물입니다. 염분·바람·그늘·습한 토양에 대한 적응은 종마다 다르므로 이미지 하나만으로 종이나 자생·식재 여부를 확정할 수 없습니다.",
+        "ru": "К примерам растений тропических и прибрежных ландшафтов относятся кокосовая пальма, банан, пандан, морской гибискус и нипа. Кокос и нипа — пальмы, банан — крупное травянистое растение, а пандан и морской гибискус — древесные растения. Устойчивость к соли, ветру, тени и влажной почве различается, поэтому по одному изображению нельзя определить вид или установить, дикорастущее это растение или посадка.",
+        "ar": "من أمثلة النباتات في المناظر المدارية أو الساحلية: نخيل جوز الهند، والموز، والباندانوس، والكركديه الساحلي، ونخيل النيبا. جوز الهند والنيبا من النخيل، والموز نبات عشبي كبير، أما الباندانوس والكركديه الساحلي فنباتان خشبيان. تختلف قدرة الأنواع على تحمّل الملح والرياح والظل والتربة الرطبة، لذلك لا تكفي صورة وحدها لتحديد النوع أو إثبات أنه أصلي أو مزروع."
+      },
+      "limitation": {
+        "en": "These are examples, not an identification of a project image, native-range claim, planting recommendation or local inventory.",
+        "zh": "这些只是植物学例子，不是对项目图片的物种鉴定，也不构成原生分布、栽植建议或当地植物清单。",
+        "id": "Ini adalah contoh, bukan identifikasi gambar proyek, klaim daerah asal, rekomendasi penanaman, atau daftar tanaman setempat.",
+        "ja": "これは例示であり、プロジェクト画像の種同定、自生域の断定、植栽提案、地域の植物リストではありません。",
+        "ko": "이는 예시일 뿐 프로젝트 이미지의 종 동정, 자생지 주장, 식재 권고 또는 지역 식물 목록이 아닙니다.",
+        "ru": "Это примеры, а не определение вида на проектном изображении, утверждение о естественном ареале, рекомендация по посадке или местный перечень растений.",
+        "ar": "هذه أمثلة وليست تحديداً لنوع في صورة المشروع أو ادعاءً بشأن موطنه الأصلي أو توصية بالزراعة أو قائمة نباتات محلية."
+      }
+    },
+    {
+      "id": "general-wood-carving-process",
+      "answerKind": "general_knowledge",
+      "evidenceClass": "ai_suggestion",
+      "status": "reviewed",
+      "sourceIds": [],
+      "reference": "Encyclopaedia Britannica, Wood carving. https://www.britannica.com/art/wood-carving",
+      "tags": ["wood carving", "carving process", "craft process", "木雕", "雕刻工艺", "制作过程", "ukiran kayu", "木彫", "목조각", "резьба по дереву", "نحت الخشب"],
+      "title": {
+        "en": "A general wood-carving process",
+        "zh": "木雕的一般制作流程",
+        "id": "Proses umum ukiran kayu",
+        "ja": "木彫の一般的な工程",
+        "ko": "목조각의 일반적인 제작 과정",
+        "ru": "Общий процесс резьбы по дереву",
+        "ar": "المراحل العامة لنحت الخشب"
+      },
+      "answer": {
+        "en": "A general wood-carving workflow is: select and prepare the wood, transfer a drawing or layout, rough out the block, carve progressively with knives or chisels, refine details and surfaces, scrape or sand as appropriate, then apply a selected finish and inspect the result. Craftspeople adjust the steps for the wood species, moisture, tools, scale and desired surface. This describes a general craft sequence, not the provenance of one object.",
+        "zh": "一般木雕流程可以概括为：选择并准备木材，转印草图或比例，先去除大块余料，再用刀、凿等逐步雕刻，细化结构与表面，按需要刮削或打磨，最后进行表面处理并检查。工匠会根据木种、含水率、工具、尺寸和目标效果调整步骤。这只是通用工艺顺序，不是对某件物品来源的判断。",
+        "id": "Alur umum ukiran kayu adalah memilih dan menyiapkan kayu, memindahkan sketsa atau ukuran, membuang bagian besar, mengukir bertahap dengan pisau atau pahat, memperhalus detail dan permukaan, mengikis atau mengamplas bila perlu, lalu memberi pelapis akhir dan memeriksa hasilnya. Perajin menyesuaikan langkah menurut jenis kayu, kadar air, alat, ukuran, dan hasil yang diinginkan. Ini hanya urutan umum, bukan penentuan asal benda.",
+        "ja": "木彫の一般的な流れは、木材を選び準備する、下絵や寸法を移す、大まかに余材を除く、刀や鑿で段階的に彫る、細部と表面を整える、必要に応じて削り・研磨する、仕上げを施して検査する、というものです。樹種、水分、道具、サイズ、求める表情で工程は変わります。これは一般的な工程であり、特定作品の来歴を判断するものではありません。",
+        "ko": "목조각의 일반적인 흐름은 목재를 선택하고 준비한 뒤 밑그림이나 치수를 옮기고, 큰 여분을 제거한 다음 칼이나 끌로 단계적으로 조각하고, 세부와 표면을 다듬고, 필요하면 긁거나 연마한 뒤 마감하고 결과를 점검하는 것입니다. 장인은 목재 종류, 수분, 도구, 크기와 원하는 표면에 따라 공정을 조정합니다. 이는 일반적인 공정 설명이지 특정 물건의 유래 판단이 아닙니다.",
+        "ru": "Общий процесс резьбы по дереву: выбрать и подготовить древесину, перенести эскиз или разметку, грубо удалить лишний материал, постепенно работать ножами или стамесками, уточнить детали и поверхность, при необходимости скоблить или шлифовать, затем нанести покрытие и проверить результат. Этапы меняются в зависимости от породы, влажности, инструментов, масштаба и желаемой поверхности. Это общее описание, а не определение происхождения конкретного предмета.",
+        "ar": "يمكن تلخيص المسار العام لنحت الخشب في اختيار الخشب وإعداده، ونقل الرسم أو القياسات، وإزالة الجزء الأكبر من المادة، ثم النحت تدريجياً بالسكاكين أو الأزاميل، وصقل التفاصيل والأسطح، والكشط أو الصنفرة عند اللزوم، ثم وضع طبقة التشطيب وفحص النتيجة. يغيّر الحرفيون الخطوات بحسب نوع الخشب ورطوبته والأدوات والحجم والسطح المطلوب. هذا وصف عام للحرفة وليس حكماً على أصل قطعة بعينها."
+      },
+      "limitation": {
+        "en": "A photograph or project render cannot establish the wood species, maker, date, authenticity, cultural lineage, or exact tools and sequence used for one object.",
+        "zh": "照片或项目渲染图不能证明某件物品的树种、制作者、年代、真伪、文化传承脉络，或实际使用的工具与工序。",
+        "id": "Foto atau render proyek tidak dapat menetapkan jenis kayu, pembuat, tanggal, keaslian, garis pewarisan budaya, atau alat dan urutan yang digunakan pada satu benda.",
+        "ja": "写真やプロジェクトのレンダーだけでは、木種、作り手、年代、真贋、文化的系譜、実際の道具や工程を確定できません。",
+        "ko": "사진이나 프로젝트 렌더만으로는 특정 물건의 목재 종류, 제작자, 연대, 진위, 문화적 계보 또는 실제 사용 도구와 공정을 확정할 수 없습니다.",
+        "ru": "Фотография или проектный рендер не позволяют установить породу древесины, мастера, дату, подлинность, культурную преемственность или точные инструменты и этапы изготовления конкретного предмета.",
+        "ar": "لا يمكن لصورة أو مشهد مصمم من المشروع أن يثبت نوع الخشب أو الصانع أو التاريخ أو الأصالة أو السلسلة الثقافية أو الأدوات والخطوات الفعلية المستخدمة في قطعة بعينها."
+      }
+    },
+    {
+      "id": "wenchang-launch-site-rationale",
+      "answerKind": "general_knowledge",
+      "evidenceClass": "ai_suggestion",
+      "status": "reviewed",
+      "sourceIds": [],
+      "reference": "China National Space Administration English portal. https://www.cnsa.gov.cn/english/",
+      "tags": ["Wenchang", "launch site", "low latitude", "Earth rotation", "geostationary transfer orbit", "文昌", "发射场", "低纬度", "地球自转", "静止转移轨道", "peluncuran", "文昌宇宙開発", "원창", "Вэньчан", "ونتشانغ"],
+      "title": {
+        "en": "Why Wenchang is suitable for launches",
+        "zh": "文昌为什么适合航天发射",
+        "id": "Mengapa Wenchang sesuai untuk peluncuran",
+        "ja": "文昌が打上げに適する理由",
+        "ko": "원창이 발사에 적합한 이유",
+        "ru": "Почему Вэньчан подходит для запусков",
+        "ar": "لماذا تناسب ونتشانغ عمليات الإطلاق"
+      },
+      "answer": {
+        "en": "Wenchang is at a relatively low latitude on Hainan. Earth's rotation gives an eastward launch an initial velocity, which can help missions toward geostationary transfer orbits. Its coastal setting also supports sea transport of large launch vehicles and planned flight or downrange corridors over open water. These are general site-selection reasons; vehicle details, mission status, safety rules and schedules require current official information.",
+        "zh": "文昌航天发射场位于海南的低纬度地区。地球自转会为向东发射提供一定的初始速度，这对前往地球同步转移轨道等任务有利；沿海位置也便于大型运载火箭通过海运抵达，并可将规划的飞行和落区方向布置在海上。这些是选址层面的通用理由，具体火箭、任务状态、安全规则与发射时间仍应以最新官方信息为准。",
+        "id": "Pusat Peluncuran Antariksa Wenchang berada di wilayah lintang rendah di Hainan. Rotasi Bumi memberi kecepatan awal ke arah timur, yang dapat membantu misi menuju orbit transfer geostasioner. Lokasi pesisir juga mendukung pengangkutan kendaraan peluncur besar melalui laut dan koridor penerbangan atau area jatuh yang direncanakan di atas perairan terbuka. Ini alasan umum pemilihan lokasi; rincian kendaraan, status misi, aturan keselamatan, dan jadwal harus diperiksa dari sumber resmi terkini.",
+        "ja": "文昌宇宙発射場は海南の比較的低緯度にあります。地球の自転は東向きの打ち上げに初速度を与え、静止トランスファー軌道などを目指すミッションに役立つ場合があります。沿岸の立地は大型ロケットの海上輸送にも適し、計画された飛行経路や落下区域を海上方向に設定できます。これは一般的な立地理由であり、機体、ミッション状況、安全規則、打上げ日程は最新の公式情報で確認してください。",
+        "ko": "원창 우주발사장은 하이난의 비교적 낮은 위도에 있습니다. 지구 자전은 동쪽으로 발사할 때 초기 속도를 보태며 정지궤도 전이궤도 등을 향하는 임무에 도움이 될 수 있습니다. 해안 입지는 대형 발사체를 해상으로 운송하고 계획된 비행·낙하 구역을 바다 방향에 배치하는 데도 유리합니다. 이는 일반적인 입지 이유이며 발사체, 임무 상태, 안전 규정과 일정은 최신 공식 자료를 확인해야 합니다.",
+        "ru": "Космодром Вэньчан расположен на сравнительно низкой широте Хайнаня. Вращение Земли добавляет начальную скорость при запуске на восток, что может помогать миссиям к геопереходным орбитам. Прибрежное положение облегчает морскую перевозку крупных ракет и позволяет планировать трассы и зоны падения над открытой водой. Это общие причины выбора площадки; сведения о ракете, миссии, безопасности и расписании нужно проверять по актуальным официальным данным.",
+        "ar": "يقع مركز ونتشانغ لإطلاق المركبات الفضائية في منطقة منخفضة خط العرض نسبياً في هاينان. يضيف دوران الأرض سرعة ابتدائية للإطلاق شرقاً، وقد يفيد ذلك في المهام المتجهة إلى مدارات الانتقال المتزامنة مع الأرض. كما يتيح الموقع الساحلي نقل المركبات الكبيرة بحراً وتخطيط مسارات ومناطق سقوط فوق المياه المفتوحة. هذه أسباب عامة لاختيار الموقع؛ أما تفاصيل المركبة وحالة المهمة وقواعد السلامة والمواعيد فتحتاج إلى معلومات رسمية محدثة."
+      },
+      "limitation": {
+        "en": "A general site rationale does not provide a current launch schedule, mission result, payload, safety clearance or visitor-access information.",
+        "zh": "选址原理的常识说明不等于当前发射时间表、任务结果、载荷信息、安全许可或访客开放信息。",
+        "id": "Penjelasan umum tentang alasan pemilihan lokasi bukan jadwal peluncuran terkini, hasil misi, muatan, izin keselamatan, atau informasi akses pengunjung.",
+        "ja": "立地の一般原理は、最新の打上げ日程、ミッション結果、搭載物、安全許可、見学者の入場情報を示すものではありません。",
+        "ko": "입지 원리에 대한 일반 설명은 최신 발사 일정, 임무 결과, 탑재체, 안전 허가 또는 방문객 접근 정보를 제공하지 않습니다.",
+        "ru": "Общее объяснение выбора площадки не является актуальным расписанием запусков, результатом миссии, сведениями о полезной нагрузке, разрешением по безопасности или информацией о доступе посетителей.",
+        "ar": "الشرح العام لسبب اختيار الموقع لا يقدم جدول إطلاق حالياً أو نتيجة مهمة أو معلومات عن الحمولة أو تصريح السلامة أو وصول الزوار."
+      }
+    },
+    {
+      "id": "li-brocade-general-process",
+      "answerKind": "general_knowledge",
+      "evidenceClass": "ai_suggestion",
+      "status": "reviewed",
+      "sourceIds": [],
+      "reference": "UNESCO, Traditional textile techniques of the Li ethnic group. https://ich.unesco.org/en/RL/traditional-textile-techniques-of-the-li-ethnic-group-spinning-dyeing-weaving-and-embroidering-00238",
+      "tags": ["Li brocade", "Li textile", "spinning", "dyeing", "weaving", "embroidery", "黎锦", "黎族纺织", "纺纱", "染色", "织造", "刺绣", "tenun Li", "黎族の織物", "리족 직물", "текстиль ли", "نسيج لي"],
+      "title": {
+        "en": "A general Li brocade process",
+        "zh": "黎锦的一般制作流程",
+        "id": "Gambaran umum proses tenun Li",
+        "ja": "黎族織物の一般的な工程",
+        "ko": "리족 전통 직물의 일반적인 제작 과정",
+        "ru": "Общий процесс изготовления текстиля ли",
+        "ar": "المراحل العامة لصناعة نسيج لي"
+      },
+      "answer": {
+        "en": "A broad description of Li textile work includes preparing and spinning fibres, dyeing yarns, arranging warp threads, weaving on a traditional loom, and, in some techniques, adding embroidery or other surface work. Patterns, tools, fibres and sequence vary across techniques and communities. UNESCO documents the practice at a general intangible-heritage level.",
+        "zh": "黎族传统纺织技艺可以概括为准备并纺制纤维、给纱线染色、排布经线、在传统织机上织造，并在部分技法中加入刺绣或其他表面处理。不同技法与社群在纹样、工具、纤维和先后顺序上可能不同。UNESCO 对这项实践提供的是一般层面的非物质文化遗产记录。",
+        "id": "Gambaran umum kerja tekstil Li mencakup menyiapkan dan memintal serat, mewarnai benang, menata benang lungsi, menenun dengan alat tenun tradisional, serta pada teknik tertentu menambahkan sulaman atau pekerjaan permukaan lain. Pola, alat, serat, dan urutannya berbeda menurut teknik dan komunitas. UNESCO mendokumentasikan praktik ini pada tingkat warisan takbenda umum.",
+        "ja": "黎族の伝統的な織物技法を大きく説明すると、繊維の準備と紡績、糸の染色、経糸の配置、伝統的な織機での織り、技法によっては刺繍やその他の表面作業を行います。模様、道具、繊維、順序は技法やコミュニティで異なります。UNESCOの記録は一般的な無形文化遺産の説明です。",
+        "ko": "리족 전통 직물 작업은 대체로 섬유를 준비하고 잣는 과정, 실 염색, 날실 배열, 전통 직기에서의 직조, 그리고 일부 기법에서 자수나 다른 표면 작업을 더하는 과정으로 설명할 수 있습니다. 문양·도구·섬유·순서는 기법과 공동체에 따라 다릅니다. UNESCO의 기록은 일반적인 무형문화유산 수준의 설명입니다.",
+        "ru": "В общих чертах традиционная текстильная работа народа ли включает подготовку и прядение волокон, окрашивание нитей, размещение основы, ткачество на традиционном станке, а в некоторых техниках — вышивку или другую обработку поверхности. Узоры, инструменты, волокна и порядок действий различаются по техникам и сообществам. ЮНЕСКО описывает эту практику на общем уровне нематериального наследия.",
+        "ar": "يمكن وصف عمل النسيج التقليدي لدى شعب لي بصورة عامة بأنه يشمل إعداد الألياف وغزلها، وصبغ الخيوط، وترتيب خيوط السدى، والنسج على نول تقليدي، وإضافة التطريز أو أعمال سطحية أخرى في بعض التقنيات. تختلف الأنماط والأدوات والألياف وتسلسل العمل بين التقنيات والمجتمعات. توثق اليونسكو هذه الممارسة على مستوى عام من التراث غير المادي."
+      },
+      "limitation": {
+        "en": "A general description does not identify the maker, community branch, date, authenticity, exact fibre or dye, or the meaning of a particular pattern or object.",
+        "zh": "一般流程说明不能确认具体制作者、所属社群支系、年代、真伪、确切纤维或染料，也不能单独解释某件物品或纹样的具体含义。",
+        "id": "Gambaran umum tidak mengidentifikasi pembuat, cabang komunitas, tanggal, keaslian, serat atau pewarna tertentu, maupun makna pola atau benda tertentu.",
+        "ja": "一般的な説明だけでは、作り手、コミュニティの系統、年代、真贋、特定の繊維や染料、個別の模様・作品の意味を確認できません。",
+        "ko": "일반적인 설명만으로는 제작자, 공동체 계통, 연대, 진위, 정확한 섬유나 염료, 특정 문양 또는 물건의 의미를 확인할 수 없습니다.",
+        "ru": "Общее описание не устанавливает мастера, ветвь сообщества, дату, подлинность, точное волокно или краситель, а также значение конкретного узора или предмета.",
+        "ar": "لا يحدد الوصف العام الصانع أو فرع المجتمع أو التاريخ أو الأصالة أو نوع الليف أو الصبغة بعينها، ولا يثبت معنى نمط أو قطعة محددة."
+      }
+    },
+    {
+      "id": "photosynthesis-basics",
+      "answerKind": "general_knowledge",
+      "evidenceClass": "ai_suggestion",
+      "status": "reviewed",
+      "sourceIds": [],
+      "reference": "OpenStax Biology 2e, Overview of Photosynthesis. https://openstax.org/books/biology-2e/pages/8-1-overview-of-photosynthesis",
+      "tags": ["photosynthesis", "chlorophyll", "carbon dioxide", "Calvin cycle", "光合作用", "叶绿素", "二氧化碳", "卡尔文循环", "fotosintesis", "光合成", "광합성", "фотосинтез", "البناء الضوئي"],
+      "title": {
+        "en": "Photosynthesis basics",
+        "zh": "光合作用基础",
+        "id": "Dasar-dasar fotosintesis",
+        "ja": "光合成の基礎",
+        "ko": "광합성의 기초",
+        "ru": "Основы фотосинтеза",
+        "ar": "أساسيات البناء الضوئي"
+      },
+      "answer": {
+        "en": "In photosynthesis, plants, algae and cyanobacteria use light energy to convert carbon dioxide and water into energy-rich sugars, releasing oxygen as a by-product. In green plants, chlorophyll captures light in chloroplasts; light reactions make energy carriers and the Calvin cycle uses them to build sugars. The rate varies with light, carbon dioxide, temperature and water.",
+        "zh": "光合作用中，植物、藻类和蓝细菌利用光能，把二氧化碳和水转化为富含能量的糖，并释放氧气作为副产物。在绿色植物中，叶绿素在叶绿体内捕获光能；光反应产生能量载体，卡尔文循环利用这些载体合成糖。光照、二氧化碳浓度、温度和水分都会影响速率。",
+        "id": "Dalam fotosintesis, tumbuhan, alga, dan sianobakteri menggunakan energi cahaya untuk mengubah karbon dioksida dan air menjadi gula berenergi tinggi, dengan oksigen sebagai hasil samping. Pada tumbuhan hijau, klorofil menangkap cahaya di dalam kloroplas; reaksi terang menghasilkan pembawa energi dan siklus Calvin menggunakannya untuk membentuk gula. Laju proses dipengaruhi cahaya, karbon dioksida, suhu, dan air.",
+        "ja": "光合成では、植物・藻類・シアノバクテリアが光エネルギーを使い、二酸化炭素と水からエネルギーを含む糖をつくり、副産物として酸素を放出します。緑色植物では葉緑素が葉緑体で光を捉え、光反応がエネルギー担体をつくり、カルビン回路がそれを使って糖を合成します。速度は光、二酸化炭素、温度、水分で変わります。",
+        "ko": "광합성에서 식물·조류·시아노박테리아는 빛 에너지를 이용해 이산화탄소와 물을 에너지가 풍부한 당으로 바꾸고 부산물로 산소를 방출합니다. 녹색 식물에서는 엽록소가 엽록체에서 빛을 포착하고, 광반응이 에너지 운반체를 만들며, 캘빈 회로가 이를 사용해 당을 합성합니다. 속도는 빛, 이산화탄소, 온도와 물에 따라 달라집니다.",
+        "ru": "При фотосинтезе растения, водоросли и цианобактерии используют световую энергию, чтобы превращать углекислый газ и воду в богатые энергией сахара; побочным продуктом выделяется кислород. У зелёных растений хлорофилл улавливает свет в хлоропластах: световые реакции создают переносчики энергии, а цикл Кальвина использует их для образования сахаров. Скорость зависит от света, углекислого газа, температуры и воды.",
+        "ar": "في البناء الضوئي تستخدم النباتات والطحالب والبكتيريا الزرقاء طاقة الضوء لتحويل ثاني أكسيد الكربون والماء إلى سكريات غنية بالطاقة، ويُطلَق الأكسجين ناتجاً ثانوياً. في النباتات الخضراء يلتقط الكلوروفيل الضوء داخل البلاستيدات الخضراء؛ وتنتج التفاعلات الضوئية حوامل للطاقة ثم تستخدمها دورة كالفن لبناء السكريات. وتتأثر السرعة بالضوء وثاني أكسيد الكربون ودرجة الحرارة والماء."
+      },
+      "limitation": {
+        "en": "This overview does not diagnose a plant or provide a measured photosynthetic rate; a specific case needs data on light, gas exchange, temperature, water and species.",
+        "zh": "这只是基础知识，不用于诊断植物状态或提供实测光合速率；具体判断需要结合光照、气体交换、温度、水分和物种等数据。",
+        "id": "Ini adalah gambaran dasar, bukan diagnosis kondisi tanaman atau laju fotosintesis terukur; kasus tertentu memerlukan data cahaya, pertukaran gas, suhu, air, dan spesies.",
+        "ja": "これは基礎的な説明であり、植物の状態の診断や実測光合速度を示すものではありません。具体的な判断には光、ガス交換、温度、水分、種のデータが必要です。",
+        "ko": "이는 기초 설명일 뿐 식물 상태를 진단하거나 측정된 광합성 속도를 제공하지 않습니다. 구체적인 판단에는 빛, 기체 교환, 온도, 물과 종에 대한 자료가 필요합니다.",
+        "ru": "Это общий обзор, а не диагностика растения и не измеренное значение скорости фотосинтеза; для конкретного случая нужны данные о свете, газообмене, температуре, воде и виде.",
+        "ar": "هذا عرض أساسي وليس تشخيصاً لحالة نبات أو قياساً لمعدل البناء الضوئي؛ يلزم تقييم الضوء وتبادل الغازات ودرجة الحرارة والماء والنوع في الحالة المحددة."
+      }
+    }
+  ]
+}
