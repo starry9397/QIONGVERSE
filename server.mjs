@@ -14,6 +14,7 @@ const port = deploymentPort()
 const host = process.env.LUOYIN_SERVER_HOST || (process.env.PORT ? '0.0.0.0' : '127.0.0.1')
 const upstreamUrl = process.env.GLM_API_URL || 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
 const model = 'GLM-4.6V-Flash'
+const upstreamModel = 'glm-4.6v-flash'
 // The chat contract accepts bounded UI context in addition to the question.
 // Keep a generous envelope for ordinary prompts without allowing uploads or
 // prompt stuffing into the GLM boundary.
@@ -39,6 +40,8 @@ const marketProductIds = new Set([
 ])
 const acceptedLeadReferences = new Map()
 let upstreamRequestCount = 0
+let upstreamActive = false
+const upstreamQueues = { interactive: [], background: [] }
 const selfTestMode = process.argv.includes('--self-test') || process.env.LUOYIN_SELF_TEST === '1'
 const configuredAllowedOrigins = (process.env.LUOYIN_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter((origin) => origin.startsWith('https://') || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))
 // Keep the published GitHub Pages origin available even if an older Render
@@ -1465,55 +1468,141 @@ async function readBody(req) {
   })
 }
 
-async function upstreamResponse(zone, language, question, context = null) {
-  upstreamRequestCount += 1
-  const knowledgeItem = knowledgeForQuestion(question, zone?.id)
-  const questionMode = guideQuestionMode(question, knowledgeItem)
-  const generation = glmGenerationProfile(questionMode)
-  const projectCardAsOptionalContext = questionMode === 'open_domain' && isOpenDomainProjectCard(knowledgeItem)
-  const source = projectCardAsOptionalContext ? null : knowledgeSource(knowledgeItem) || sourceForQuestion(zone.id, question)
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 15_000)
+function drainUpstreamQueue() {
+  if (upstreamActive) return
+  const next = upstreamQueues.interactive.shift() || upstreamQueues.background.shift()
+  if (!next) return
+  upstreamActive = true
+  Promise.resolve()
+    .then(next.task)
+    .then(next.resolve, next.reject)
+    .finally(() => {
+      upstreamActive = false
+      queueMicrotask(drainUpstreamQueue)
+    })
+}
+
+function scheduleUpstream(task, priority = 'interactive') {
+  const queue = priority === 'background' ? upstreamQueues.background : upstreamQueues.interactive
+  if (priority === 'background' && queue.length >= 1) {
+    return Promise.reject(new Error('upstream_background_busy'))
+  }
+  return new Promise((resolve, reject) => {
+    queue.push({ task, resolve, reject })
+    drainUpstreamQueue()
+  })
+}
+
+function upstreamErrorCode(payload) {
+  const value = payload?.error?.code ?? payload?.code
+  return value === undefined || value === null ? '' : String(value)
+}
+
+async function upstreamFailure(response) {
+  let payload = null
   try {
-    const requestBody = {
-      model,
-      temperature: generation.temperature,
-      max_tokens: generation.maxTokens,
-      stream: false,
-      thinking: { type: 'disabled' },
-      messages: [
-        { role: 'system', content: systemPrompt(zone, language, source, knowledgeItem, questionMode) },
-        { role: 'user', content: `${question}\n\n${guideContextPrompt(context, language)}` },
-      ],
-    }
-    const requestOptions = {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { authorization: `Bearer ${process.env.GLM_API_KEY}`, 'content-type': 'application/json' },
-    }
-    let response = await fetch(upstreamUrl, { ...requestOptions, body: JSON.stringify(requestBody) })
-    if (!response.ok && [400, 422].includes(response.status)) {
-      // Older compatible GLM deployments may reject the optional thinking field.
+    payload = await response.clone().json()
+  } catch {
+    payload = null
+  }
+  const message = typeof payload?.error?.message === 'string'
+    ? payload.error.message
+    : typeof payload?.message === 'string'
+      ? payload.message
+      : ''
+  return { status: response.status, code: upstreamErrorCode(payload), message }
+}
+
+function retryableUpstreamFailure(failure) {
+  if (failure.status >= 500) return true
+  return failure.status === 429 && (failure.code === '1302' || failure.code === '1305')
+}
+
+function upstreamRetryDelay() {
+  if (selfTestMode) return Promise.resolve()
+  const delayMs = 750 + Math.floor(Math.random() * 250)
+  return new Promise((resolve) => setTimeout(resolve, delayMs))
+}
+
+async function requestGlm(requestBody, requestOptions) {
+  let response = await fetch(upstreamUrl, { ...requestOptions, body: JSON.stringify(requestBody) })
+  if (!response.ok && [400, 422].includes(response.status)) {
+    const failure = await upstreamFailure(response)
+    const thinkingFieldRejected = /thinking/iu.test(failure.message) && ['1213', '1214', '1215'].includes(failure.code)
+    const unstructuredCompatibilityError = response.status === 422 && !failure.code
+    if (thinkingFieldRejected || unstructuredCompatibilityError) {
+      // Some compatible deployments reject the optional thinking field. Do
+      // not repeat auth, quota, content-safety or unrelated parameter errors.
       const compatibleBody = { ...requestBody }
       delete compatibleBody.thinking
       response = await fetch(upstreamUrl, { ...requestOptions, body: JSON.stringify(compatibleBody) })
     }
-    if (!response.ok) throw new Error(`upstream_${response.status}`)
-    const data = await response.json()
-    const answer = data?.choices?.[0]?.message?.content?.trim()
-    if (!answer) throw new Error('upstream_empty')
-    return {
-      answer,
-      ...(knowledgeItem?.answerKind ? { answerKind: knowledgeItem.answerKind } : {}),
-      layer: source ? 'verified_primary_source' : knowledgeItem?.evidenceClass || 'ai_suggestion',
-      ...knowledgePresentation(knowledgeItem, language, question, source),
-      handoff: false,
-      mode: 'glm',
-      answerMode: answerModeForQuestion(question, knowledgeItem, source),
-    }
-  } finally {
-    clearTimeout(timeout)
   }
+  return response
+}
+
+async function upstreamResponse(zone, language, question, context = null, priority = 'interactive') {
+  upstreamRequestCount += 1
+  return scheduleUpstream(async () => {
+    const knowledgeItem = knowledgeForQuestion(question, zone?.id)
+    const questionMode = guideQuestionMode(question, knowledgeItem)
+    const generation = glmGenerationProfile(questionMode)
+    const projectCardAsOptionalContext = questionMode === 'open_domain' && isOpenDomainProjectCard(knowledgeItem)
+    const source = projectCardAsOptionalContext ? null : knowledgeSource(knowledgeItem) || sourceForQuestion(zone.id, question)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 15_000)
+    try {
+      const requestBody = {
+        model: upstreamModel,
+        temperature: generation.temperature,
+        max_tokens: generation.maxTokens,
+        stream: false,
+        thinking: { type: 'disabled' },
+        messages: [
+          { role: 'system', content: systemPrompt(zone, language, source, knowledgeItem, questionMode) },
+          { role: 'user', content: `${question}\n\n${guideContextPrompt(context, language)}` },
+        ],
+      }
+      const requestOptions = {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { authorization: `Bearer ${process.env.GLM_API_KEY}`, 'content-type': 'application/json' },
+      }
+      let response = null
+      let lastFailure = null
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          response = await requestGlm(requestBody, requestOptions)
+        } catch (error) {
+          if (error?.name === 'AbortError' || attempt === 1) throw error
+          await upstreamRetryDelay()
+          continue
+        }
+        if (response.ok) break
+        lastFailure = await upstreamFailure(response)
+        if (attempt === 1 || !retryableUpstreamFailure(lastFailure)) break
+        await upstreamRetryDelay()
+      }
+      if (!response?.ok) {
+        const failure = lastFailure || { status: response?.status || 503, code: '' }
+        throw new Error(`upstream_${failure.status}${failure.code ? `_${failure.code}` : ''}`)
+      }
+      const data = await response.json()
+      const answer = data?.choices?.[0]?.message?.content?.trim()
+      if (!answer) throw new Error('upstream_empty')
+      return {
+        answer,
+        ...(knowledgeItem?.answerKind ? { answerKind: knowledgeItem.answerKind } : {}),
+        layer: source ? 'verified_primary_source' : knowledgeItem?.evidenceClass || 'ai_suggestion',
+        ...knowledgePresentation(knowledgeItem, language, question, source),
+        handoff: false,
+        mode: 'glm',
+        answerMode: answerModeForQuestion(question, knowledgeItem, source),
+      }
+    } finally {
+      clearTimeout(timeout)
+    }
+  }, priority)
 }
 
 function requiresHumanConfirmation(question) {
@@ -1655,7 +1744,7 @@ const server = http.createServer(async (req, res) => {
           const context = localized(parsed.cue.answer, parsed.language)
           const factContext = factItem ? knowledgePromptContext(factItem, parsed.language) : 'No matching fact card is available; stay with the visible project cue.'
           const question = `Give a concise automatic exhibit introduction for ${localized(parsed.cue.title, parsed.language)}. Start with what the visitor can see in this cue, then use the following related fact card for one or two concrete facts when it fits. Do not invent a maker, date, material authenticity, exact measurement, price, operations, tourism or policy fact. Mention uncertainty only if the visitor would otherwise mistake a project image for a real verified object. Answer in the requested locale and keep it under 110 words. Visible cue: ${context}\n${factContext}`
-          const upstream = await upstreamResponse(zones[parsed.zoneId], parsed.language, question)
+          const upstream = await upstreamResponse(zones[parsed.zoneId], parsed.language, question, null, 'background')
           result = { ...local, ...upstream, title: local.title, answer: upstream.answer, mode: 'glm' }
         } catch {
           result = { ...local, mode: 'fallback' }
@@ -1856,6 +1945,137 @@ async function runSelfTest() {
     check('reviewed Free Trade Port source can be displayed', desk.status === 200 && deskEntries.some((entry) => entry.id === 'hainan-free-trade-port-source-desk' && entry.status === 'reviewed' && entry.canonicalUrl === 'https://en.hnftp.gov.cn/'))
     const guideStatus = await requestGet(`${baseUrl}/api/luoyin/status`)
     check('guide status exposes only safe TTS capability state', guideStatus.status === 200 && guideStatus.body.model === 'GLM-4.6V-Flash' && guideStatus.body.upstreamConfigured === false && guideStatus.body.ttsConfigured === false && guideStatus.body.voiceProfile === ttsVoiceProfile && guideStatus.body.voiceStyle === ttsVoiceStyle && !Object.hasOwn(guideStatus.body, 'apiKey'))
+    const originalFetch = globalThis.fetch
+    let retryAttempts = 0
+    let retryAnswer = null
+    let requestedModel = ''
+    try {
+      globalThis.fetch = async (_url, options) => {
+        retryAttempts += 1
+        requestedModel = JSON.parse(options.body).model
+        if (retryAttempts === 1) {
+          return new Response(JSON.stringify({ error: { code: '1305', message: 'temporary overload' } }), {
+            status: 429,
+            headers: { 'content-type': 'application/json' },
+          })
+        }
+        return new Response(JSON.stringify({ choices: [{ message: { content: 'A direct model answer.' } }] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      try {
+        retryAnswer = await upstreamResponse(zones.tropical, 'en', 'Explain photosynthesis.')
+      } catch {
+        retryAnswer = null
+      }
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+    check('GLM request uses the official lowercase model code', requestedModel === 'glm-4.6v-flash')
+    check('GLM retries one transient provider overload before fallback', retryAttempts === 2 && retryAnswer?.mode === 'glm' && retryAnswer.answer === 'A direct model answer.')
+    let activeUpstreamCalls = 0
+    let maxConcurrentUpstreamCalls = 0
+    try {
+      globalThis.fetch = async () => {
+        activeUpstreamCalls += 1
+        maxConcurrentUpstreamCalls = Math.max(maxConcurrentUpstreamCalls, activeUpstreamCalls)
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        activeUpstreamCalls -= 1
+        return new Response(JSON.stringify({ choices: [{ message: { content: 'Queued model answer.' } }] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      await Promise.all([
+        upstreamResponse(zones.tropical, 'en', 'What is photosynthesis?'),
+        upstreamResponse(zones.huali, 'en', 'How is wood carved?'),
+      ])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+    check('GLM upstream calls are serialized to respect free-model concurrency', maxConcurrentUpstreamCalls === 1)
+    const upstreamStartOrder = []
+    let releaseFirstBackground
+    let markFirstBackgroundStarted
+    const firstBackgroundStarted = new Promise((resolve) => { markFirstBackgroundStarted = resolve })
+    const firstBackgroundGate = new Promise((resolve) => { releaseFirstBackground = resolve })
+    try {
+      globalThis.fetch = async (_url, options) => {
+        const requestBody = JSON.parse(options.body)
+        const visitorPrompt = requestBody.messages.at(-1)?.content || ''
+        const marker = visitorPrompt.includes('FIRST_BACKGROUND')
+          ? 'first-background'
+          : visitorPrompt.includes('SECOND_BACKGROUND')
+            ? 'second-background'
+            : 'interactive'
+        upstreamStartOrder.push(marker)
+        if (marker === 'first-background') {
+          markFirstBackgroundStarted()
+          await firstBackgroundGate
+        }
+        return new Response(JSON.stringify({ choices: [{ message: { content: `${marker} answer` } }] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      const firstBackground = upstreamResponse(zones.tropical, 'en', 'FIRST_BACKGROUND', null, 'background')
+      await firstBackgroundStarted
+      const secondBackground = upstreamResponse(zones.tropical, 'en', 'SECOND_BACKGROUND', null, 'background')
+      const interactive = upstreamResponse(zones.tropical, 'en', 'INTERACTIVE_VISITOR', null, 'interactive')
+      releaseFirstBackground()
+      await Promise.all([firstBackground, secondBackground, interactive])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+    check('interactive GLM questions take priority over queued automatic guidance', upstreamStartOrder.join(',') === 'first-background,interactive,second-background')
+    let safetyFailureAttempts = 0
+    try {
+      globalThis.fetch = async () => {
+        safetyFailureAttempts += 1
+        return new Response(JSON.stringify({ error: { code: '1301', message: 'content safety rejection' } }), {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      try {
+        await upstreamResponse(zones.tropical, 'en', 'A provider-rejected prompt.')
+      } catch {
+        // The observable contract is the single upstream attempt; the route
+        // will preserve its existing local fallback after this rejection.
+      }
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+    check('GLM content-safety failures are not retried as compatibility errors', safetyFailureAttempts === 1)
+    let releaseBusyBackground
+    let markBusyBackgroundStarted
+    const busyBackgroundStarted = new Promise((resolve) => { markBusyBackgroundStarted = resolve })
+    const busyBackgroundGate = new Promise((resolve) => { releaseBusyBackground = resolve })
+    let backgroundFetches = 0
+    let overflowRejected = false
+    try {
+      globalThis.fetch = async () => {
+        backgroundFetches += 1
+        if (backgroundFetches === 1) {
+          markBusyBackgroundStarted()
+          await busyBackgroundGate
+        }
+        return new Response(JSON.stringify({ choices: [{ message: { content: 'Background answer.' } }] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      const activeBackground = upstreamResponse(zones.tropical, 'en', 'ACTIVE_BACKGROUND', null, 'background')
+      await busyBackgroundStarted
+      const queuedBackground = upstreamResponse(zones.tropical, 'en', 'QUEUED_BACKGROUND', null, 'background')
+      const overflowBackground = upstreamResponse(zones.tropical, 'en', 'OVERFLOW_BACKGROUND', null, 'background').catch(() => { overflowRejected = true })
+      releaseBusyBackground()
+      await Promise.all([activeBackground, queuedBackground, overflowBackground])
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+    check('automatic guidance keeps only one pending GLM request', overflowRejected && backgroundFetches === 2)
     const expectedGuideZones = ['free-trade-port', 'tropical', 'lijin', 'aerospace', 'huali', 'village']
     const guideCounts = Object.fromEntries(expectedGuideZones.map((zoneId) => [zoneId, sharedWorldGuideCues.filter((item) => item.apiZoneId === zoneId).length]))
     check('automatic guide catalogue covers six halls with fifteen cues each', expectedGuideZones.every((zoneId) => guideCounts[zoneId] >= 15) && sharedWorldGuideCues.length >= 90)
