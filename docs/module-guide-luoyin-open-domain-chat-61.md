@@ -33,6 +33,11 @@ browser coordinates, movement history, or stored dialogue.
   block prevents the model from inventing site capabilities; it is not a
   catalogue card, is never returned to the browser, and does not change
   open-domain response metadata.
+- Object-level questions about a displayed rosewood or carving item receive a
+  hidden fact constraint that the current display has no reviewed specimen,
+  species, provenance, date, maker or authentication record. GLM must answer
+  the visitor directly without identifying the object as Hainan huanghuali or
+  another species, and this constraint is never rendered as a project card.
 - Reviewed HTTPS sources may still return `verified_primary_source` metadata.
 - The normalized chat response defaults to `open_domain`, never
   `project_context`.
@@ -75,7 +80,9 @@ content-safety decisions remain upstream behavior and are not bypassed.
 5. Test a website-capability question such as “Is the market a real payment
    service?” and require a direct negative answer without project-context
    metadata.
-6. Deploy GitHub Pages, CloudBase static assets, and the shared Render backend.
-7. Verify both public sites with ordinary knowledge, explicit exhibit,
+6. Test “这个展厅里的花梨展品是什么？” and reject any unsupported identification
+   as 海南黄花梨, `Dalbergia odorifera`, or another species.
+7. Deploy GitHub Pages, CloudBase static assets, and the shared Render backend.
+8. Verify both public sites with ordinary knowledge, explicit exhibit,
    project-service, and current regulated questions; no interactive response
    may contain project-context metadata.

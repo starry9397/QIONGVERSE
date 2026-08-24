@@ -1164,11 +1164,21 @@ function knowledgePromptContext(item, language, questionMode = 'open_domain') {
 
 function questionSpecificPrompt(question) {
   const normalized = String(question || '').toLocaleLowerCase().normalize('NFKC')
-  if (!/东方花梨|dongfang rosewood/iu.test(normalized)) return ''
-  return [
-    'Terminology note for this question: “东方花梨” / “Dongfang Rosewood” is the project hall label, not a botanical species or standardized timber designation.',
-    'Do not equate it with 海南黄花梨, Dalbergia odorifera, or another species. If the visitor asks only for this term, distinguish the hall label first, then explain 花梨木 / rosewood as a broad trade and cultural term with concrete examples.',
-  ].join('\n')
+  const notes = []
+  if (/东方花梨|dongfang rosewood/iu.test(normalized)) {
+    notes.push(
+      'Terminology note for this question: “东方花梨” / “Dongfang Rosewood” is the project hall label, not a botanical species or standardized timber designation.',
+      'Do not equate it with 海南黄花梨, Dalbergia odorifera, or another species. If the visitor asks only for this term, distinguish the hall label first, then explain 花梨木 / rosewood as a broad trade and cultural term with concrete examples.',
+    )
+  }
+  const explicitRosewoodExhibit = /(?:这个|这件|这张|这里|展厅|展柜|画面|图片|照片).{0,24}(?:花梨|木雕|雕刻).{0,20}(?:展品|物件|作品|是什么|树种|材质)|(?:花梨|木雕|雕刻).{0,20}(?:展品|物件|作品).{0,20}(?:是什么|树种|材质)|\b(?:this|the|pictured|shown|current)\b.{0,32}\b(?:rosewood|wood carving|carved wood)\b.{0,32}\b(?:exhibit|object|artefact|artifact|piece|species|material)\b/iu.test(normalized)
+  if (explicitRosewoodExhibit) {
+    notes.push(
+      'Object-level fact for this question: the displayed rosewood-hall objects are project-curated concept/display objects, and no reviewed object-level record identifies them as a particular botanical specimen, collection object, species, provenance, date, maker, or authenticated material.',
+      'Do not identify the displayed object as 海南黄花梨, Dalbergia odorifera, or any other species. State the unavailable identification directly, then give a useful description of the display focus or general rosewood and wood-carving characteristics. Do not return or name a “project context” card.',
+    )
+  }
+  return notes.join('\n')
 }
 
 function interfaceCapabilityPrompt() {
@@ -2120,6 +2130,7 @@ async function runSelfTest() {
     check('project cards are excluded from open-domain prompts', /intentionally excluded from interactive chat/u.test(knowledgePromptContext(hualiKnowledge, 'zh', 'open_domain')) && !/Approved project-authored context|Matched catalogue item/u.test(knowledgePromptContext(hualiKnowledge, 'zh', 'open_domain')))
     check('open-domain prompt calibrates unreviewed material facts', /calibrated wording/u.test(systemPrompt(zones.huali, 'en', null, hualiKnowledge, 'open_domain')) && /Do not assert a specific species/u.test(systemPrompt(zones.huali, 'en', null, hualiKnowledge, 'open_domain')))
     check('huali prompt does not equate the project hall label with a botanical species', /not a botanical species/u.test(systemPrompt(zones.huali, 'zh', null, null, 'open_domain', '东方花梨')) && /Do not equate it with 海南黄花梨/u.test(systemPrompt(zones.huali, 'zh', null, null, 'open_domain', '东方花梨')))
+    check('explicit huali exhibit prompt prevents unsupported species identification', /no reviewed object-level record/u.test(systemPrompt(zones.huali, 'zh', null, null, 'open_domain', '这个展厅里的花梨展品是什么？')) && /Do not identify the displayed object as 海南黄花梨/u.test(systemPrompt(zones.huali, 'zh', null, null, 'open_domain', '这个展厅里的花梨展品是什么？')))
     const hualiFallback = localResponse(zones.huali, 'zh', '东方花梨')
     check('offline huali topic uses an open-domain fallback instead of a project disclaimer', hualiFallback.answerMode === 'open_domain_fallback' && hualiFallback.sourceClass === 'ai_suggestion' && !hualiFallback.answer.includes('展品是项目策展的视觉研究'))
     const hualiRoute = await requestJson(baseUrl + '/api/luoyin', { question: '东方花梨', language: 'zh', zoneId: 'huali' })
