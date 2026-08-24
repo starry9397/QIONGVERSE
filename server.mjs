@@ -1516,6 +1516,7 @@ const server = http.createServer(async (req, res) => {
 
   let responseLanguage = 'en'
   let responseZone = zones.tropical
+  let responseQuestion = ''
   let speakRequested = false
   try {
     const body = JSON.parse(await readBody(req))
@@ -1527,6 +1528,7 @@ const server = http.createServer(async (req, res) => {
     const zone = zones[zoneId]
     responseLanguage = language
     responseZone = zone || zones.tropical
+    responseQuestion = question
     if (isNormalizedChatRoute && normalized.error) {
       const fallback = localResponse(zones.tropical, language, '', 'mock')
       return json(res, 400, { error: normalized.error, ...normalizedChatResponse(fallback, language, '') })
@@ -1548,8 +1550,8 @@ const server = http.createServer(async (req, res) => {
   } catch (error) {
     const status = error.statusCode || 200
     const reason = error.name === 'AbortError' ? 'upstream_timeout' : 'service_unavailable'
-    const fallback = localResponse(responseZone, responseLanguage, 'offline', 'fallback')
-    if (isNormalizedChatRoute) return json(res, status, { error: reason, ...normalizedChatResponse(fallback, responseLanguage, 'offline', speakRequested ? { status: 'unavailable', voice: ttsVoiceProfile } : null) })
+    const fallback = localResponse(responseZone, responseLanguage, responseQuestion, 'fallback')
+    if (isNormalizedChatRoute) return json(res, status, { error: reason, ...normalizedChatResponse(fallback, responseLanguage, responseQuestion, speakRequested ? { status: 'unavailable', voice: ttsVoiceProfile } : null) })
     return json(res, status, {
       error: reason,
       ...fallback,
@@ -1655,6 +1657,8 @@ async function runSelfTest() {
     check('offline factual answer explains general carving steps directly', carvingFacts.answer.length > 40 && !carvingFacts.answer.includes('我可以解释概念') && /设计|打|雕刻|打磨/u.test(carvingFacts.answer))
     const aerospaceFacts = localResponse(zones.aerospace, 'zh', '文昌为什么适合航天发射？')
     check('offline aerospace answer gives a concrete rationale', aerospaceFacts.answer.length > 40 && /低纬度|赤道|自转|海洋/u.test(aerospaceFacts.answer))
+    const fallbackFacts = localResponse(zones.tropical, 'zh', '红树林有什么生态作用？', 'fallback')
+    check('upstream failure fallback preserves factual question context', fallbackFacts.mode === 'fallback' && fallbackFacts.answer.length > 40 && /根系|栖息|海岸|沉积物/u.test(fallbackFacts.answer) && !fallbackFacts.answer.includes('我可以解释概念'))
     check('factual cards remain explicitly non-authentication claims', carvingFacts.answer.includes('不') && carvingFacts.sourceClass === 'ai_suggestion')
     const crossHallSource = sourceForQuestion('tropical', '文昌为什么适合航天发射？')
     check('topic source survives a cross-hall question', crossHallSource?.id === 'cnsa-english-portal')
