@@ -909,7 +909,7 @@ function matchesKnowledgeTag(question, tag) {
   const normalizedQuestion = question.toLocaleLowerCase().normalize('NFKC')
   const normalizedTag = tag.toLocaleLowerCase().trim().normalize('NFKC')
   if (!normalizedTag) return false
-  if (/^[a-z0-9 ]+$/i.test(normalizedTag) && normalizedTag.length <= 3) {
+  if (/^[a-z0-9][a-z0-9 ]*$/i.test(normalizedTag)) {
     return new RegExp(`\\b${normalizedTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'iu').test(normalizedQuestion)
   }
   return normalizedQuestion.includes(normalizedTag)
@@ -1820,6 +1820,7 @@ async function runSelfTest() {
     const marketKnowledge = knowledgeForQuestion('Is the market a real payment service?')
     check('offline knowledge matches B2C collection boundary', marketKnowledge?.id === 'market-demo-boundary' && localResponse(zones.tropical, 'en', 'Is the market a real payment service?').sourceClass === 'project_context')
     check('offline knowledge matches regional map questions', knowledgeForQuestion('How should I use the Hainan regional map?')?.id === 'map-reading-boundary')
+    check('knowledge matching avoids substring false positives', knowledgeForQuestion('authenticity', 'huali') === null && knowledgeForQuestion('How do museums verify authenticity?', 'huali') === null)
     check('offline knowledge matches voice questions', knowledgeForQuestion('Is Luoyin voice a real child?')?.id === 'ai-voice-boundary')
     check('offline knowledge matches tour questions', knowledgeForQuestion('Can Luoyin guide me through the tour?')?.id === 'guided-tour-interface')
     const unknownFallback = localResponse(zones.tropical, 'en', 'How do neural networks work?')
