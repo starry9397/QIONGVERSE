@@ -374,7 +374,7 @@ function App() {
   const guideAnswerLabel = (message: GuideMessage) => {
     if (message.mode === 'fallback' || message.mode === 'error') return guideText('offlineFallback')
     if (message.mode === 'glm') {
-      if (message.answerMode === 'project_context') return guideText('glmProjectResponse')
+      if (message.answerMode === 'project_context') return guideText('glmKnowledgeResponse')
       if (message.answerMode === 'regulated_orientation') return guideText('glmRegulatedResponse')
       if (message.answerMode === 'open_domain' || message.answerMode === 'open_domain_fallback' || message.answerMode === 'general_knowledge') return guideText('glmKnowledgeResponse')
       return guideText('glmResponse')
@@ -1033,7 +1033,8 @@ function App() {
       const response = await fetch(apiPath('/api/luoyin'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ question: trimmed, language, zoneId: guideZoneId, speak: speechEnabled }) })
       const payload = await response.json() as { answer?: string; answerMode?: string; layer?: string; sourceLabel?: string; sourceUrl?: string | null; sourceClass?: string; sourceStatus?: string; handoff?: boolean; mode?: 'local' | 'mock' | 'glm' | 'fallback'; speech?: GuideMessage['speech'] }
       if (!payload.answer) throw new Error('empty_response')
-      const guideMessage: GuideMessage = { id: `guide-${Date.now()}`, role: 'guide', text: payload.answer || '', zoneTitle: localize(guideZoneTitle, language), layer: payload.layer || 'local_contextual_guide', sourceLabel: payload.sourceLabel || inline(language, 'Local contextual guide', '本地语境导览'), sourceUrl: payload.sourceUrl || null, sourceClass: payload.sourceClass || '', sourceStatus: payload.sourceStatus || '', answerMode: payload.answerMode || '', mode: payload.mode === 'glm' ? 'glm' : payload.mode === 'fallback' ? 'fallback' : payload.mode === 'local' ? 'local' : 'mock', speech: payload.speech }
+      const legacyProjectContext = payload.answerMode === 'project_context' || payload.sourceClass === 'project_context' || payload.layer === 'project_context'
+      const guideMessage: GuideMessage = { id: `guide-${Date.now()}`, role: 'guide', text: payload.answer || '', zoneTitle: localize(guideZoneTitle, language), layer: legacyProjectContext ? 'ai_suggestion' : payload.layer || 'local_contextual_guide', sourceLabel: legacyProjectContext ? '' : payload.sourceLabel || inline(language, 'Local contextual guide', '本地语境导览'), sourceUrl: legacyProjectContext ? null : payload.sourceUrl || null, sourceClass: legacyProjectContext ? 'ai_suggestion' : payload.sourceClass || '', sourceStatus: legacyProjectContext ? 'needs_review' : payload.sourceStatus || '', answerMode: legacyProjectContext ? 'open_domain' : payload.answerMode || '', mode: payload.mode === 'glm' ? 'glm' : payload.mode === 'fallback' ? 'fallback' : payload.mode === 'local' ? 'local' : 'mock', speech: payload.speech }
       setGuideMessages((messages) => [...messages, guideMessage].slice(-24))
       completed = true
     } catch {
