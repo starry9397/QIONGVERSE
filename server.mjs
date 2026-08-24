@@ -1138,6 +1138,8 @@ function knowledgePromptContext(item, language, questionMode = 'open_domain') {
     return [
       `optional exhibition context only: ${localized(item.title, language)}.`,
       'The current hall contains a project-curated visual study; use it only as a scene cue after answering the visitor’s ordinary knowledge question.',
+      'The project label “东方花梨” / “Dongfang Rosewood” is not itself a botanical species or a standardized timber designation. You must not equate it with 海南黄花梨, Dalbergia odorifera, or any other species unless the visitor explicitly asks about that named species and the answer clearly distinguishes the terms.',
+      'If the visitor asks only “东方花梨”, begin with that distinction and then explain “花梨木” as a broad trade and cultural term with concrete, calibrated examples.',
       'Answer the visitor’s ordinary knowledge question first using general knowledge. Do not treat the project image, render, or curatorial wording as evidence for species, age, provenance, maker, authenticity, price, or historical fact.',
       'Do not lead with a project disclaimer or repeat the exhibition limitation unless the visitor asks about this specific scene or object. If the question is about the material or craft generally, give the concrete educational explanation first.',
     ].join('\n')
@@ -2115,6 +2117,7 @@ async function runSelfTest() {
     check('explicit exhibit question keeps project context mode', guideQuestionMode('这个展厅里的花梨展品是什么？', hualiKnowledge) === 'project_context' && guideQuestionMode('这张项目图片如何呈现花梨？', hualiKnowledge) === 'project_context')
     check('project card is optional context for open-domain prompts', /optional exhibition context/u.test(knowledgePromptContext(hualiKnowledge, 'zh', 'open_domain')) && !/Approved project-authored context/u.test(knowledgePromptContext(hualiKnowledge, 'zh', 'open_domain')))
     check('open-domain prompt calibrates unreviewed material facts', /calibrated wording/u.test(systemPrompt(zones.huali, 'en', null, hualiKnowledge, 'open_domain')) && /Do not assert a specific species/u.test(systemPrompt(zones.huali, 'en', null, hualiKnowledge, 'open_domain')))
+    check('huali prompt does not equate the project hall label with a botanical species', /not itself a botanical species/u.test(systemPrompt(zones.huali, 'zh', null, hualiKnowledge, 'open_domain')) && /must not equate it with 海南黄花梨/u.test(systemPrompt(zones.huali, 'zh', null, hualiKnowledge, 'open_domain')))
     const hualiFallback = localResponse(zones.huali, 'zh', '东方花梨')
     check('offline huali topic uses an open-domain fallback instead of a project disclaimer', hualiFallback.answerMode === 'open_domain_fallback' && hualiFallback.sourceClass === 'ai_suggestion' && !hualiFallback.answer.includes('展品是项目策展的视觉研究'))
     const hualiRoute = await requestJson(baseUrl + '/api/luoyin', { question: '东方花梨', language: 'zh', zoneId: 'huali' })
