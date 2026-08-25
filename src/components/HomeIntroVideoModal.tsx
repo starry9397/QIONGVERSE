@@ -41,10 +41,10 @@ const copy = {
 assertLocalizationTree(copy, 'home intro video copy')
 
 const VIDEO_SOURCES: Record<VideoSource, string> = {
-  h264: publicMedia('/assets/video/homepage-intro.mp4'),
-  hevc: publicMedia('/assets/video/homepage-intro-hevc.mp4'),
+  h264: publicMedia('/assets/video/homepage-intro-20260826.mp4'),
+  hevc: publicMedia('/assets/video/homepage-intro-20260826-hevc.mp4'),
 }
-const POSTER = publicMedia('/assets/video/homepage-intro-poster.jpg')
+const POSTER = publicMedia('/assets/video/homepage-intro-20260826-poster.jpg')
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const
 
 function localized(language: Language, value: RuntimeLocalized) {

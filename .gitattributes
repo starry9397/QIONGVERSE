@@ -37,7 +37,7 @@ public/**/*.task filter=lfs diff=lfs merge=lfs -text
 # Direct static release files: keep actual public bytes available to Pages.
 # These presentation assets are deliberately kept below GitHub's per-file
 # limit, so the Pages workflow does not depend on a missing LFS upload.
-public/assets/video/homepage-intro.mp4 -filter -diff -merge -text
-public/assets/video/homepage-intro-hevc.mp4 -filter -diff -merge -text
-public/assets/video/homepage-intro-poster.jpg -filter -diff -merge -text
+public/assets/video/homepage-intro-20260826.mp4 -filter -diff -merge -text
+public/assets/video/homepage-intro-20260826-hevc.mp4 -filter -diff -merge -text
+public/assets/video/homepage-intro-20260826-poster.jpg -filter -diff -merge -text
 public/assets/demo-market/products/culture/** -filter -diff -merge -text
